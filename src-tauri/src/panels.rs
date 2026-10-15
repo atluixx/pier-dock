@@ -44,7 +44,9 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64,
     let margin = 10.0 * scale;
     let (w, h) = (width * scale, height * scale);
     let x = (dock_x + anchor_x * scale - w / 2.0).clamp(mon_x + margin, mon_x + mon_w - w - margin);
-    let y = reserved_top - h - margin;
+    // A janela tem uma margem transparente em volta do painel (sombra), que já serve de espaço
+    // entre o painel e a dock.
+    let y = reserved_top - h;
 
     let label = format!("panel-{}", PANEL_COUNTER.fetch_add(1, Ordering::SeqCst));
     let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App("index.html".into()))

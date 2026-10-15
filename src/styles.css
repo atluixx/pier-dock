@@ -1,9 +1,12 @@
 /* ---------- Temas ---------- */
 :root {
-  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI Variable Text", "Segoe UI", "Adwaita Sans",
+    system-ui, sans-serif;
   --radius: 20px;
   --tile-radius: 12px;
-  --bar-bg: rgba(32, 34, 40, 0.78);
+  /* Tom da dock: os painéis usam o mesmo, só que mais opaco (sem blur real atrás da janela). */
+  --surface: 32, 34, 40;
+  --bar-bg: rgba(var(--surface), 0.78);
   --bar-border: rgba(255, 255, 255, 0.14);
   --bar-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --fg: #f4f5f7;
@@ -13,7 +16,16 @@
   --accent: #6ea8ff;
   --indicator: rgba(255, 255, 255, 0.55);
   --indicator-active: #ffffff;
-  --panel-bg: rgba(28, 30, 36, 0.97);
+  --panel-bg: rgba(var(--surface), 0.92);
+  --panel-inset: 12px;
+  --panel-accent: var(--fg);
+  --panel-on-accent: #1d1d1f;
+  --panel-hover: rgba(255, 255, 255, 0.08);
+  --panel-separator: rgba(255, 255, 255, 0.07);
+  --panel-track: rgba(255, 255, 255, 0.18);
+  --panel-border: rgba(0, 0, 0, 0.45);
+  --panel-highlight: rgba(255, 255, 255, 0.12);
+  --panel-shadow: 0 14px 36px rgba(0, 0, 0, 0.38), 0 3px 10px rgba(0, 0, 0, 0.22);
   --tooltip-bg: rgba(20, 20, 24, 0.92);
   --badge: #ff5a5f;
   --ok: #3fb950;
@@ -36,6 +48,8 @@
   --accent: #8b9cff;
   --indicator-active: #8b9cff;
   --panel-bg: rgba(10, 12, 26, 0.98);
+  --panel-accent: var(--accent);
+  --panel-on-accent: #000;
 }
 
 [data-theme="paper"] {
@@ -49,7 +63,14 @@
   --accent: #0a66d8;
   --indicator: rgba(0, 0, 0, 0.4);
   --indicator-active: #1d1d1f;
-  --panel-bg: rgba(252, 251, 249, 0.99);
+  --panel-bg: rgba(252, 251, 249, 0.97);
+  --panel-on-accent: #fff;
+  --panel-hover: rgba(0, 0, 0, 0.06);
+  --panel-separator: rgba(0, 0, 0, 0.07);
+  --panel-track: rgba(0, 0, 0, 0.14);
+  --panel-border: rgba(0, 0, 0, 0.16);
+  --panel-highlight: rgba(255, 255, 255, 0.8);
+  --panel-shadow: 0 14px 36px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.1);
   --tooltip-bg: rgba(255, 255, 255, 0.97);
   --heat-0: rgba(0, 0, 0, 0.07);
   --heat-1: #9be9a8;
@@ -68,6 +89,9 @@
   --indicator: #ff00c8;
   --indicator-active: #00f0ff;
   --panel-bg: rgba(14, 6, 28, 0.98);
+  --panel-accent: var(--accent);
+  --panel-on-accent: #000;
+  --panel-border: rgba(255, 0, 200, 0.5);
 }
 
 [data-theme="aqua"] {
@@ -82,7 +106,15 @@
   --accent: #0063b1;
   --indicator: rgba(6, 35, 61, 0.5);
   --indicator-active: #06233d;
-  --panel-bg: rgba(225, 241, 252, 0.99);
+  --panel-bg: rgba(225, 241, 252, 0.98);
+  --panel-accent: var(--accent);
+  --panel-on-accent: #fff;
+  --panel-hover: rgba(0, 60, 120, 0.08);
+  --panel-separator: rgba(0, 60, 120, 0.1);
+  --panel-track: rgba(6, 35, 61, 0.15);
+  --panel-border: rgba(0, 60, 120, 0.25);
+  --panel-highlight: rgba(255, 255, 255, 0.9);
+  --panel-shadow: 0 14px 36px rgba(0, 60, 120, 0.28), 0 3px 10px rgba(0, 60, 120, 0.15);
   --tooltip-bg: rgba(255, 255, 255, 0.95);
 }
 
@@ -96,6 +128,9 @@
   --indicator: #ffdf00;
   --indicator-active: #ffffff;
   --panel-bg: rgba(0, 70, 36, 0.98);
+  --panel-accent: var(--accent);
+  --panel-on-accent: #002776;
+  --panel-border: rgba(255, 223, 0, 0.45);
   --badge: #002776;
 }
 
@@ -590,23 +625,29 @@ button {
 }
 
 /* ---------- Painéis ---------- */
+/* Material de popover do macOS. A janela é transparente e maior que o painel (--panel-inset em
+   cada lado) para a sombra e os cantos caberem dentro dela. */
 .panel {
   position: absolute;
-  inset: 0;
+  inset: var(--panel-inset);
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 14px 16px;
   background: var(--panel-bg);
-  border: 1px solid var(--bar-border);
-  border-radius: 16px;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 0.5px var(--panel-border),
+    inset 0 0.5px 0 var(--panel-highlight),
+    var(--panel-shadow);
   overflow: hidden;
-  animation: panel-in 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  transform-origin: bottom center;
+  animation: panel-in 0.18s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
 @keyframes panel-in {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
+    transform: scale(0.96) translateY(6px);
   }
 }
 
@@ -614,23 +655,42 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
 .panel-header h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .panel-header p {
   margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.panel-value {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Abaixo do número grande, o título vira legenda. */
+.panel-value + h2 {
   font-size: 12px;
+  font-weight: 500;
   color: var(--fg-muted);
 }
 
 .panel-actions {
   display: flex;
-  gap: 4px;
+  gap: 2px;
+  margin: -3px -6px 0 0;
 }
 
 .icon-btn {
@@ -645,6 +705,16 @@ button {
 .icon-btn:hover {
   background: var(--tile-hover);
   color: var(--fg);
+}
+
+.panel .icon-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.panel .icon-btn:hover {
+  background: var(--panel-hover);
 }
 
 .icon-btn.danger:hover {
@@ -670,16 +740,33 @@ button {
 }
 
 .list li {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px;
-  border-radius: 10px;
+  padding: 7px 8px;
+  border-radius: 8px;
   cursor: pointer;
 }
 
+/* Separador fino entre linhas, escondido junto do destaque de hover. */
+.list li + li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  background: var(--panel-separator);
+}
+
 .list li:hover {
-  background: var(--tile-hover);
+  background: var(--panel-hover);
+}
+
+.list li:hover::before,
+.list li:hover + li::before {
+  background: transparent;
 }
 
 .list-main {
@@ -689,12 +776,14 @@ button {
 
 .list-title {
   font-size: 13px;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .list-sub {
+  margin-top: 1px;
   font-size: 11px;
   color: var(--fg-muted);
   overflow: hidden;
@@ -713,16 +802,16 @@ button {
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 6px;
-  background: var(--tile-bg);
-  color: var(--accent);
+  background: var(--panel-hover);
+  color: var(--fg-muted);
 }
 
 .pill {
   font-size: 10px;
   padding: 1px 6px;
   margin-right: 6px;
-  border-radius: 8px;
-  background: var(--tile-bg);
+  border-radius: 999px;
+  background: var(--panel-hover);
   color: var(--fg-muted);
 }
 
@@ -749,26 +838,22 @@ button {
 }
 
 .error-box {
-  padding: 10px 12px;
+  padding: 8px 10px;
   margin-bottom: 8px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 12px;
-  background: rgba(248, 81, 73, 0.15);
+  background: rgba(248, 81, 73, 0.14);
   color: var(--fail);
 }
 
-/* Painel: o grid estica para ocupar toda a área livre. */
+/* Contribuições: colunas dividem a largura e as células são sempre quadradas. */
 .heatmap-wrap {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
 .heatmap {
-  flex: 1;
-  min-height: 0;
   gap: 3px;
 }
 
@@ -776,8 +861,10 @@ button {
   gap: 3px;
 }
 
-.heatmap .heat {
-  border-radius: 3px;
+.heatmap .heat-col .heat {
+  flex: none;
+  aspect-ratio: 1;
+  border-radius: 2.5px;
 }
 
 .heat-months {
@@ -799,22 +886,34 @@ button {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
+  gap: 3px;
+  margin-top: 2px;
   font-size: 10px;
   color: var(--fg-muted);
 }
 
 .heat-legend .heat {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
   flex: none;
-  border-radius: 3px;
+  border-radius: 2.5px;
 }
 
+.heat-legend .heat:first-of-type {
+  margin-left: 3px;
+}
+
+.heat-legend .heat:last-of-type {
+  margin-right: 3px;
+}
+
+/* Mídia, no estilo do "Tocando agora" do macOS. */
 .media-panel {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
@@ -827,18 +926,19 @@ button {
 }
 
 .media-big-cover {
-  width: 220px;
-  height: 220px;
-  border-radius: 16px;
-  background: var(--tile-bg) center / cover no-repeat;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  width: 200px;
+  height: 200px;
+  border-radius: 12px;
+  background: var(--panel-hover) center / cover no-repeat;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3), 0 0 0 0.5px var(--panel-separator);
+  color: var(--fg-muted);
   display: grid;
   place-items: center;
-  margin: 4px 0 16px;
+  margin: 4px 0 18px;
 }
 
 .media-big-title {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 600;
   max-width: 100%;
   overflow: hidden;
@@ -858,91 +958,115 @@ button {
 
 .media-source {
   font-size: 11px;
-  color: var(--accent);
-  margin-top: 4px;
+  color: var(--fg-muted);
+  opacity: 0.8;
+  margin-top: 3px;
 }
 
 .progress {
   width: 100%;
-  height: 5px;
-  margin-top: 14px;
-  border-radius: 3px;
-  background: var(--tile-bg);
+  height: 4px;
+  margin-top: 16px;
+  border-radius: 2px;
+  background: var(--panel-track);
   overflow: hidden;
+  transition: height 0.12s ease;
 }
 
 .progress.seekable {
   cursor: pointer;
 }
 
+.progress.seekable:hover {
+  height: 6px;
+  margin-bottom: -2px;
+}
+
 .progress-fill {
   height: 100%;
-  background: var(--accent);
+  background: var(--panel-accent);
 }
 
 .progress-times {
   width: 100%;
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
   color: var(--fg-muted);
-  margin-top: 4px;
+  margin-top: 5px;
 }
 
 .media-big-buttons {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin-top: 8px;
+  gap: 20px;
+  margin-top: 6px;
 }
 
 .media-big-buttons button {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: grid;
   place-items: center;
+  transition: background 0.12s ease, transform 0.12s ease;
 }
 
 .media-big-buttons button:hover:not(:disabled) {
-  background: var(--tile-hover);
+  background: var(--panel-hover);
+}
+
+.media-big-buttons button:active:not(:disabled) {
+  transform: scale(0.92);
 }
 
 .media-big-buttons button:disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: default;
 }
 
 .media-big-buttons .primary {
-  width: 56px;
-  height: 56px;
-  background: var(--accent);
-  color: #000;
+  width: 52px;
+  height: 52px;
+  background: var(--panel-accent);
+  color: var(--panel-on-accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-.media-big-buttons .primary:hover {
-  filter: brightness(1.1);
-  background: var(--accent) !important;
+.media-big-buttons .primary:hover:not(:disabled) {
+  background: var(--panel-accent);
+  filter: brightness(0.92);
 }
 
+/* Controle segmentado. */
 .session-switch {
   display: flex;
-  gap: 6px;
-  margin-top: 14px;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: 2px;
+  margin-top: 16px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--panel-hover);
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .session-switch button {
   font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 12px;
-  background: var(--tile-bg);
+  padding: 3px 10px;
+  border-radius: 6px;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.session-switch button:hover {
+  color: var(--fg);
 }
 
 .session-switch button.selected {
-  background: var(--accent);
-  color: #000;
+  background: var(--tile-hover);
+  color: var(--fg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* ---------- Configurações ---------- */
