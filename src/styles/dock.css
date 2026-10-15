@@ -1,0 +1,184 @@
+.dock-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.dock-bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding-bottom: 8px !important;
+  background: rgb(var(--glass-tint) / var(--glass-opacity));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-dock);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  white-space: nowrap;
+  animation: dock-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  transition:
+    transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.1),
+    opacity 0.22s ease;
+}
+
+/* Ocultar automaticamente: desliza para baixo da borda da tela. */
+.dock-bar.dock-hidden {
+  transform: translateX(-50%) translateY(calc(100% + 24px));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.26s ease-in,
+    opacity 0.26s ease-in;
+}
+
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(30px);
+  }
+}
+
+.dock-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  touch-action: none;
+}
+
+.dragging {
+  z-index: 10;
+  opacity: 0.85;
+}
+
+.magnify {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.app-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: var(--shadow-icon);
+}
+
+.app-icon:active img {
+  filter: brightness(0.75);
+}
+
+.app-icon-fallback {
+  width: 82%;
+  height: 82%;
+  border-radius: var(--radius-card);
+  background: var(--fill-selected);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: calc(var(--icon) * 0.4);
+}
+
+.start-button svg {
+  width: 62%;
+  height: 62%;
+  fill: var(--accent);
+  filter: drop-shadow(0 1px 4px var(--fill));
+}
+
+.start-button {
+  background: var(--fill-selected);
+}
+
+.start-button:is(:hover, [data-hover]) {
+  background: var(--fill-active);
+}
+
+.indicator {
+  position: absolute;
+  bottom: -6px;
+  width: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--indicator);
+  transition: width 0.25s ease, background 0.25s ease;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.indicator.on {
+  width: 6px;
+}
+
+.indicator.active {
+  width: 16px;
+  background: var(--accent);
+}
+
+.indicator-dot {
+  position: absolute;
+  right: -7px;
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--indicator);
+}
+
+/* A área do separador é mais larga que a linha, para dar para arrastá-lo. */
+.divider-item {
+  height: var(--icon);
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  touch-action: none;
+}
+
+.divider {
+  width: 1px;
+  height: 75%;
+  background: var(--divider);
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-tooltip);
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 100;
+  animation: fade-in 0.12s ease;
+}
+
+.dock-item .tooltip {
+  bottom: calc(100% + 6px);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+}

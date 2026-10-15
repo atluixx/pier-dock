@@ -4,7 +4,14 @@ import { App } from "./App";
 import { os } from "./lib/platform";
 import { startPointerBridge } from "./lib/pointerBridge";
 import { currentView } from "./lib/view";
-import "./styles.css";
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
+import "./theme/tokens.css";
+import "./styles/base.css";
+import "./styles/dock.css";
+import "./styles/widgets.css";
+import "./styles/popover.css";
+import "./styles/settings.css";
 
 // O macOS desenha vidro nativo atrás do WebView; o CSS só tinge (ver `html[data-os="macos"]`).
 document.documentElement.dataset.os = os;

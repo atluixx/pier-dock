@@ -6,19 +6,11 @@ import { labels, os } from "../lib/platform";
 import { useConfig } from "../store/config";
 import { useIcon } from "../hooks/useIcon";
 import { iconKeyForEntry } from "../dock/apps";
+import { ACCENTS } from "../theme/accents";
 import { addDivider, appKey, applyOrder, isDivider, removeItem, resolveOrder, START_KEY } from "../dock/order";
 
 const TABS = ["Apps", "Widgets", "Aparência", "GitHub", "Geral"] as const;
 type Tab = (typeof TABS)[number];
-
-export const THEMES: { id: string; name: string }[] = [
-  { id: "glass", name: "Vidro" },
-  { id: "midnight", name: "Midnight" },
-  { id: "paper", name: "Paper" },
-  { id: "neon", name: "Neon" },
-  { id: "aqua", name: "Aqua" },
-  { id: "canarinho", name: "Canarinho" },
-];
 
 const WIDGET_NAMES: Record<string, string> = {
   media: "Player de mídia (Spotify / YouTube Music)",
@@ -190,22 +182,19 @@ function AppearanceTab({ config, update }: { config: Config; update: (p: Partial
   return (
     <>
       <section>
-        <h3>Tema</h3>
-        <div className="themes">
-          {THEMES.map((t) => (
+        <h3>Cor de destaque</h3>
+        <div className="accents" role="radiogroup" aria-label="Cor de destaque">
+          {ACCENTS.map((a) => (
             <button
-              key={t.id}
-              data-theme={t.id}
-              className={`theme-card ${config.theme === t.id ? "selected" : ""}`}
-              onClick={() => update({ theme: t.id })}
-            >
-              <div className="theme-preview">
-                <span />
-                <span />
-                <span />
-              </div>
-              {t.name}
-            </button>
+              key={a.key}
+              role="radio"
+              aria-checked={config.accent === a.key}
+              aria-label={a.name}
+              title={a.name}
+              className="accent-swatch"
+              style={{ background: `var(--${a.key})` }}
+              onClick={() => update({ accent: a.key })}
+            />
           ))}
         </div>
       </section>

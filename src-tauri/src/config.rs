@@ -40,6 +40,8 @@ pub struct Config {
     pub pinned_apps: Vec<AppEntry>,
     pub widgets: Vec<WidgetConfig>,
     pub theme: String,
+    /// Cor de destaque: "coral", "blue", "green", "amber" ou "lilac".
+    pub accent: String,
     pub icon_size: u32,
     pub magnification: f32,
     pub show_running_unpinned: bool,
@@ -101,6 +103,7 @@ impl Default for Config {
                 widget("clock", "small"),
             ],
             theme: "glass".into(),
+            accent: "coral".into(),
             icon_size: 44,
             magnification: 1.6,
             show_running_unpinned: true,
@@ -172,6 +175,7 @@ mod tests {
         let config: Config = serde_json::from_str(r#"{"theme":"neon"}"#).unwrap();
         assert_eq!(config.theme, "neon");
         assert_eq!(config.icon_size, 44);
+        assert_eq!(config.accent, "coral");
         assert!(!config.widgets.is_empty());
         assert!(config.dock_order.is_empty());
         assert!(config.show_start_button);

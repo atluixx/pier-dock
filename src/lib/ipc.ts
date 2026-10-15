@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { Accent } from "../theme/accents";
 
 export interface AppEntry {
   id: string;
@@ -29,6 +30,7 @@ export interface Config {
   pinnedApps: AppEntry[];
   widgets: WidgetConfig[];
   theme: string;
+  accent: Accent;
   iconSize: number;
   magnification: number;
   showRunningUnpinned: boolean;

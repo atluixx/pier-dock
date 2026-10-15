@@ -15,9 +15,8 @@ export function App() {
   }, [load]);
 
   useEffect(() => {
-    // As configurações usam sempre a paleta padrão; o tema vale para a dock e os painéis.
-    if (config && currentView.view !== "settings") document.documentElement.dataset.theme = config.theme;
-  }, [config?.theme]);
+    if (config) document.documentElement.dataset.accent = config.accent;
+  }, [config?.accent]);
 
   if (!config) return null;
   if (currentView.view === "panel") return <Panel kind={currentView.kind} />;

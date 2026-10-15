@@ -42,6 +42,7 @@ const config: Config = {
     { kind: "clock", enabled: true, size: "small" },
   ],
   theme: "glass",
+  accent: "coral",
   iconSize: 40,
   magnification: 1,
   showRunningUnpinned: true,

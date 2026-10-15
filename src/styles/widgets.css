@@ -1,0 +1,275 @@
+.widget-slot {
+  display: flex;
+  align-items: flex-end;
+}
+
+.tile {
+  position: relative;
+  height: var(--icon);
+  min-width: var(--icon);
+  border-radius: var(--radius-card);
+  background: var(--fill-selected);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.tile:is(:hover, [data-hover]) {
+  background: var(--fill-active);
+  transform: translateY(-2px);
+}
+
+.tile:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.tile.wide {
+  width: calc(var(--icon) * 4.6);
+  justify-content: flex-start;
+  padding: 0 8px 0 4px;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.success {
+  background: var(--success);
+}
+
+.status-dot.failure {
+  background: var(--danger);
+}
+
+.status-dot.pending {
+  background: var(--warning);
+}
+
+.sys-tile {
+  min-width: calc(var(--icon) * 0.75);
+  padding: 0 6px;
+  background: transparent;
+}
+
+.sys-tile.low {
+  color: var(--danger);
+}
+
+.sys-text {
+  font-size: 12px;
+}
+
+.clock-tile {
+  flex-direction: column;
+  gap: 0;
+  padding: 0 8px;
+  background: transparent;
+  line-height: 1.15;
+}
+
+.clock-time {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.clock-date {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.media-tile {
+  overflow: visible;
+}
+
+.media-tile.idle {
+  color: var(--text-secondary);
+}
+
+.media-cover {
+  position: relative;
+  width: calc(var(--icon) - 8px);
+  height: calc(var(--icon) - 8px);
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: var(--fill-selected) center / cover no-repeat;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.media-tile.playing .media-cover {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.media-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--scrim);
+  color: var(--text-strong);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.media-tile:is(:hover, [data-hover]) .media-overlay {
+  opacity: 1;
+}
+
+.media-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.media-title,
+.media-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.media-artist {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.media-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.media-buttons button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.media-buttons button:is(:hover, [data-hover]) {
+  background: var(--fill-active);
+}
+
+.mini-heatmap,
+.heatmap {
+  display: flex;
+  gap: 2px;
+}
+
+/* Colunas e células esticam para preencher o espaço (tile ou painel). */
+.heat-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heat-col .heat {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Células quadradas de tamanho fixo: 7 linhas cabem na altura do tile. */
+.contrib-tile {
+  --cell-gap: 1px;
+  --cell: calc((var(--icon) - 10px - 6 * var(--cell-gap)) / 7);
+  width: auto;
+  padding: 5px;
+}
+
+.contrib-tile.wide {
+  width: auto;
+  gap: 10px;
+  padding: 5px 8px 5px 12px;
+}
+
+.contrib-summary {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.contrib-total {
+  font-size: calc(var(--icon) * 0.36);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.contrib-caption {
+  font-size: calc(var(--icon) * 0.21);
+  color: var(--text-secondary);
+}
+
+.mini-heatmap {
+  gap: var(--cell-gap);
+}
+
+.mini-heatmap .heat-col {
+  flex: none;
+  gap: var(--cell-gap);
+}
+
+.mini-heatmap .heat-col .heat {
+  flex: none;
+  width: var(--cell);
+  height: var(--cell);
+  border-radius: 1px;
+}
+
+/* Dias que faltam para completar a semana. Não usar `.empty`: essa classe já tem padding (painéis). */
+.heat.blank {
+  background: transparent !important;
+}
+
+.heat {
+  display: block;
+  background: var(--heat-0);
+}
+
+.heat.l1 {
+  background: var(--heat-1);
+}
+
+.heat.l2 {
+  background: var(--heat-2);
+}
+
+.heat.l3 {
+  background: var(--heat-3);
+}
+
+.heat.l4 {
+  background: var(--heat-4);
+}
