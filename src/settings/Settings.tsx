@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, LayoutGrid, Minus, Plus, Puzzle, Trash2 } from "lucide-react";
 import { disable as disableAutostart, enable as enableAutostart, isEnabled as autostartEnabled } from "@tauri-apps/plugin-autostart";
 import { ipc, type AppEntry, type Config, type PlatformInfo, type WidgetConfig } from "../lib/ipc";
 import { labels, os } from "../lib/platform";
 import { useConfig } from "../store/config";
 import { useIcon } from "../hooks/useIcon";
 import { iconKeyForEntry } from "../dock/apps";
+import { addDivider, appKey, applyOrder, isDivider, removeItem, resolveOrder, START_KEY } from "../dock/order";
 
 const TABS = ["Apps", "Widgets", "Aparência", "GitHub", "Geral"] as const;
 type Tab = (typeof TABS)[number];
@@ -58,33 +59,74 @@ function AppsTab({ config, update }: { config: Config; update: (p: Partial<Confi
   }, [installed, query, config.pinnedApps]);
 
   const setPinned = (pinnedApps: AppEntry[]) => update({ pinnedApps });
+  const order = resolveOrder(config);
+  const appsById = new Map(config.pinnedApps.map((p) => [appKey(p.id), p]));
+  const appKeys = order.filter((key) => appsById.has(key));
+
+  const row = (key: string) => {
+    const app = appsById.get(key);
+    if (app) {
+      const n = appKeys.indexOf(key);
+      return (
+        <>
+          <AppRowIcon iconKey={iconKeyForEntry(app)} />
+          <div className="row-main">
+            <div>{app.name}</div>
+            <div className="row-sub">{app.target}</div>
+          </div>
+          <span className="row-sub">Ctrl+Alt+{n < 9 ? n + 1 : "—"}</span>
+        </>
+      );
+    }
+    const [Icon, name] =
+      key === START_KEY
+        ? [LayoutGrid, `Botão ${labels.startButton}`]
+        : isDivider(key)
+          ? [Minus, "Separador"]
+          : [Puzzle, WIDGET_NAMES[key.slice("widget:".length)] ?? key];
+    return (
+      <>
+        <Icon className="row-icon glyph" size={18} />
+        <div className="row-main">
+          <div>{name}</div>
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="tab-grid">
       <section>
-        <h3>Fixados na dock</h3>
-        <p className="hint">Dica: arraste ícones na própria dock para reordenar, ou {labels.dropHint}.</p>
+        <h3>Itens da dock</h3>
+        <p className="hint">
+          Apps, widgets e separadores, na ordem da dock. Arraste os itens na própria dock para reordenar, ou {labels.dropHint}.
+        </p>
         <ul className="rows">
-          {config.pinnedApps.map((app, i) => (
-            <li key={app.id}>
-              <AppRowIcon iconKey={iconKeyForEntry(app)} />
-              <div className="row-main">
-                <div>{app.name}</div>
-                <div className="row-sub">{app.target}</div>
-              </div>
-              <span className="row-sub">Ctrl+Alt+{i < 9 ? i + 1 : "—"}</span>
-              <button className="icon-btn" onClick={() => setPinned(move(config.pinnedApps, i, -1))}>
+          {order.map((key, i) => (
+            <li key={key}>
+              {row(key)}
+              <button className="icon-btn" onClick={() => update(applyOrder(config, move(order, i, -1)))}>
                 <ArrowUp size={15} />
               </button>
-              <button className="icon-btn" onClick={() => setPinned(move(config.pinnedApps, i, 1))}>
+              <button className="icon-btn" onClick={() => update(applyOrder(config, move(order, i, 1)))}>
                 <ArrowDown size={15} />
               </button>
-              <button className="icon-btn danger" onClick={() => setPinned(config.pinnedApps.filter((p) => p.id !== app.id))}>
+              <button className="icon-btn danger" onClick={() => update(removeItem(config, key))}>
                 <Trash2 size={15} />
               </button>
             </li>
           ))}
         </ul>
+        <div className="inline">
+          <button className="btn ghost" onClick={() => update(addDivider(config))}>
+            Adicionar separador
+          </button>
+          {!config.showStartButton && (
+            <button className="btn ghost" onClick={() => update({ showStartButton: true })}>
+              Mostrar botão {labels.startButton}
+            </button>
+          )}
+        </div>
       </section>
       <section>
         <h3>Adicionar app</h3>
@@ -113,9 +155,9 @@ function WidgetsTab({ config, update }: { config: Config; update: (p: Partial<Co
   return (
     <section>
       <h3>Widgets</h3>
-      <p className="hint">Aparecem à direita dos apps, nesta ordem.</p>
+      <p className="hint">Os widgets ligados entram no fim da dock; arraste-os na dock para misturá-los com os apps.</p>
       <ul className="rows">
-        {config.widgets.map((w, i) => (
+        {config.widgets.map((w) => (
           <li key={w.kind}>
             <label className="check">
               <input
@@ -137,12 +179,6 @@ function WidgetsTab({ config, update }: { config: Config; update: (p: Partial<Co
                 <option value="wide">Largo</option>
               </select>
             )}
-            <button className="icon-btn" onClick={() => set(move(config.widgets, i, -1))}>
-              <ArrowUp size={15} />
-            </button>
-            <button className="icon-btn" onClick={() => set(move(config.widgets, i, 1))}>
-              <ArrowDown size={15} />
-            </button>
           </li>
         ))}
       </ul>
@@ -305,7 +341,7 @@ function GeneralTab({ config, update, platform }: { config: Config; update: (p: 
         <select value={config.autoHide} onChange={(e) => update({ autoHide: e.target.value as Config["autoHide"] })}>
           <option value="smart">Quando um app estiver em uso (aparece na área de trabalho)</option>
           <option value="always">Sempre</option>
-          <option value="never">Nunca (reserva espaço na tela)</option>
+          <option value="never">{labels.autoHideNever}</option>
         </select>
       </label>
       <p className="hint">Com a dock oculta, encoste o mouse na borda de baixo da tela para ela aparecer.</p>

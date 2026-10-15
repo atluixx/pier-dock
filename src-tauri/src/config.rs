@@ -47,6 +47,10 @@ pub struct Config {
     /// "never", "smart" (esconde quando um app está em foco) ou "always".
     pub auto_hide: String,
     pub github_poll_minutes: u32,
+    /// Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. Vazia em
+    /// configs antigas; o frontend completa e limpa a lista.
+    pub dock_order: Vec<String>,
+    pub show_start_button: bool,
 }
 
 fn widget(kind: &str, size: &str) -> WidgetConfig {
@@ -103,6 +107,8 @@ impl Default for Config {
             hide_taskbar: true,
             auto_hide: "smart".into(),
             github_poll_minutes: 3,
+            dock_order: Vec::new(),
+            show_start_button: true,
         }
     }
 }
@@ -167,5 +173,7 @@ mod tests {
         assert_eq!(config.theme, "neon");
         assert_eq!(config.icon_size, 44);
         assert!(!config.widgets.is_empty());
+        assert!(config.dock_order.is_empty());
+        assert!(config.show_start_button);
     }
 }

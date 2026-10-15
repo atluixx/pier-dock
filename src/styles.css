@@ -4,19 +4,21 @@
     system-ui, sans-serif;
   --radius: 20px;
   --tile-radius: 12px;
-  /* Tom da dock: os painéis usam o mesmo, só que mais opaco (sem blur real atrás da janela). */
-  --surface: 32, 34, 40;
-  --bar-bg: rgba(var(--surface), 0.78);
-  --bar-border: rgba(255, 255, 255, 0.14);
-  --bar-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  --fg: #f4f5f7;
-  --fg-muted: rgba(244, 245, 247, 0.62);
+  /* Zinc do Tailwind: barra em zinc-800, painéis e tooltips em zinc-900. Fora do macOS não há
+     blur real atrás da janela, então um brilho no topo faz as vezes do vidro. */
+  --surface: 39, 39, 42;
+  --panel-surface: 24, 24, 27;
+  --bar-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.01) 60%), rgba(var(--surface), 0.76);
+  --bar-border: rgba(255, 255, 255, 0.12);
+  --bar-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --fg: #fafafa;
+  --fg-muted: rgba(250, 250, 250, 0.6);
   --tile-bg: rgba(255, 255, 255, 0.08);
   --tile-hover: rgba(255, 255, 255, 0.16);
-  --accent: #6ea8ff;
+  --accent: #e4e4e7;
   --indicator: rgba(255, 255, 255, 0.55);
   --indicator-active: #ffffff;
-  --panel-bg: rgba(var(--surface), 0.92);
+  --panel-bg: rgba(var(--panel-surface), 0.94);
   --panel-inset: 12px;
   --panel-accent: var(--fg);
   --panel-on-accent: #1d1d1f;
@@ -26,7 +28,7 @@
   --panel-border: rgba(0, 0, 0, 0.45);
   --panel-highlight: rgba(255, 255, 255, 0.12);
   --panel-shadow: 0 14px 36px rgba(0, 0, 0, 0.38), 0 3px 10px rgba(0, 0, 0, 0.22);
-  --tooltip-bg: rgba(20, 20, 24, 0.92);
+  --tooltip-bg: rgba(var(--panel-surface), 0.92);
   --badge: #ff5a5f;
   --ok: #3fb950;
   --fail: #f85149;
@@ -36,8 +38,20 @@
   --heat-2: #006d32;
   --heat-3: #26a641;
   --heat-4: #39d353;
-  --settings-bg: #1b1d22;
-  --settings-card: #23262d;
+  --settings-bg: #18181b;
+  --settings-card: #27272a;
+}
+
+/* macOS: o Liquid Glass é nativo (atrás do WebView); a barra e os painéis só tingem por cima. */
+html[data-os="macos"][data-theme="glass"] {
+  --bar-bg: rgba(var(--panel-surface), 0.16);
+  --bar-border: rgba(255, 255, 255, 0.1);
+  --bar-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.16);
+  --tile-bg: rgba(255, 255, 255, 0.1);
+  --tile-hover: rgba(255, 255, 255, 0.2);
+  --panel-bg: rgba(var(--panel-surface), 0.3);
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --panel-highlight: rgba(255, 255, 255, 0.16);
 }
 
 [data-theme="midnight"] {
@@ -218,7 +232,7 @@ button {
   touch-action: none;
 }
 
-.dock-item.dragging {
+.dragging {
   z-index: 10;
   opacity: 0.85;
 }
@@ -272,7 +286,7 @@ button {
   background: var(--tile-bg);
 }
 
-.start-button:hover {
+.start-button:is(:hover, [data-hover]) {
   background: var(--tile-hover);
 }
 
@@ -306,13 +320,19 @@ button {
   background: var(--indicator);
 }
 
+/* A área do separador é mais larga que a linha, para dar para arrastá-lo. */
+.divider-item {
+  height: var(--icon);
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  touch-action: none;
+}
+
 .divider {
-  align-self: center;
   width: 1px;
-  height: calc(var(--icon) * 0.75);
-  margin: 0 4px 0 4px;
+  height: 75%;
   background: var(--bar-border);
-  margin-bottom: calc(var(--icon) * 0.125);
 }
 
 .tooltip {
@@ -366,7 +386,7 @@ button {
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
-.tile:hover {
+.tile:is(:hover, [data-hover]) {
   background: var(--tile-hover);
   transform: translateY(-2px);
 }
@@ -486,7 +506,7 @@ button {
   transition: opacity 0.15s ease;
 }
 
-.media-tile:hover .media-overlay {
+.media-tile:is(:hover, [data-hover]) .media-overlay {
   opacity: 1;
 }
 
@@ -526,7 +546,7 @@ button {
   place-items: center;
 }
 
-.media-buttons button:hover {
+.media-buttons button:is(:hover, [data-hover]) {
   background: var(--tile-hover);
 }
 
@@ -702,7 +722,7 @@ button {
   color: var(--fg-muted);
 }
 
-.icon-btn:hover {
+.icon-btn:is(:hover, [data-hover]) {
   background: var(--tile-hover);
   color: var(--fg);
 }
@@ -713,11 +733,11 @@ button {
   border-radius: 50%;
 }
 
-.panel .icon-btn:hover {
+.panel .icon-btn:is(:hover, [data-hover]) {
   background: var(--panel-hover);
 }
 
-.icon-btn.danger:hover {
+.icon-btn.danger:is(:hover, [data-hover]) {
   color: var(--fail);
 }
 
@@ -760,12 +780,12 @@ button {
   background: var(--panel-separator);
 }
 
-.list li:hover {
+.list li:is(:hover, [data-hover]) {
   background: var(--panel-hover);
 }
 
-.list li:hover::before,
-.list li:hover + li::before {
+.list li:is(:hover, [data-hover])::before,
+.list li:is(:hover, [data-hover]) + li::before {
   background: transparent;
 }
 
@@ -977,7 +997,7 @@ button {
   cursor: pointer;
 }
 
-.progress.seekable:hover {
+.progress.seekable:is(:hover, [data-hover]) {
   height: 6px;
   margin-bottom: -2px;
 }
@@ -1013,7 +1033,7 @@ button {
   transition: background 0.12s ease, transform 0.12s ease;
 }
 
-.media-big-buttons button:hover:not(:disabled) {
+.media-big-buttons button:is(:hover, [data-hover]):not(:disabled) {
   background: var(--panel-hover);
 }
 
@@ -1034,7 +1054,7 @@ button {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-.media-big-buttons .primary:hover:not(:disabled) {
+.media-big-buttons .primary:is(:hover, [data-hover]):not(:disabled) {
   background: var(--panel-accent);
   filter: brightness(0.92);
 }
@@ -1059,7 +1079,7 @@ button {
   white-space: nowrap;
 }
 
-.session-switch button:hover {
+.session-switch button:is(:hover, [data-hover]) {
   color: var(--fg);
 }
 
@@ -1103,7 +1123,7 @@ html[data-view="settings"] body {
   color: var(--fg-muted);
 }
 
-.settings nav button:hover {
+.settings nav button:is(:hover, [data-hover]) {
   background: var(--tile-bg);
 }
 
@@ -1183,6 +1203,13 @@ code {
   height: 28px;
   object-fit: contain;
   flex-shrink: 0;
+}
+
+.row-icon.glyph {
+  padding: 5px;
+  border-radius: 6px;
+  background: var(--tile-bg);
+  color: var(--fg-muted);
 }
 
 .row-icon.placeholder {

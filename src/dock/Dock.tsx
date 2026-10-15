@@ -16,13 +16,21 @@ import { buildDockApps, type DockApp } from "./apps";
 import { dockMetrics } from "./layout";
 import { MagnifyCtx, Magnify } from "./Magnify";
 import { AppIcon } from "./AppIcon";
+import { SortableItem } from "./SortableItem";
+import { addDivider, applyOrder, isDivider, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
 import { MediaWidget } from "../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../widgets/GithubWidgets";
 import { BatteryWidget, ClockWidget, NetworkWidget, VolumeWidget } from "../widgets/SystemWidgets";
 
-function StartButton() {
+function StartButton({ onRemove }: { onRemove: () => void }) {
+  const onContextMenu = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const menu = await Menu.new({ items: [{ id: "remove", text: "Remover da dock", action: onRemove }] });
+    await menu.popup();
+  };
   return (
-    <div className="dock-item">
+    <SortableItem id={START_KEY} className="dock-item" onContextMenu={onContextMenu}>
       <Magnify>
         <button className="app-icon start-button" onClick={() => ipc.openShell("start")} title={labels.startButton}>
           {os === "windows" ? (
@@ -41,7 +49,21 @@ function StartButton() {
         </button>
       </Magnify>
       <div className="indicator" />
-    </div>
+    </SortableItem>
+  );
+}
+
+function Divider({ id, onRemove }: { id: string; onRemove: () => void }) {
+  const onContextMenu = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const menu = await Menu.new({ items: [{ id: "remove", text: "Remover separador", action: onRemove }] });
+    await menu.popup();
+  };
+  return (
+    <SortableItem id={id} className="divider-item" onContextMenu={onContextMenu}>
+      <div className="divider" />
+    </SortableItem>
   );
 }
 
@@ -97,8 +119,10 @@ export function Dock({ config }: { config: Config }) {
     const report = () => {
       const width = bar.offsetWidth;
       const height = bar.offsetHeight;
-      const bottom = parseFloat(getComputedStyle(bar).bottom) || 0;
-      ipc.setHitRect({ x: (window.innerWidth - width) / 2, y: window.innerHeight - bottom - height, width, height });
+      const style = getComputedStyle(bar);
+      const bottom = parseFloat(style.bottom) || 0;
+      const radius = parseFloat(style.borderTopLeftRadius) || 0;
+      ipc.setHitRect({ x: (window.innerWidth - width) / 2, y: window.innerHeight - bottom - height, width, height, radius });
     };
     const observer = new ResizeObserver(report);
     observer.observe(bar);
@@ -108,7 +132,8 @@ export function Dock({ config }: { config: Config }) {
       observer.disconnect();
       window.removeEventListener("resize", report);
     };
-  }, []);
+    // O tema muda o raio dos cantos, que o vidro do macOS acompanha.
+  }, [config.theme]);
 
   // Ocultar automaticamente: o Rust decide quando a dock aparece; aqui só anima.
   const [visible, setVisible] = useState(true);
@@ -142,7 +167,8 @@ export function Dock({ config }: { config: Config }) {
         const app = appsRef.current[e.payload];
         if (app) clickApp(app);
       }),
-      // Arrastar um .exe/.lnk/.desktop/.app/pasta do gerenciador de arquivos para a dock fixa o item.
+      // Arrastar um .exe/.lnk/.desktop/.app/pasta do gerenciador de arquivos para a dock fixa o item
+      // (no fim da ordem).
       getCurrentWebview().onDragDropEvent(async (e) => {
         if (e.payload.type !== "drop") return;
         const entries = await Promise.all(e.payload.paths.map((p) => ipc.resolveAppPath(p)));
@@ -155,24 +181,30 @@ export function Dock({ config }: { config: Config }) {
   }, [mouseX, update]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const pinnedKeys = apps.filter((a) => a.pinned).map((a) => a.key);
+  const order = resolveOrder(config);
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
     update((c) => {
-      const ids = c.pinnedApps.map((p) => `pin:${p.id}`);
-      const from = ids.indexOf(String(active.id));
-      const to = ids.indexOf(String(over.id));
+      const keys = resolveOrder(c);
+      const from = keys.indexOf(String(active.id));
+      const to = keys.indexOf(String(over.id));
       if (from < 0 || to < 0) return {};
-      return { pinnedApps: arrayMove(c.pinnedApps, from, to) };
+      return applyOrder(c, arrayMove(keys, from, to));
     });
   };
+
+  const remove = (key: string) => update((c) => removeItem(c, key));
 
   const onBackgroundMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
     const menu = await Menu.new({
       items: [
         { id: "settings", text: "Configurações da dock", action: () => ipc.openSettings() },
+        { id: "divider", text: "Adicionar separador", action: () => update((c) => addDivider(c)) },
+        ...(config.showStartButton
+          ? []
+          : [{ id: "start", text: `Mostrar botão ${labels.startButton}`, action: () => update({ showStartButton: true }) }]),
         { id: "reload", text: "Recarregar", action: () => location.reload() },
         { item: "Separator" },
         { id: "quit", text: labels.quit, action: () => ipc.quit() },
@@ -205,8 +237,31 @@ export function Dock({ config }: { config: Config }) {
     }
   };
 
-  const widgets = config.widgets.filter((w) => w.enabled);
+  const pinnedApps = new Map(apps.filter((a) => a.pinned).map((a) => [a.key, a]));
+  const unpinnedApps = apps.filter((a) => !a.pinned);
+  const widgets = new Map(config.widgets.filter((w) => w.enabled).map((w) => [widgetKey(w.kind), w]));
   const activeKey = apps.find((a) => a.windows.some((w) => w.id === snapshot.foreground))?.key;
+
+  const renderItem = (key: string) => {
+    if (key === START_KEY) return <StartButton key={key} onRemove={() => remove(key)} />;
+    if (isDivider(key)) return <Divider key={key} id={key} onRemove={() => remove(key)} />;
+    const app = pinnedApps.get(key);
+    if (app) return <AppIcon key={key} app={app} active={key === activeKey} sortable />;
+    const widget = widgets.get(key);
+    if (widget) {
+      return (
+        <SortableItem key={key} id={key} className="widget-slot">
+          {renderWidget(widget)}
+        </SortableItem>
+      );
+    }
+    return null;
+  };
+
+  // Clicar em qualquer outro lugar da dock fecha o painel aberto; o próprio tile alterna o dele.
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!(e.target as Element).closest(".tile")) ipc.closePanel();
+  };
 
   return (
     <div className="dock-root" style={{ ["--icon" as string]: `${config.iconSize}px` }}>
@@ -216,24 +271,19 @@ export function Dock({ config }: { config: Config }) {
         style={{ bottom: metrics.margin, height: metrics.barHeight, padding: `0 ${metrics.padding}px` }}
         onMouseMove={(e) => mouseX.set(e.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}
+        onPointerDown={onPointerDown}
         onContextMenu={onBackgroundMenu}
       >
         <MagnifyCtx.Provider value={{ mouseX, base: config.iconSize, scale: Math.max(1, config.magnification) }}>
-          <StartButton />
           <DndContext sensors={sensors} onDragStart={() => mouseX.set(Infinity)} onDragEnd={onDragEnd}>
-            <SortableContext items={pinnedKeys} strategy={horizontalListSortingStrategy}>
-              {apps.map((app) => (
-                <AppIcon key={app.key} app={app} active={app.key === activeKey} sortable={!!app.pinned} />
-              ))}
+            <SortableContext items={order} strategy={horizontalListSortingStrategy}>
+              {order.map(renderItem)}
             </SortableContext>
           </DndContext>
+          {unpinnedApps.map((app) => (
+            <AppIcon key={app.key} app={app} active={app.key === activeKey} sortable={false} />
+          ))}
         </MagnifyCtx.Provider>
-        {widgets.length > 0 && <div className="divider" />}
-        {widgets.map((w) => (
-          <div key={w.kind} className="widget-slot">
-            {renderWidget(w)}
-          </div>
-        ))}
       </div>
     </div>
   );

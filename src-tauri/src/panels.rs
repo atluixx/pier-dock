@@ -10,6 +10,13 @@ use crate::util::ErrStr;
 
 pub const SETTINGS_LABEL: &str = "settings";
 
+/// Margem transparente da janela em volta do painel e raio dos cantos, iguais a `--panel-inset` e
+/// ao `border-radius` de `.panel` no CSS.
+#[cfg(target_os = "macos")]
+const PANEL_INSET: f64 = 12.0;
+#[cfg(target_os = "macos")]
+const PANEL_RADIUS: f64 = 18.0;
+
 /// (label, kind) do painel aberto. Cada painel ganha um label novo porque fechar uma janela é
 /// assíncrono e reutilizar o label logo em seguida falharia.
 static OPEN_PANEL: Mutex<Option<(String, String)>> = Mutex::new(None);
@@ -23,7 +30,7 @@ fn view_script(view: &str, kind: &str) -> String {
     )
 }
 
-fn close_open_panel(app: &AppHandle) -> Option<String> {
+pub fn close_open_panel(app: &AppHandle) -> Option<String> {
     let (label, kind) = OPEN_PANEL.lock().unwrap().take()?;
     if let Some(window) = app.get_webview_window(&label) {
         let _ = window.destroy();
@@ -70,13 +77,26 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64,
             let _ = window.set_focus();
         }
     });
+    #[cfg(target_os = "macos")]
+    let builder = builder.accept_first_mouse(true);
     let window = builder.build().err_str()?;
+    #[cfg(target_os = "macos")]
+    {
+        use crate::platform::macos::{glass, pointer};
+        pointer::forward(&window);
+        let rect = glass::Rect { x: PANEL_INSET, y: PANEL_INSET, width: width - 2.0 * PANEL_INSET, height: height - 2.0 * PANEL_INSET };
+        glass::set_frame(&window, rect, PANEL_RADIUS);
+    }
 
     // Fecha ao perder o foco, mas só depois de ter tido foco: no X11 a janela recém-criada recebe
     // um "sem foco" antes de ser focada, o que a fechava na hora.
     let handle = window.clone();
     let was_focused = AtomicBool::new(false);
     window.on_window_event(move |event| {
+        #[cfg(target_os = "macos")]
+        if let WindowEvent::Destroyed = event {
+            crate::platform::macos::glass::forget(handle.label());
+        }
         if let WindowEvent::Focused(focused) = event {
             if *focused {
                 was_focused.store(true, Ordering::SeqCst);

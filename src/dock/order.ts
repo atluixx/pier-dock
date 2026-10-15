@@ -1,0 +1,78 @@
+import type { Config } from "../lib/ipc";
+
+/** Ordem livre dos itens da dock. `pinnedApps` e `widgets` guardam os dados; `dockOrder`, só a posição. */
+type OrderConfig = Pick<Config, "dockOrder" | "pinnedApps" | "widgets" | "showStartButton">;
+
+export const START_KEY = "start";
+export const appKey = (id: string) => `app:${id}`;
+export const widgetKey = (kind: string) => `widget:${kind}`;
+export const isDivider = (key: string) => key.startsWith("divider:");
+
+/** Itens que devem estar na dock, sem separadores. */
+function itemKeys(config: OrderConfig): string[] {
+  return [
+    ...(config.showStartButton ? [START_KEY] : []),
+    ...config.pinnedApps.map((p) => appKey(p.id)),
+    ...config.widgets.filter((w) => w.enabled).map((w) => widgetKey(w.kind)),
+  ];
+}
+
+/** A dock antes da ordem livre: botão de apps, apps, um separador e os widgets. */
+function legacyOrder(config: OrderConfig): string[] {
+  const widgets = config.widgets.filter((w) => w.enabled).map((w) => widgetKey(w.kind));
+  return [
+    ...(config.showStartButton ? [START_KEY] : []),
+    ...config.pinnedApps.map((p) => appKey(p.id)),
+    ...(widgets.length ? ["divider:default"] : []),
+    ...widgets,
+  ];
+}
+
+/**
+ * Ordem a renderizar: a salva, sem itens que não existem mais (app desafixado, widget desligado) e
+ * com os que ainda não têm lugar (app recém-fixado, widget recém-ligado) no fim.
+ */
+export function resolveOrder(config: OrderConfig): string[] {
+  if (!config.dockOrder.length) return legacyOrder(config);
+  const valid = new Set(itemKeys(config));
+  const seen = new Set<string>();
+  const kept = config.dockOrder.filter((key) => {
+    if (seen.has(key) || (!isDivider(key) && !valid.has(key))) return false;
+    seen.add(key);
+    return true;
+  });
+  return [...kept, ...[...valid].filter((key) => !seen.has(key))];
+}
+
+/**
+ * Salva uma nova ordem e reordena `pinnedApps` e `widgets` para acompanhá-la — assim o Ctrl+Alt+N
+ * e as listas das configurações seguem a ordem da dock. Widgets desligados vão para o fim.
+ */
+export function applyOrder(config: OrderConfig, keys: string[]): Pick<Config, "dockOrder" | "pinnedApps" | "widgets"> {
+  const rank = new Map(keys.map((key, i) => [key, i]));
+  const pos = (key: string) => rank.get(key) ?? Number.MAX_SAFE_INTEGER;
+  return {
+    dockOrder: keys,
+    pinnedApps: [...config.pinnedApps].sort((a, b) => pos(appKey(a.id)) - pos(appKey(b.id))),
+    widgets: [...config.widgets].sort((a, b) => pos(widgetKey(a.kind)) - pos(widgetKey(b.kind))),
+  };
+}
+
+/** Tira um item da dock: desafixa o app, desliga o widget, esconde o botão de apps ou apaga o separador. */
+export function removeItem(config: OrderConfig, key: string): Partial<Config> {
+  const dockOrder = resolveOrder(config).filter((k) => k !== key);
+  if (key === START_KEY) return { dockOrder, showStartButton: false };
+  if (key.startsWith("app:")) {
+    const id = key.slice("app:".length);
+    return { dockOrder, pinnedApps: config.pinnedApps.filter((p) => p.id !== id) };
+  }
+  if (key.startsWith("widget:")) {
+    const kind = key.slice("widget:".length);
+    return { dockOrder, widgets: config.widgets.map((w) => (w.kind === kind ? { ...w, enabled: false } : w)) };
+  }
+  return { dockOrder };
+}
+
+export function addDivider(config: OrderConfig): Partial<Config> {
+  return { dockOrder: [...resolveOrder(config), `divider:${Date.now().toString(36)}`] };
+}

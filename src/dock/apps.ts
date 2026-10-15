@@ -1,6 +1,7 @@
 import type { AppEntry, WindowInfo } from "../lib/ipc";
 import { prettyExeName } from "../lib/format";
 import { os } from "../lib/platform";
+import { appKey } from "./order";
 
 export interface DockApp {
   key: string;
@@ -77,7 +78,7 @@ export function buildDockApps(
   installed: AppEntry[] = [],
 ): DockApp[] {
   const pinnedApps: DockApp[] = pinned.map((p) => ({
-    key: `pin:${p.id}`,
+    key: appKey(p.id),
     name: p.name,
     pinned: p,
     windows: [],

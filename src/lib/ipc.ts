@@ -35,6 +35,9 @@ export interface Config {
   hideTaskbar: boolean;
   autoHide: "never" | "smart" | "always";
   githubPollMinutes: number;
+  /** Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. */
+  dockOrder: string[];
+  showStartButton: boolean;
 }
 
 export interface WindowInfo {
@@ -130,7 +133,8 @@ export const ipc = {
 
   setDockLayout: (layout: { reservedHeight: number; windowHeight: number; hoverHeadroom: number }) =>
     invoke<void>("set_dock_layout", { layout }),
-  setHitRect: (rect: { x: number; y: number; width: number; height: number }) => invoke<void>("set_hit_rect", { rect }),
+  setHitRect: (rect: { x: number; y: number; width: number; height: number; radius: number }) =>
+    invoke<void>("set_hit_rect", { rect }),
   dockVisible: () => invoke<boolean>("dock_visible"),
   setDockHover: (hovering: boolean) => invoke<void>("set_dock_hover", { hovering }),
 

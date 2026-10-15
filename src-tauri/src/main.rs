@@ -168,6 +168,15 @@ fn main() {
             if let Some(dock) = app.get_webview_window(dock_window::DOCK_LABEL) {
                 dock_window::init(&dock);
             }
+            // O painel não recebe foco no macOS (o app nunca fica ativo), então "perder o foco" não
+            // serve para fechá-lo.
+            #[cfg(target_os = "macos")]
+            {
+                let panel_handle = handle.clone();
+                platform::macos::events::on_click_outside(move || {
+                    panels::close_open_panel(&panel_handle);
+                });
+            }
             windows_list::start(handle.clone());
             media::start(handle.clone());
             register_shortcuts(&handle);

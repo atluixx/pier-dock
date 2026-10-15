@@ -7,13 +7,12 @@ use std::time::Duration;
 use tauri::AppHandle;
 use zbus::zvariant::{OwnedObjectPath, OwnedValue, Value};
 
-use super::{image_data_url, now_ms, publish, thumbnail_key, MediaSession, MediaState};
+use super::{fetch_image, image_data_url, now_ms, publish, thumbnail_key, MediaSession, MediaState, MAX_ART_BYTES};
 use crate::platform::linux::dbus;
 
 const PREFIX: &str = "org.mpris.MediaPlayer2.";
 const PATH: &str = "/org/mpris/MediaPlayer2";
 const PLAYER: &str = "org.mpris.MediaPlayer2.Player";
-const MAX_ART_BYTES: usize = 5 * 1024 * 1024;
 
 type Metadata = HashMap<String, OwnedValue>;
 
@@ -79,22 +78,7 @@ fn read_art(url: &str) -> Option<String> {
         let ext = path.rsplit('.').next().unwrap_or_default().to_ascii_lowercase();
         return Some(image_data_url(&format!("image/{ext}"), &bytes));
     }
-    if !url.starts_with("https://") {
-        return None;
-    }
-    let url = url.to_string();
-    tauri::async_runtime::block_on(async move {
-        let client = reqwest::Client::builder().timeout(Duration::from_secs(5)).build().ok()?;
-        let response = client.get(&url).send().await.ok()?.error_for_status().ok()?;
-        let content_type = response
-            .headers()
-            .get(reqwest::header::CONTENT_TYPE)
-            .and_then(|v| v.to_str().ok())
-            .unwrap_or_default()
-            .to_string();
-        let bytes = response.bytes().await.ok().filter(|b| b.len() <= MAX_ART_BYTES)?;
-        Some(image_data_url(&content_type, &bytes))
-    })
+    fetch_image(url)
 }
 
 fn percent_decode(s: &str) -> String {

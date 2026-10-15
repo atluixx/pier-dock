@@ -51,13 +51,17 @@ pub struct HitRect {
     pub x: f64,
     pub y: f64,
     pub width: f64,
-    /// Não usado hoje: a área clicável vai do topo da barra até a base da tela.
-    #[allow(dead_code)]
+    /// A área clicável vai do topo da barra até a base da tela; a altura só serve ao vidro do macOS.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     pub height: f64,
+    /// Raio dos cantos da barra, para o vidro do macOS acompanhar o tema.
+    #[serde(default)]
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    pub radius: f64,
 }
 
 static LAYOUT: Mutex<Layout> = Mutex::new(Layout { reserved_height: 72.0, window_height: 170.0, hover_headroom: 80.0 });
-static HIT: Mutex<HitRect> = Mutex::new(HitRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 });
+static HIT: Mutex<HitRect> = Mutex::new(HitRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0, radius: 0.0 });
 
 fn layout() -> Layout {
     *LAYOUT.lock().unwrap()
@@ -150,6 +154,8 @@ pub fn reserved_top_and_scale(window: &WebviewWindow) -> Option<(f64, f64, f64, 
 
 /// Onde a janela da dock fica, em pixels físicos de tela.
 #[derive(Clone, Copy, Debug)]
+// O macOS não reserva área de trabalho, então só posiciona a janela.
+#[cfg_attr(target_os = "macos", allow(dead_code))]
 struct Placement {
     x: i32,
     /// Topo da janela.
