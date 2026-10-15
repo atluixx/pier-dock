@@ -6,6 +6,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { Menu } from "@tauri-apps/api/menu";
 import { ipc, type AppEntry, type Config, type WidgetConfig } from "../lib/ipc";
+import { labels, os } from "../lib/platform";
 import { useConfig } from "../store/config";
 import { useWindows } from "../hooks/useWindows";
 import { useMedia } from "../hooks/useMedia";
@@ -23,13 +24,20 @@ function StartButton() {
   return (
     <div className="dock-item">
       <Magnify>
-        <button className="app-icon start-button" onClick={() => ipc.openShell("start")} title="Iniciar">
-          <svg viewBox="0 0 24 24" aria-hidden>
-            <rect x="2" y="2" width="9.5" height="9.5" rx="1.2" />
-            <rect x="12.5" y="2" width="9.5" height="9.5" rx="1.2" />
-            <rect x="2" y="12.5" width="9.5" height="9.5" rx="1.2" />
-            <rect x="12.5" y="12.5" width="9.5" height="9.5" rx="1.2" />
-          </svg>
+        <button className="app-icon start-button" onClick={() => ipc.openShell("start")} title={labels.startButton}>
+          {os === "windows" ? (
+            <svg viewBox="0 0 24 24" aria-hidden>
+              <rect x="2" y="2" width="9.5" height="9.5" rx="1.2" />
+              <rect x="12.5" y="2" width="9.5" height="9.5" rx="1.2" />
+              <rect x="2" y="12.5" width="9.5" height="9.5" rx="1.2" />
+              <rect x="12.5" y="12.5" width="9.5" height="9.5" rx="1.2" />
+            </svg>
+          ) : (
+            // Grade de apps (GNOME / Launchpad).
+            <svg viewBox="0 0 24 24" aria-hidden>
+              {[4, 12, 20].flatMap((cy) => [4, 12, 20].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2.6" />))}
+            </svg>
+          )}
         </button>
       </Magnify>
       <div className="indicator" />
@@ -39,7 +47,7 @@ function StartButton() {
 
 /** Clique num app da dock (também usado pelos atalhos Ctrl+Alt+N). */
 function clickApp(app: DockApp) {
-  if (app.windows.length) ipc.toggleAppWindows(app.windows.map((w) => w.hwnd));
+  if (app.windows.length) ipc.toggleAppWindows(app.windows.map((w) => w.id));
   else ipc.launchApp(app.launchTarget).catch(console.error);
 }
 
@@ -112,6 +120,20 @@ export function Dock({ config }: { config: Config }) {
     };
   }, []);
 
+  // Linux: o click-through recorta a região de input da janela, e o Rust só sabe do hover por aqui.
+  useEffect(() => {
+    if (os !== "linux") return;
+    const root = document.documentElement;
+    const enter = () => ipc.setDockHover(true);
+    const leave = () => ipc.setDockHover(false);
+    root.addEventListener("mouseenter", enter);
+    root.addEventListener("mouseleave", leave);
+    return () => {
+      root.removeEventListener("mouseenter", enter);
+      root.removeEventListener("mouseleave", leave);
+    };
+  }, []);
+
   useEffect(() => {
     const subs = [
       // Quando o Rust liga o click-through, o WebView não recebe mouseleave.
@@ -120,7 +142,7 @@ export function Dock({ config }: { config: Config }) {
         const app = appsRef.current[e.payload];
         if (app) clickApp(app);
       }),
-      // Arrastar um .exe/.lnk/pasta do Explorer para a dock fixa o item.
+      // Arrastar um .exe/.lnk/.desktop/.app/pasta do gerenciador de arquivos para a dock fixa o item.
       getCurrentWebview().onDragDropEvent(async (e) => {
         if (e.payload.type !== "drop") return;
         const entries = await Promise.all(e.payload.paths.map((p) => ipc.resolveAppPath(p)));
@@ -153,7 +175,7 @@ export function Dock({ config }: { config: Config }) {
         { id: "settings", text: "Configurações da dock", action: () => ipc.openSettings() },
         { id: "reload", text: "Recarregar", action: () => location.reload() },
         { item: "Separator" },
-        { id: "quit", text: "Sair da dock (restaura a taskbar)", action: () => ipc.quit() },
+        { id: "quit", text: labels.quit, action: () => ipc.quit() },
       ],
     });
     await menu.popup();
@@ -184,7 +206,7 @@ export function Dock({ config }: { config: Config }) {
   };
 
   const widgets = config.widgets.filter((w) => w.enabled);
-  const activeKey = apps.find((a) => a.windows.some((w) => w.hwnd === snapshot.foreground))?.key;
+  const activeKey = apps.find((a) => a.windows.some((w) => w.id === snapshot.foreground))?.key;
 
   return (
     <div className="dock-root" style={{ ["--icon" as string]: `${config.iconSize}px` }}>

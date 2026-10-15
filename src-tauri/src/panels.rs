@@ -1,6 +1,6 @@
 //! Janelas auxiliares: painéis dos widgets (ancorados acima da dock) e a janela de configurações.
 
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Mutex;
 
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
@@ -44,10 +44,12 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64,
     let margin = 10.0 * scale;
     let (w, h) = (width * scale, height * scale);
     let x = (dock_x + anchor_x * scale - w / 2.0).clamp(mon_x + margin, mon_x + mon_w - w - margin);
-    let y = reserved_top - h - margin;
+    // A janela tem uma margem transparente em volta do painel (sombra), que já serve de espaço
+    // entre o painel e a dock.
+    let y = reserved_top - h;
 
     let label = format!("panel-{}", PANEL_COUNTER.fetch_add(1, Ordering::SeqCst));
-    let window = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App("index.html".into()))
+    let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App("index.html".into()))
         .initialization_script(&view_script("panel", &kind))
         .title("WinDock")
         .decorations(false)
@@ -58,13 +60,31 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64,
         .resizable(false)
         .inner_size(width, height)
         .position(x / scale, y / scale)
-        .focused(true)
-        .build()
-        .err_str()?;
+        .focused(true);
+    // No Linux a janela aparece preta até o WebKitGTK desenhar a primeira vez: só mostra depois
+    // que a página carregou.
+    #[cfg(target_os = "linux")]
+    let builder = builder.visible(false).on_page_load(|window, payload| {
+        if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    });
+    let window = builder.build().err_str()?;
 
+    // Fecha ao perder o foco, mas só depois de ter tido foco: no X11 a janela recém-criada recebe
+    // um "sem foco" antes de ser focada, o que a fechava na hora.
     let handle = window.clone();
+    let was_focused = AtomicBool::new(false);
     window.on_window_event(move |event| {
-        if let WindowEvent::Focused(false) = event {
+        if let WindowEvent::Focused(focused) = event {
+            if *focused {
+                was_focused.store(true, Ordering::SeqCst);
+                return;
+            }
+            if !was_focused.load(Ordering::SeqCst) {
+                return;
+            }
             let mut open = OPEN_PANEL.lock().unwrap();
             if open.as_ref().map(|(l, _)| l == handle.label()).unwrap_or(false) {
                 *open = None;

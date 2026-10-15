@@ -38,7 +38,8 @@ export interface Config {
 }
 
 export interface WindowInfo {
-  hwnd: number;
+  /** Identificador opaco da janela (HWND no Windows, id do Mutter/X11 no Linux, CGWindowID no macOS). */
+  id: number;
   title: string;
   exe: string;
   aumid?: string | null;
@@ -115,6 +116,13 @@ export interface Volume {
   muted: boolean;
 }
 
+export interface PlatformInfo {
+  os: "windows" | "linux" | "macos";
+  windowList: "ok" | "needs-extension" | "needs-relogin" | "needs-accessibility" | "unsupported";
+  hideNative: boolean;
+  shortcuts: boolean;
+}
+
 export const ipc = {
   getConfig: () => invoke<Config>("get_config"),
   saveConfig: (config: Config) => invoke<void>("save_config", { config }),
@@ -124,11 +132,12 @@ export const ipc = {
     invoke<void>("set_dock_layout", { layout }),
   setHitRect: (rect: { x: number; y: number; width: number; height: number }) => invoke<void>("set_hit_rect", { rect }),
   dockVisible: () => invoke<boolean>("dock_visible"),
+  setDockHover: (hovering: boolean) => invoke<void>("set_dock_hover", { hovering }),
 
   getWindows: () => invoke<WindowsSnapshot>("get_windows"),
-  toggleAppWindows: (hwnds: number[]) => invoke<void>("toggle_app_windows", { hwnds }),
-  activateWindow: (hwnd: number) => invoke<void>("activate_window", { hwndValue: hwnd }),
-  closeWindows: (hwnds: number[]) => invoke<void>("close_windows", { hwnds }),
+  toggleAppWindows: (ids: number[]) => invoke<void>("toggle_app_windows", { ids }),
+  activateWindow: (id: number) => invoke<void>("activate_window", { id }),
+  closeWindows: (ids: number[]) => invoke<void>("close_windows", { ids }),
 
   listInstalledApps: () => invoke<AppEntry[]>("list_installed_apps"),
   launchApp: (target: string) => invoke<void>("launch_app", { target }),
@@ -154,4 +163,7 @@ export const ipc = {
     invoke<void>("open_panel", { kind, anchorX, width, height }),
   closePanel: () => invoke<void>("close_panel"),
   openSettings: () => invoke<void>("open_settings"),
+
+  platformInfo: () => invoke<PlatformInfo>("platform_info"),
+  platformSetup: (action: "install-extension" | "request-accessibility") => invoke<void>("platform_setup", { action }),
 };

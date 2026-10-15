@@ -16,16 +16,26 @@ export function formatDuration(ms: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-/** "C:\Program Files\Foo\foo-bar.exe" → "Foo Bar" */
+/** "C:\Program Files\Foo\foo-bar.exe", "/usr/bin/foo-bar" ou "/Applications/Foo Bar.app" → "Foo Bar" */
 export function prettyExeName(exe: string): string {
-  const file = exe.split(/[\\/]/).pop() ?? exe;
-  const stem = file.replace(/\.exe$/i, "");
+  const file = exe.split(/[\\/]/).filter(Boolean).pop() ?? exe;
+  const stem = file.replace(/\.(exe|app|desktop)$/i, "");
   return stem.replace(/[-_.]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-/** Nome amigável do app que publica uma sessão de mídia, a partir do AUMID. */
+/**
+ * Nome amigável do app que publica uma sessão de mídia, a partir do id: AUMID no Windows, nome
+ * MPRIS (`org.mpris.MediaPlayer2.firefox.instance_1_23`) no Linux, bundle id no macOS.
+ */
 export function mediaSourceName(id: string): string {
   const lower = id.toLowerCase();
+  if (lower.startsWith("org.mpris.mediaplayer2.")) {
+    const player = id.slice("org.mpris.MediaPlayer2.".length).replace(/\.instance.*$/i, "");
+    return mediaSourceName(player);
+  }
+  if (lower === "com.apple.music") return "Música";
+  if (lower.includes("chromium")) return "Chromium";
+  if (lower.includes("brave")) return "Brave";
   if (lower.includes("spotify")) return "Spotify";
   if (lower.includes("music.youtube") || lower.includes("youtube music")) return "YouTube Music";
   if (lower.includes("chrome")) return "Chrome";

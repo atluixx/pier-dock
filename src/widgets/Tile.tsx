@@ -1,13 +1,16 @@
 import { useRef, useState, type ReactNode } from "react";
 import { ipc } from "../lib/ipc";
 
-/** Tamanho (px lógicos) do painel de cada widget. */
+/** Margem transparente da janela em volta do painel, para a sombra (igual a `--panel-inset`). */
+export const PANEL_INSET = 12;
+
+/** Tamanho visível (px lógicos) do painel de cada widget, sem a margem da sombra. */
 export const PANEL_SIZES: Record<string, [number, number]> = {
-  media: [360, 470],
+  media: [360, 430],
   "github-review": [420, 480],
   "github-mine": [420, 480],
   "github-commits": [420, 480],
-  "github-contrib": [780, 240],
+  "github-contrib": [800, 216],
 };
 
 interface TileProps {
@@ -31,7 +34,7 @@ export function Tile({ kind, wide, label, panel = true, onClick, onWheel, onCont
     if (!panel || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const [w, h] = PANEL_SIZES[kind] ?? [380, 420];
-    ipc.openPanel(kind, rect.left + rect.width / 2, w, h).catch(console.error);
+    ipc.openPanel(kind, rect.left + rect.width / 2, w + 2 * PANEL_INSET, h + 2 * PANEL_INSET).catch(console.error);
   };
 
   return (

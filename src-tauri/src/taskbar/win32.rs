@@ -1,4 +1,4 @@
-//! Esconde e restaura a taskbar nativa do Windows.
+//! Taskbar do Windows.
 //!
 //! A taskbar é colocada em "ocultar automaticamente" (para liberar a área de trabalho que ela
 //! reserva) e suas janelas são escondidas. O estado original fica salvo em disco, para que um
@@ -103,7 +103,7 @@ pub fn restore() {
     set_visible(true);
 }
 
-pub fn is_hidden() -> bool {
+fn is_hidden() -> bool {
     HIDDEN.load(Ordering::SeqCst)
 }
 
@@ -136,13 +136,8 @@ unsafe extern "system" fn console_handler(_ctrl: u32) -> BOOL {
     BOOL(0)
 }
 
-/// Garante que a taskbar volte em pânico e em Ctrl+C / fechamento do console (`tauri dev`).
-pub fn install_crash_guards() {
-    let default_hook = std::panic::take_hook();
-    std::panic::set_hook(Box::new(move |info| {
-        restore();
-        default_hook(info);
-    }));
+/// Ctrl+C / fechamento do console (`tauri dev`).
+pub fn install_signal_guard() {
     unsafe {
         let _ = SetConsoleCtrlHandler(Some(console_handler), true);
     }

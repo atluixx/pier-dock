@@ -10,11 +10,13 @@ use crate::util::{data_dir, ErrStr};
 pub struct AppEntry {
     pub id: String,
     pub name: String,
-    /// O que é aberto ao clicar: caminho de .exe/.lnk/pasta ou `shell:AppsFolder\<AUMID>`.
+    /// O que é aberto ao clicar: caminho de .exe/.lnk/pasta ou `shell:AppsFolder\<AUMID>` no
+    /// Windows, arquivo .desktop no Linux, bundle .app no macOS.
     pub target: String,
     /// Executável real, usado para casar o app fixado com janelas abertas.
     pub exe: Option<String>,
-    /// AppUserModelID (apps da Store, PWAs), também usado para casar janelas.
+    /// Identidade do app, também usada para casar janelas: AppUserModelID (apps da Store, PWAs)
+    /// no Windows, desktop id (`firefox.desktop`) no Linux, bundle id no macOS.
     pub aumid: Option<String>,
 }
 
@@ -51,16 +53,38 @@ fn widget(kind: &str, size: &str) -> WidgetConfig {
     WidgetConfig { kind: kind.into(), enabled: true, size: size.into() }
 }
 
+/// O gerenciador de arquivos do sistema, fixado na primeira execução.
+fn file_manager() -> AppEntry {
+    #[cfg(windows)]
+    return AppEntry {
+        id: "explorer".into(),
+        name: "Explorador de Arquivos".into(),
+        target: r"C:\Windows\explorer.exe".into(),
+        exe: Some(r"C:\Windows\explorer.exe".into()),
+        aumid: Some("Microsoft.Windows.Explorer".into()),
+    };
+    #[cfg(target_os = "linux")]
+    return AppEntry {
+        id: "files".into(),
+        name: "Arquivos".into(),
+        target: "/usr/share/applications/org.gnome.Nautilus.desktop".into(),
+        exe: Some("/usr/bin/nautilus".into()),
+        aumid: Some("org.gnome.Nautilus.desktop".into()),
+    };
+    #[cfg(target_os = "macos")]
+    return AppEntry {
+        id: "finder".into(),
+        name: "Finder".into(),
+        target: "/System/Library/CoreServices/Finder.app".into(),
+        exe: Some("/System/Library/CoreServices/Finder.app".into()),
+        aumid: Some("com.apple.finder".into()),
+    };
+}
+
 impl Default for Config {
     fn default() -> Self {
         Self {
-            pinned_apps: vec![AppEntry {
-                id: "explorer".into(),
-                name: "Explorador de Arquivos".into(),
-                target: r"C:\Windows\explorer.exe".into(),
-                exe: Some(r"C:\Windows\explorer.exe".into()),
-                aumid: Some("Microsoft.Windows.Explorer".into()),
-            }],
+            pinned_apps: vec![file_manager()],
             widgets: vec![
                 widget("media", "wide"),
                 widget("github-review", "small"),

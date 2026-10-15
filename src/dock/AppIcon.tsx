@@ -32,16 +32,16 @@ export function AppIcon({ app, active, sortable }: Props) {
 
   const onClick = (e: React.MouseEvent) => {
     if (e.shiftKey || app.windows.length === 0) launch();
-    else ipc.toggleAppWindows(app.windows.map((w) => w.hwnd));
+    else ipc.toggleAppWindows(app.windows.map((w) => w.id));
   };
 
   const onContextMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const windowItems = app.windows.slice(0, 10).map((w) => ({
-      id: `win-${w.hwnd}`,
+      id: `win-${w.id}`,
       text: w.title.length > 60 ? `${w.title.slice(0, 57)}…` : w.title,
-      action: () => ipc.activateWindow(w.hwnd),
+      action: () => ipc.activateWindow(w.id),
     }));
     const pinItem = app.pinned
       ? {
@@ -61,7 +61,7 @@ export function AppIcon({ app, active, sortable }: Props) {
               {
                 id: "close",
                 text: app.windows.length > 1 ? `Fechar ${app.windows.length} janelas` : "Fechar janela",
-                action: () => ipc.closeWindows(app.windows.map((w) => w.hwnd)),
+                action: () => ipc.closeWindows(app.windows.map((w) => w.id)),
               },
             ]
           : []),

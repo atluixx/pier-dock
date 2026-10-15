@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { disable as disableAutostart, enable as enableAutostart, isEnabled as autostartEnabled } from "@tauri-apps/plugin-autostart";
-import { ipc, type AppEntry, type Config, type WidgetConfig } from "../lib/ipc";
+import { ipc, type AppEntry, type Config, type PlatformInfo, type WidgetConfig } from "../lib/ipc";
+import { labels, os } from "../lib/platform";
 import { useConfig } from "../store/config";
 import { useIcon } from "../hooks/useIcon";
 import { iconKeyForEntry } from "../dock/apps";
@@ -62,7 +63,7 @@ function AppsTab({ config, update }: { config: Config; update: (p: Partial<Confi
     <div className="tab-grid">
       <section>
         <h3>Fixados na dock</h3>
-        <p className="hint">Dica: arraste ícones na própria dock para reordenar, ou solte um .exe/atalho nela para fixar.</p>
+        <p className="hint">Dica: arraste ícones na própria dock para reordenar, ou {labels.dropHint}.</p>
         <ul className="rows">
           {config.pinnedApps.map((app, i) => (
             <li key={app.id}>
@@ -223,7 +224,7 @@ function GithubTab({ config, update }: { config: Config; update: (p: Partial<Con
       <p>
         {source === undefined && "Verificando…"}
         {source === "gh" && "✅ Usando o token do GitHub CLI (gh auth token)."}
-        {source === "pat" && "✅ Usando o Personal Access Token salvo no Gerenciador de Credenciais."}
+        {source === "pat" && `✅ Usando o Personal Access Token salvo ${labels.keychain}.`}
         {source === null && "⚠️ Não conectado. Rode `gh auth login` no terminal ou cole um token abaixo."}
       </p>
       <div className="inline">
@@ -279,7 +280,7 @@ function GithubTab({ config, update }: { config: Config; update: (p: Partial<Con
   );
 }
 
-function GeneralTab({ config, update }: { config: Config; update: (p: Partial<Config>) => void }) {
+function GeneralTab({ config, update, platform }: { config: Config; update: (p: Partial<Config>) => void; platform: PlatformInfo | null }) {
   const [autostart, setAutostart] = useState<boolean | null>(null);
   useEffect(() => {
     autostartEnabled().then(setAutostart).catch(() => setAutostart(false));
@@ -297,7 +298,7 @@ function GeneralTab({ config, update }: { config: Config; update: (p: Partial<Co
             setAutostart(await autostartEnabled());
           }}
         />
-        Iniciar com o Windows
+        {labels.autostart}
       </label>
       <label className="inline">
         Ocultar a dock automaticamente:
@@ -308,14 +309,24 @@ function GeneralTab({ config, update }: { config: Config; update: (p: Partial<Co
         </select>
       </label>
       <p className="hint">Com a dock oculta, encoste o mouse na borda de baixo da tela para ela aparecer.</p>
-      <label className="check">
-        <input type="checkbox" checked={config.hideTaskbar} onChange={(e) => update({ hideTaskbar: e.target.checked })} />
-        Esconder a barra de tarefas do Windows enquanto a dock estiver aberta
-      </label>
-      <p className="hint">
-        Se a dock travar e a barra de tarefas não voltar, rode <code>win-dock.exe --restore-taskbar</code> (ou reinicie o
-        explorer.exe e rode o comando).
-      </p>
+      {platform?.hideNative && (
+        <label className="check">
+          <input type="checkbox" checked={config.hideTaskbar} onChange={(e) => update({ hideTaskbar: e.target.checked })} />
+          {labels.nativeBar}
+        </label>
+      )}
+      {os === "windows" && (
+        <p className="hint">
+          Se a dock travar e a barra de tarefas não voltar, rode <code>win-dock.exe --restore-taskbar</code> (ou reinicie o
+          explorer.exe e rode o comando).
+        </p>
+      )}
+      {os === "macos" && (
+        <p className="hint">
+          Se a dock travar e o Dock do macOS não voltar, rode <code>/Applications/WinDock.app/Contents/MacOS/win-dock --restore-taskbar</code>.
+        </p>
+      )}
+      {os === "linux" && <p className="hint">O Dash volta sozinho se a dock for encerrada, mesmo num travamento.</p>}
       <div className="inline">
         <button className="btn danger" onClick={() => ipc.quit()}>
           Sair da dock
@@ -325,10 +336,71 @@ function GeneralTab({ config, update }: { config: Config; update: (p: Partial<Co
   );
 }
 
+/** Avisa quando falta algo do sistema para a dock enxergar as janelas (extensão do GNOME, permissão de Acessibilidade). */
+function PlatformNotice({ platform, refresh }: { platform: PlatformInfo | null; refresh: () => void }) {
+  const [error, setError] = useState<string | null>(null);
+  const [installed, setInstalled] = useState(false);
+  if (!platform || platform.windowList === "ok") return null;
+  const run = async (action: "install-extension" | "request-accessibility") => {
+    setError(null);
+    try {
+      await ipc.platformSetup(action);
+      if (action === "install-extension") setInstalled(true);
+      refresh();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+  let text: string;
+  let button: JSX.Element | null = null;
+  switch (platform.windowList) {
+    case "needs-extension":
+      text = installed
+        ? "Extensão instalada. Encerre a sessão e entre de novo para o GNOME carregá-la."
+        : "Para a dock ver e focar as janelas abertas no GNOME, instale a extensão WinDock do GNOME Shell. Ela também reserva o espaço da dock na tela, esconde o Dash e registra os atalhos Ctrl+Alt+1..9.";
+      if (!installed) {
+        button = (
+          <button className="btn" onClick={() => run("install-extension")}>
+            Instalar extensão
+          </button>
+        );
+      }
+      break;
+    case "needs-relogin":
+      text = "A extensão WinDock está instalada, mas ainda não foi carregada. Encerre a sessão e entre de novo (no Wayland o GNOME só carrega extensões novas no login).";
+      break;
+    case "needs-accessibility":
+      text = "Para listar, focar, minimizar e fechar janelas, o macOS exige a permissão de Acessibilidade (Ajustes do Sistema → Privacidade e Segurança → Acessibilidade).";
+      button = (
+        <button className="btn" onClick={() => run("request-accessibility")}>
+          Conceder permissão
+        </button>
+      );
+      break;
+    default:
+      text = "Este ambiente não permite que a dock veja as janelas abertas (só GNOME ou sessões X11). Os apps fixados e os widgets funcionam normalmente.";
+  }
+  return (
+    <section className="notice">
+      <p>⚠️ {text}</p>
+      <div className="inline">
+        {button}
+        <button className="btn ghost" onClick={refresh}>
+          Verificar de novo
+        </button>
+        {error && <span className="hint">Erro: {error}</span>}
+      </div>
+    </section>
+  );
+}
+
 export function Settings() {
   const config = useConfig((s) => s.config)!;
   const update = useConfig((s) => s.update);
   const [tab, setTab] = useState<Tab>("Apps");
+  const [platform, setPlatform] = useState<PlatformInfo | null>(null);
+  const refreshPlatform = () => void ipc.platformInfo().then(setPlatform).catch(() => {});
+  useEffect(refreshPlatform, []);
   const props = { config, update: (p: Partial<Config>) => void update(p) };
   return (
     <div className="settings">
@@ -341,11 +413,12 @@ export function Settings() {
         ))}
       </nav>
       <main>
+        <PlatformNotice platform={platform} refresh={refreshPlatform} />
         {tab === "Apps" && <AppsTab {...props} />}
         {tab === "Widgets" && <WidgetsTab {...props} />}
         {tab === "Aparência" && <AppearanceTab {...props} />}
         {tab === "GitHub" && <GithubTab {...props} />}
-        {tab === "Geral" && <GeneralTab {...props} />}
+        {tab === "Geral" && <GeneralTab {...props} platform={platform} />}
       </main>
     </div>
   );

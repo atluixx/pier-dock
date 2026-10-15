@@ -1,13 +1,10 @@
-//! Janela da dock: estilos Win32, registro como AppBar, posicionamento no monitor primário,
-//! click-through fora da barra, ocultação automática quando um app está em foco e ocultação
-//! quando um app está em tela cheia.
+//! Dock no Windows: estilos Win32, registro como AppBar, click-through fora da barra (thread que
+//! acompanha o cursor), ocultação automática e ocultação quando um app está em tela cheia.
 
-use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicU8, Ordering};
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
 use std::time::{Duration, Instant};
 
-use serde::Deserialize;
-use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT};
 use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
@@ -18,45 +15,12 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WS_EX_TRANSPARENT,
 };
 
+use super::{auto_hide, hit_rect, layout, place_window, set_visible, want_visible, AUTO_HIDE_NEVER, DOCK_LABEL, HOVER_GRACE_MS};
 use crate::util::wide_to_string;
-
-pub const DOCK_LABEL: &str = "dock";
 
 static DOCK_HWND: AtomicIsize = AtomicIsize::new(0);
 static APPBAR_REGISTERED: AtomicBool = AtomicBool::new(false);
 static HIDDEN_FOR_FULLSCREEN: AtomicBool = AtomicBool::new(false);
-/// A dock está à mostra (ou escondida pelo "ocultar automaticamente").
-static VISIBLE: AtomicBool = AtomicBool::new(true);
-
-const AUTO_HIDE_NEVER: u8 = 0;
-const AUTO_HIDE_SMART: u8 = 1;
-const AUTO_HIDE_ALWAYS: u8 = 2;
-static AUTO_HIDE: AtomicU8 = AtomicU8::new(AUTO_HIDE_SMART);
-
-/// Medidas em pixels lógicos (CSS), informadas pelo frontend.
-#[derive(Clone, Copy, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Layout {
-    /// Altura reservada na base da tela (a área que janelas maximizadas não ocupam).
-    pub reserved_height: f64,
-    /// Altura total da janela, incluindo a folga para a magnificação e tooltips.
-    pub window_height: f64,
-    /// Quanto a área clicável cresce para cima enquanto o mouse está na dock.
-    pub hover_headroom: f64,
-}
-
-#[derive(Clone, Copy, Default, Deserialize)]
-pub struct HitRect {
-    pub x: f64,
-    pub y: f64,
-    pub width: f64,
-    /// Não usado hoje: a área clicável vai do topo da barra até a base da tela.
-    #[allow(dead_code)]
-    pub height: f64,
-}
-
-static LAYOUT: Mutex<Layout> = Mutex::new(Layout { reserved_height: 72.0, window_height: 170.0, hover_headroom: 80.0 });
-static HIT: Mutex<HitRect> = Mutex::new(HitRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 });
 
 fn dock_hwnd() -> HWND {
     HWND(DOCK_HWND.load(Ordering::SeqCst) as *mut _)
@@ -96,21 +60,10 @@ pub fn init(window: &WebviewWindow) {
 
 /// Posiciona a janela na base do monitor primário e reserva a área de trabalho via AppBar.
 pub fn apply_layout(window: &WebviewWindow) {
-    let layout = *LAYOUT.lock().unwrap();
-    let Ok(Some(monitor)) = window.primary_monitor() else { return };
-    let scale = monitor.scale_factor();
-    let pos = monitor.position();
-    let size = monitor.size();
-    let win_h = (layout.window_height * scale).round() as i32;
-    let reserved = (layout.reserved_height * scale).round() as i32;
-    let bottom = pos.y + size.height as i32;
-
-    let _ = window.set_size(PhysicalSize::new(size.width, win_h as u32));
-    let _ = window.set_position(PhysicalPosition::new(pos.x, bottom - win_h));
-
-    if AUTO_HIDE.load(Ordering::SeqCst) == AUTO_HIDE_NEVER {
-        let rect = RECT { left: pos.x, top: bottom - reserved, right: pos.x + size.width as i32, bottom };
-        register_appbar(rect, reserved);
+    let Some(p) = place_window(window) else { return };
+    if auto_hide() == AUTO_HIDE_NEVER {
+        let rect = RECT { left: p.x, top: p.bottom - p.reserved, right: p.x + p.width as i32, bottom: p.bottom };
+        register_appbar(rect, p.reserved);
     } else {
         remove_appbar();
     }
@@ -180,7 +133,6 @@ fn start_pointer_thread(window: WebviewWindow) {
     std::thread::spawn(move || {
         let own_pid = std::process::id();
         let mut ignoring = true;
-        let mut visible = true;
         let mut hover_until = Instant::now();
         loop {
             std::thread::sleep(Duration::from_millis(if ignoring { 30 } else { 16 }));
@@ -194,36 +146,27 @@ fn start_pointer_thread(window: WebviewWindow) {
                 }
             }
             let scale = unsafe { GetDpiForWindow(hwnd) } as f64 / 96.0;
-            let hit = *HIT.lock().unwrap();
+            let hit = hit_rect();
             if hit.width <= 0.0 {
                 continue;
             }
-            let headroom = if ignoring { 0.0 } else { LAYOUT.lock().unwrap().hover_headroom };
+            let headroom = if ignoring { 0.0 } else { layout().hover_headroom };
             let left = win.left as f64 + hit.x * scale;
             let right = left + hit.width * scale;
             // Até a base da tela: a margem abaixo da barra também conta como "na dock".
             let bottom = win.bottom as f64;
             let top = win.top as f64 + (hit.y - headroom).max(0.0) * scale;
             let (cx, cy) = (cursor.x as f64, cursor.y as f64);
-            let over_dock = visible && cx >= left && cx <= right && cy >= top && cy <= bottom;
+            let over_dock = super::dock_visible() && cx >= left && cx <= right && cy >= top && cy <= bottom;
             // Encostar o mouse na borda de baixo revela a dock escondida.
             let at_edge = cy >= win.bottom as f64 - 2.0 && cx >= win.left as f64 && cx < win.right as f64;
 
             let now = Instant::now();
             if over_dock || at_edge {
-                hover_until = now + Duration::from_millis(700);
+                hover_until = now + Duration::from_millis(HOVER_GRACE_MS);
             }
             let hovering = now < hover_until;
-            let want_visible = match AUTO_HIDE.load(Ordering::SeqCst) {
-                AUTO_HIDE_NEVER => true,
-                AUTO_HIDE_SMART => hovering || !app_has_focus(own_pid),
-                _ => hovering,
-            };
-            if want_visible != visible {
-                visible = want_visible;
-                VISIBLE.store(visible, Ordering::SeqCst);
-                let _ = window.emit("dock-visibility", visible);
-            }
+            set_visible(&window, want_visible(hovering, || app_has_focus(own_pid)));
 
             let interactive = over_dock;
             if interactive == ignoring {
@@ -235,34 +178,6 @@ fn start_pointer_thread(window: WebviewWindow) {
             }
         }
     });
-}
-
-fn parse_auto_hide(mode: &str) -> u8 {
-    match mode {
-        "never" => AUTO_HIDE_NEVER,
-        "always" => AUTO_HIDE_ALWAYS,
-        _ => AUTO_HIDE_SMART,
-    }
-}
-
-/// Troca o modo de ocultar. Com ocultação ligada a dock não reserva área de trabalho, então
-/// janelas maximizadas usam a tela inteira (como a taskbar em "ocultar automaticamente").
-pub fn set_auto_hide(app: &AppHandle, mode: &str) {
-    let mode = parse_auto_hide(mode);
-    if AUTO_HIDE.swap(mode, Ordering::SeqCst) != mode {
-        if let Some(window) = app.get_webview_window(DOCK_LABEL) {
-            apply_layout(&window);
-        }
-    }
-}
-
-pub fn init_auto_hide(mode: &str) {
-    AUTO_HIDE.store(parse_auto_hide(mode), Ordering::SeqCst);
-}
-
-#[tauri::command]
-pub fn dock_visible() -> bool {
-    VISIBLE.load(Ordering::SeqCst)
 }
 
 fn is_shell_window(hwnd: HWND) -> bool {
@@ -314,24 +229,7 @@ fn start_fullscreen_thread(app: AppHandle) {
     });
 }
 
-#[tauri::command]
-pub fn set_dock_layout(window: WebviewWindow, layout: Layout) {
-    *LAYOUT.lock().unwrap() = layout;
-    if let Some(dock) = window.app_handle().get_webview_window(DOCK_LABEL) {
-        apply_layout(&dock);
-    }
-}
+pub fn hit_rect_changed(_app: &AppHandle) {}
 
-#[tauri::command]
-pub fn set_hit_rect(rect: HitRect) {
-    *HIT.lock().unwrap() = rect;
-}
-
-/// Retângulo da área reservada, em pixels físicos de tela — usado para ancorar painéis.
-pub fn reserved_top_and_scale(window: &WebviewWindow) -> Option<(f64, f64, f64, f64)> {
-    let monitor = window.primary_monitor().ok().flatten()?;
-    let scale = monitor.scale_factor();
-    let reserved = LAYOUT.lock().unwrap().reserved_height * scale;
-    let bottom = monitor.position().y as f64 + monitor.size().height as f64;
-    Some((bottom - reserved, scale, monitor.position().x as f64, monitor.size().width as f64))
-}
+/// O hover vem da thread que acompanha o cursor.
+pub fn set_hover(_hovering: bool) {}

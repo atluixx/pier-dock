@@ -7,6 +7,7 @@ mod github;
 mod icons;
 mod media;
 mod panels;
+mod platform;
 mod system;
 mod taskbar;
 mod util;
@@ -45,7 +46,8 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let settings = MenuItem::with_id(app, "settings", "Configurações", true, None::<&str>)?;
     let reload = MenuItem::with_id(app, "reload", "Recarregar dock", true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;
-    let quit_item = MenuItem::with_id(app, "quit", "Restaurar taskbar e sair", true, None::<&str>)?;
+    let quit_label = if cfg!(windows) { "Restaurar taskbar e sair" } else { "Sair" };
+    let quit_item = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&settings, &reload, &separator, &quit_item])?;
 
     let mut tray = TrayIconBuilder::with_id("main")
@@ -84,6 +86,8 @@ fn register_shortcuts(app: &AppHandle) {
 }
 
 fn main() {
+    #[cfg(target_os = "linux")]
+    platform::linux::prepare_env();
     if std::env::args().any(|a| a == "--restore-taskbar") {
         taskbar::restore();
         return;
@@ -115,6 +119,7 @@ fn main() {
             dock_window::set_dock_layout,
             dock_window::set_hit_rect,
             dock_window::dock_visible,
+            dock_window::set_dock_hover,
             windows_list::get_windows,
             windows_list::toggle_app_windows,
             windows_list::activate_window,
@@ -137,8 +142,13 @@ fn main() {
             panels::open_panel,
             panels::close_panel,
             panels::open_settings,
+            platform::platform_info,
+            platform::platform_setup,
         ])
         .setup(|app| {
+            // Sem ícone no Dock nem barra de menus: a dock é o app.
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let handle = app.handle().clone();
             let (hide_taskbar, auto_hide) = {
                 let config = app.state::<config::ConfigState>();
@@ -149,8 +159,11 @@ fn main() {
             if hide_taskbar {
                 taskbar::hide();
             }
-            let restart_handle = handle.clone();
-            taskbar::start_watchdog(move || dock_window::reregister(&restart_handle));
+            #[cfg(windows)]
+            {
+                let restart_handle = handle.clone();
+                taskbar::start_watchdog(move || dock_window::reregister(&restart_handle));
+            }
 
             if let Some(dock) = app.get_webview_window(dock_window::DOCK_LABEL) {
                 dock_window::init(&dock);
@@ -158,6 +171,9 @@ fn main() {
             windows_list::start(handle.clone());
             media::start(handle.clone());
             register_shortcuts(&handle);
+            // No GNOME (inclusive Wayland) quem registra os atalhos é a extensão.
+            #[cfg(target_os = "linux")]
+            platform::linux::gnome_shell::set_shortcuts_enabled(true);
             if let Err(e) = build_tray(&handle) {
                 eprintln!("falha ao criar o ícone da bandeja: {e}");
             }

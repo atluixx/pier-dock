@@ -18,11 +18,24 @@ import { pickSession, useMedia, usePlaybackPosition, useThumbnail } from "../hoo
 import { formatDuration, mediaSourceName, timeAgo } from "../lib/format";
 import { HeatmapGrid } from "../widgets/GithubWidgets";
 
-function PanelHeader({ title, subtitle, onRefresh, link }: { title: string; subtitle?: string; onRefresh?: () => void; link?: string }) {
+function PanelHeader({
+  value,
+  title,
+  subtitle,
+  onRefresh,
+  link,
+}: {
+  value?: string;
+  title: string;
+  subtitle?: string;
+  onRefresh?: () => void;
+  link?: string;
+}) {
   const [spinning, setSpinning] = useState(false);
   return (
     <div className="panel-header">
       <div>
+        {value && <div className="panel-value">{value}</div>}
         <h2>{title}</h2>
         {subtitle && <p>{subtitle}</p>}
       </div>
@@ -171,8 +184,8 @@ function ContribPanel() {
   return (
     <>
       <PanelHeader
-        title={`${data?.totalContributions ?? 0} contribuições no último ano`}
-        subtitle={data?.login ? `@${data.login}` : undefined}
+        value={(data?.totalContributions ?? 0).toLocaleString("pt-BR")}
+        title={data?.login ? `contribuições no último ano · @${data.login}` : "contribuições no último ano"}
         onRefresh={refresh}
         link={data?.login ? `https://github.com/${data.login}` : undefined}
       />
