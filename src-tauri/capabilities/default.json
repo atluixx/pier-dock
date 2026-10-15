@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissões das janelas da dock",
+  "windows": ["dock", "panel-*", "settings"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-close",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:menu:default",
+    "autostart:default",
+    "opener:default"
+  ]
+}
