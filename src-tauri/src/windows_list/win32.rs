@@ -1,10 +1,8 @@
-//! Janelas abertas (o que a taskbar mostraria), eventos ao vivo e ações de focar/minimizar.
+//! Janelas no Windows: enumeração com as regras da taskbar e hooks de eventos do sistema.
 
-use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
-use std::time::Duration;
+use std::sync::atomic::{AtomicIsize, Ordering};
 
-use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use windows::Win32::Foundation::{CloseHandle, BOOL, HWND, LPARAM, TRUE, WPARAM};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_CLOAKED};
 use windows::Win32::Storage::EnhancedStorage::PKEY_AppUserModel_ID;
@@ -25,33 +23,15 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
 };
 
+use super::{mark_dirty, WindowInfo, WindowsSnapshot};
 use crate::util::{com_init, wide_to_string};
 
-#[derive(Serialize, Clone, PartialEq, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct WindowInfo {
-    pub hwnd: isize,
-    pub title: String,
-    pub exe: String,
-    pub aumid: Option<String>,
-    pub minimized: bool,
-}
-
-#[derive(Serialize, Clone, PartialEq, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct WindowsSnapshot {
-    /// Em ordem Z: a primeira janela de cada app é a usada mais recentemente.
-    pub windows: Vec<WindowInfo>,
-    pub foreground: isize,
-}
-
-static DIRTY: AtomicBool = AtomicBool::new(true);
 /// Última janela de outro processo que esteve em primeiro plano. Clicar na dock pode mover o foco
 /// para o WebView, então "qual app está ativo" é lembrado aqui.
 static LAST_FOREGROUND: AtomicIsize = AtomicIsize::new(0);
 
-fn hwnd(value: isize) -> HWND {
-    HWND(value as *mut _)
+fn hwnd(value: i64) -> HWND {
+    HWND(value as isize as *mut _)
 }
 
 /// Mesmas regras de "aparece na taskbar" que o explorer usa, mais o filtro de janelas cloaked
@@ -88,7 +68,7 @@ fn window_pid(h: HWND) -> u32 {
     pid
 }
 
-pub fn process_path(pid: u32) -> String {
+fn process_path(pid: u32) -> String {
     unsafe {
         let Ok(handle) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else { return String::new() };
         let mut buf = [0u16; 1024];
@@ -127,6 +107,7 @@ unsafe extern "system" fn collect(h: HWND, lparam: LPARAM) -> BOOL {
 }
 
 pub fn snapshot() -> WindowsSnapshot {
+    com_init();
     let mut handles: Vec<HWND> = Vec::new();
     unsafe {
         let _ = EnumWindows(Some(collect), LPARAM(&mut handles as *mut _ as isize));
@@ -141,7 +122,7 @@ pub fn snapshot() -> WindowsSnapshot {
                 return None;
             }
             Some(WindowInfo {
-                hwnd: h.0 as isize,
+                id: h.0 as isize as i64,
                 title: window_title(h),
                 exe: process_path(pid),
                 aumid: window_aumid(h),
@@ -149,7 +130,7 @@ pub fn snapshot() -> WindowsSnapshot {
             })
         })
         .collect();
-    WindowsSnapshot { windows, foreground: LAST_FOREGROUND.load(Ordering::SeqCst) }
+    WindowsSnapshot { windows, foreground: foreground() }
 }
 
 unsafe extern "system" fn on_win_event(
@@ -169,12 +150,11 @@ unsafe extern "system" fn on_win_event(
         let root = if root.is_invalid() { h } else { root };
         LAST_FOREGROUND.store(root.0 as isize, Ordering::SeqCst);
     }
-    DIRTY.store(true, Ordering::SeqCst);
+    mark_dirty();
 }
 
-/// Hooks de eventos do sistema (thread com message loop) + uma thread que, quando algo mudou,
-/// tira um snapshot e emite `windows-changed` só se ele for diferente do anterior.
-pub fn start(app: AppHandle) {
+/// Hooks de eventos do sistema, numa thread com message loop.
+pub fn start(_app: AppHandle) {
     unsafe {
         let fg = GetForegroundWindow();
         if !fg.is_invalid() && window_pid(fg) != std::process::id() {
@@ -200,25 +180,18 @@ pub fn start(app: AppHandle) {
             DispatchMessageW(&msg);
         }
     });
-
-    std::thread::spawn(move || {
-        com_init();
-        let mut last: Option<WindowsSnapshot> = None;
-        loop {
-            std::thread::sleep(Duration::from_millis(120));
-            if !DIRTY.swap(false, Ordering::SeqCst) {
-                continue;
-            }
-            let snap = snapshot();
-            if last.as_ref() != Some(&snap) {
-                let _ = app.emit("windows-changed", &snap);
-                last = Some(snap);
-            }
-        }
-    });
 }
 
-fn activate(h: HWND) {
+pub fn foreground() -> i64 {
+    LAST_FOREGROUND.load(Ordering::SeqCst) as i64
+}
+
+pub fn is_minimized(id: i64) -> bool {
+    unsafe { IsIconic(hwnd(id)).as_bool() }
+}
+
+pub fn activate(id: i64) {
+    let h = hwnd(id);
     unsafe {
         if IsIconic(h).as_bool() {
             let _ = ShowWindow(h, SW_RESTORE);
@@ -235,60 +208,16 @@ fn activate(h: HWND) {
         }
     }
     LAST_FOREGROUND.store(h.0 as isize, Ordering::SeqCst);
-    DIRTY.store(true, Ordering::SeqCst);
 }
 
-#[tauri::command]
-pub fn get_windows() -> WindowsSnapshot {
-    com_init();
-    snapshot()
-}
-
-/// Clique num app aberto: foca a janela mais recente; se o app já está ativo, minimiza (uma
-/// janela) ou alterna para a próxima (várias janelas).
-#[tauri::command]
-pub fn toggle_app_windows(hwnds: Vec<isize>) {
-    let Some(&first) = hwnds.first() else { return };
-    let fg = LAST_FOREGROUND.load(Ordering::SeqCst);
-    let active = hwnds.contains(&fg) && unsafe { !IsIconic(hwnd(fg)).as_bool() };
-    if !active {
-        activate(hwnd(first));
-    } else if hwnds.len() == 1 {
-        unsafe {
-            let _ = ShowWindow(hwnd(fg), SW_MINIMIZE);
-        }
-        DIRTY.store(true, Ordering::SeqCst);
-    } else {
-        // A lista vem em ordem Z, então a última é a usada há mais tempo: isso faz o ciclo
-        // passar por todas as janelas em vez de pular entre as duas mais recentes.
-        activate(hwnd(*hwnds.last().unwrap()));
+pub fn minimize(id: i64) {
+    unsafe {
+        let _ = ShowWindow(hwnd(id), SW_MINIMIZE);
     }
 }
 
-#[tauri::command]
-pub fn activate_window(hwnd_value: isize) {
-    activate(hwnd(hwnd_value));
-}
-
-#[tauri::command]
-pub fn close_windows(hwnds: Vec<isize>) {
-    for h in hwnds {
-        unsafe {
-            let _ = PostMessageW(hwnd(h), WM_CLOSE, WPARAM(0), LPARAM(0));
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    #[ignore = "smoke test: depende das janelas abertas na máquina"]
-    fn lists_open_windows() {
-        crate::util::com_init();
-        let snap = super::snapshot();
-        for w in &snap.windows {
-            println!("{:?} | {} | {:?} | {}", w.hwnd, w.exe, w.aumid, w.title);
-        }
-        assert!(snap.windows.iter().all(|w| !w.title.is_empty()));
+pub fn close(id: i64) {
+    unsafe {
+        let _ = PostMessageW(hwnd(id), WM_CLOSE, WPARAM(0), LPARAM(0));
     }
 }

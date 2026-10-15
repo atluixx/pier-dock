@@ -84,7 +84,7 @@ export function HeatmapGrid({ weeks, className }: { weeks: ContributionDay[][]; 
                 title={`${day.count} contribuição(ões) em ${new Date(day.date + "T12:00").toLocaleDateString("pt-BR")}`}
               />
             ) : (
-              <span key={`empty-${j}`} className="heat empty" />
+              <span key={`blank-${j}`} className="heat blank" />
             ),
           )}
         </div>
@@ -93,8 +93,15 @@ export function HeatmapGrid({ weeks, className }: { weeks: ContributionDay[][]; 
   );
 }
 
+/** Contribuições do ano corrente (o calendário do GitHub cobre os últimos 12 meses). */
+function contributionsThisYear(weeks: ContributionDay[][]): number {
+  const year = String(new Date().getFullYear());
+  return weeks.flat().reduce((sum, d) => (d.date.startsWith(year) ? sum + d.count : sum), 0);
+}
+
 export function ContributionsWidget({ data, wide }: { data: GithubData | null; wide: boolean }) {
-  const weeks = (data?.weeks ?? []).slice(wide ? -20 : -7);
+  const all = data?.weeks ?? [];
+  const weeks = all.slice(wide ? -26 : -7);
   return (
     <Tile
       kind="github-contrib"
@@ -102,6 +109,12 @@ export function ContributionsWidget({ data, wide }: { data: GithubData | null; w
       label={`${data?.totalContributions ?? 0} contribuições no último ano`}
       className="contrib-tile"
     >
+      {wide && (
+        <div className="contrib-summary">
+          <span className="contrib-total">{contributionsThisYear(all).toLocaleString("pt-BR")}</span>
+          <span className="contrib-caption">neste ano</span>
+        </div>
+      )}
       <HeatmapGrid weeks={weeks} className="mini-heatmap" />
     </Tile>
   );

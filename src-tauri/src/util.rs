@@ -1,17 +1,18 @@
 use std::path::PathBuf;
 
-use windows::Win32::System::Com::{CoInitializeEx, COINIT_APARTMENTTHREADED};
-
-/// %APPDATA%\win-dock — config, cache de ícones e estado da taskbar.
+/// Config, cache de ícones e estado da taskbar: `%APPDATA%\win-dock`, `~/.config/win-dock` ou
+/// `~/Library/Application Support/win-dock`.
 pub fn data_dir() -> PathBuf {
-    let base = std::env::var("APPDATA").unwrap_or_else(|_| ".".into());
-    let dir = PathBuf::from(base).join("win-dock");
+    let base = dirs::config_dir().unwrap_or_else(|| ".".into());
+    let dir = base.join("win-dock");
     let _ = std::fs::create_dir_all(&dir);
     dir
 }
 
 /// Inicializa COM (STA) na thread atual. Chamadas repetidas são inofensivas.
+#[cfg(windows)]
 pub fn com_init() {
+    use windows::Win32::System::Com::{CoInitializeEx, COINIT_APARTMENTTHREADED};
     unsafe {
         let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
     }
@@ -19,8 +20,37 @@ pub fn com_init() {
 
 /// Pasta do Windows (`%WINDIR%`), para chamar executáveis do sistema por caminho absoluto em vez
 /// de deixar a busca do Windows achar um homônimo na pasta do app.
+#[cfg(windows)]
 pub fn windows_dir() -> String {
     std::env::var("WINDIR").unwrap_or_else(|_| r"C:\Windows".into())
+}
+
+/// Inicia um programa sem esperar por ele e sem deixá-lo como processo zumbi.
+#[cfg(unix)]
+pub fn spawn_detached(program: impl AsRef<std::ffi::OsStr>, args: &[&str]) -> Result<(), String> {
+    use std::process::{Command, Stdio};
+    let mut child = Command::new(program)
+        .args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    std::thread::spawn(move || child.wait());
+    Ok(())
+}
+
+/// Roda um programa e devolve o stdout se ele terminar com sucesso. Com `LC_ALL=C`, para que a
+/// saída que é interpretada não venha traduzida.
+#[cfg(unix)]
+pub fn run(program: &str, args: &[&str]) -> Option<String> {
+    let output = std::process::Command::new(program)
+        .args(args)
+        .env("LC_ALL", "C")
+        .stdin(std::process::Stdio::null())
+        .output()
+        .ok()?;
+    output.status.success().then(|| String::from_utf8_lossy(&output.stdout).into_owned())
 }
 
 /// Recusa caminhos de rede (`\\servidor\…`, `//servidor/…`, `\\?\UNC\…`). Só de tocar num caminho
@@ -42,6 +72,7 @@ pub fn reject_network_path(path: &str) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(windows)]
 pub fn wide_to_string(buf: &[u16]) -> String {
     let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
     String::from_utf16_lossy(&buf[..len])

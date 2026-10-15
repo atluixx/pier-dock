@@ -1,4 +1,4 @@
-//! Apps instalados (a mesma lista do Menu Iniciar), resolução de atalhos e abertura de apps.
+//! Apps no Windows: shell:AppsFolder (a lista do Menu Iniciar), atalhos .lnk e ShellExecute.
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -14,15 +14,9 @@ use windows::Win32::UI::Shell::{
 };
 use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
+use super::app_id;
 use crate::config::AppEntry;
-use crate::util::{com_init, reject_network_path, wide_to_string, windows_dir, ErrStr};
-
-fn app_id(seed: &str) -> String {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    seed.to_lowercase().hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
-}
+use crate::util::{com_init, wide_to_string, windows_dir, ErrStr};
 
 /// `{GUID}\resto\do\caminho` (formato usado pelo AppsFolder) → caminho real.
 fn resolve_known_folder(parsing: &str) -> Option<String> {
@@ -153,7 +147,6 @@ pub fn resolve_path(path: &str) -> AppEntry {
 }
 
 pub fn launch(target: &str) -> Result<(), String> {
-    reject_network_path(target)?;
     com_init();
     if target.starts_with("shell:") {
         // Caminho absoluto: um `explorer.exe` na pasta do app não pode ser executado no lugar.
@@ -172,22 +165,6 @@ pub fn launch(target: &str) -> Result<(), String> {
     } else {
         Err(format!("não foi possível abrir {target}"))
     }
-}
-
-#[tauri::command]
-pub async fn list_installed_apps() -> Result<Vec<AppEntry>, String> {
-    tauri::async_runtime::spawn_blocking(|| installed_apps().err_str()).await.err_str()?
-}
-
-#[tauri::command]
-pub async fn launch_app(target: String) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || launch(&target)).await.err_str()?
-}
-
-#[tauri::command]
-pub async fn resolve_app_path(path: String) -> Result<AppEntry, String> {
-    reject_network_path(&path)?;
-    tauri::async_runtime::spawn_blocking(move || resolve_path(&path)).await.err_str()
 }
 
 #[cfg(test)]

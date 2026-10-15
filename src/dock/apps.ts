@@ -1,5 +1,6 @@
 import type { AppEntry, WindowInfo } from "../lib/ipc";
 import { prettyExeName } from "../lib/format";
+import { os } from "../lib/platform";
 
 export interface DockApp {
   key: string;
@@ -16,6 +17,9 @@ export interface DockApp {
 const lower = (s?: string | null) => (s ?? "").toLowerCase();
 
 function iconKeyForWindow(w: WindowInfo): string {
+  // Linux: o desktop id dá o ícone do tema; macOS: o exe já é o bundle .app.
+  if (os === "linux") return w.aumid ?? w.exe;
+  if (os === "macos") return w.exe;
   // Janelas UWP pertencem ao ApplicationFrameHost; o ícone certo vem do AUMID.
   if (w.aumid && (w.aumid.includes("!") || lower(w.exe).endsWith("applicationframehost.exe"))) {
     return `shell:AppsFolder\\${w.aumid}`;
@@ -29,6 +33,8 @@ function iconKeyForWindow(w: WindowInfo): string {
  * navegador) precisam do AppsFolder.
  */
 export function iconKeyForEntry(entry: AppEntry): string {
+  if (os === "linux") return entry.aumid ?? entry.target;
+  if (os === "macos") return entry.target;
   const aumid = lower(entry.aumid);
   const isPackagedOrPwa = aumid.includes("!") || aumid.includes("_crx_");
   if (entry.exe && !isPackagedOrPwa && lower(entry.exe).endsWith(".exe")) return entry.exe;
@@ -56,6 +62,13 @@ function findInstalled(installed: AppEntry[], w: WindowInfo): AppEntry | undefin
   return installed.find((a) => a.exe && lower(a.exe) === lower(w.exe));
 }
 
+/** O que abrir para um app aberto que não está na lista de instalados. */
+function launchTargetForWindow(w: WindowInfo, isUwp: boolean): string {
+  // No Linux o desktop id (`firefox.desktop`) é resolvido pelo backend.
+  if (os === "linux" && w.aumid) return w.aumid;
+  return w.aumid && isUwp ? `shell:AppsFolder\\${w.aumid}` : w.exe;
+}
+
 /** Junta apps fixados com janelas abertas: cada janela vai para o app fixado correspondente ou forma um grupo próprio. */
 export function buildDockApps(
   pinned: AppEntry[],
@@ -79,7 +92,7 @@ export function buildDockApps(
       pinnedApps[idx].windows.push(w);
       continue;
     }
-    if (!showUnpinned || !w.exe) continue;
+    if (!showUnpinned || (!w.exe && !w.aumid)) continue;
     const groupKey = `run:${lower(w.aumid) || lower(w.exe)}`;
     let app = running.get(groupKey);
     if (!app) {
@@ -90,7 +103,7 @@ export function buildDockApps(
         name: match?.name ?? (isUwp ? w.title : prettyExeName(w.exe)),
         windows: [],
         iconKey: match ? iconKeyForEntry(match) : iconKeyForWindow(w),
-        launchTarget: match?.target ?? (w.aumid && isUwp ? `shell:AppsFolder\\${w.aumid}` : w.exe),
+        launchTarget: match?.target ?? launchTargetForWindow(w, isUwp),
         installed: match,
       };
       running.set(groupKey, app);

@@ -1,0 +1,207 @@
+//! X11 via EWMH: lista e controla janelas em sessões X11 sem a extensão do GNOME, e reserva a
+//! área da dock com `_NET_WM_STRUT_PARTIAL`.
+
+use std::sync::OnceLock;
+
+use x11rb::connection::Connection;
+use x11rb::protocol::xproto::{
+    AtomEnum, ChangeWindowAttributesAux, ClientMessageEvent, ConfigureWindowAux, ConnectionExt as _, EventMask, PropMode, Window,
+};
+use x11rb::protocol::Event;
+use x11rb::rust_connection::RustConnection;
+use x11rb::wrapper::ConnectionExt as _;
+
+x11rb::atom_manager! {
+    pub Atoms: AtomsCookie {
+        _NET_CLIENT_LIST,
+        _NET_CLIENT_LIST_STACKING,
+        _NET_ACTIVE_WINDOW,
+        _NET_WM_NAME,
+        _NET_WM_PID,
+        _NET_WM_STATE,
+        _NET_WM_STATE_HIDDEN,
+        _NET_WM_STATE_SKIP_TASKBAR,
+        _NET_WM_WINDOW_TYPE,
+        _NET_WM_WINDOW_TYPE_NORMAL,
+        _NET_WM_WINDOW_TYPE_DIALOG,
+        _NET_WM_STRUT,
+        _NET_WM_STRUT_PARTIAL,
+        _NET_CLOSE_WINDOW,
+        WM_CHANGE_STATE,
+        UTF8_STRING,
+    }
+}
+
+pub struct X11 {
+    conn: RustConnection,
+    root: Window,
+    root_height: u16,
+    atoms: Atoms,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct X11Window {
+    pub id: u32,
+    pub title: String,
+    pub pid: u32,
+    /// Segunda parte do `WM_CLASS` (a "classe"), que costuma bater com o `StartupWMClass` do .desktop.
+    pub wm_class: Option<String>,
+    pub minimized: bool,
+}
+
+fn connect() -> Option<X11> {
+    let (conn, screen) = x11rb::connect(None).ok()?;
+    let screen = &conn.setup().roots[screen];
+    let (root, root_height) = (screen.root, screen.height_in_pixels);
+    let atoms = Atoms::new(&conn).ok()?.reply().ok()?;
+    Some(X11 { conn, root, root_height, atoms })
+}
+
+/// Conexão compartilhada para consultas e comandos (o watcher de eventos abre a dele).
+pub fn get() -> Option<&'static X11> {
+    static X: OnceLock<Option<X11>> = OnceLock::new();
+    X.get_or_init(connect).as_ref()
+}
+
+impl X11 {
+    fn property32(&self, window: Window, property: u32, kind: impl Into<u32>) -> Vec<u32> {
+        self.conn
+            .get_property(false, window, property, kind.into(), 0, 1024)
+            .ok()
+            .and_then(|c| c.reply().ok())
+            .and_then(|r| r.value32().map(|v| v.collect()))
+            .unwrap_or_default()
+    }
+
+    fn string_property(&self, window: Window, property: u32, kind: impl Into<u32>) -> Option<String> {
+        let reply = self.conn.get_property(false, window, property, kind.into(), 0, 4096).ok()?.reply().ok()?;
+        (!reply.value.is_empty()).then(|| String::from_utf8_lossy(&reply.value).into_owned())
+    }
+
+    fn title(&self, window: Window) -> String {
+        self.string_property(window, self.atoms._NET_WM_NAME, self.atoms.UTF8_STRING)
+            .or_else(|| self.string_property(window, AtomEnum::WM_NAME.into(), AtomEnum::STRING))
+            .unwrap_or_default()
+    }
+
+    fn wm_class(&self, window: Window) -> Option<String> {
+        let raw = self.string_property(window, AtomEnum::WM_CLASS.into(), AtomEnum::STRING)?;
+        // "instância\0Classe\0"
+        let mut parts = raw.split('\0').filter(|s| !s.is_empty());
+        let instance = parts.next();
+        parts.next().or(instance).map(str::to_string)
+    }
+
+    /// Mesmas regras de "aparece na barra de tarefas" que os painéis X11 usam.
+    fn is_app_window(&self, window: Window) -> bool {
+        let types = self.property32(window, self.atoms._NET_WM_WINDOW_TYPE, AtomEnum::ATOM);
+        let normal = types.is_empty()
+            || types.iter().any(|&t| t == self.atoms._NET_WM_WINDOW_TYPE_NORMAL || t == self.atoms._NET_WM_WINDOW_TYPE_DIALOG);
+        let states = self.property32(window, self.atoms._NET_WM_STATE, AtomEnum::ATOM);
+        normal && !states.contains(&self.atoms._NET_WM_STATE_SKIP_TASKBAR)
+    }
+
+    /// Janelas de app, a usada mais recentemente primeiro.
+    pub fn windows(&self) -> Vec<X11Window> {
+        let mut list = self.property32(self.root, self.atoms._NET_CLIENT_LIST_STACKING, AtomEnum::WINDOW);
+        if list.is_empty() {
+            list = self.property32(self.root, self.atoms._NET_CLIENT_LIST, AtomEnum::WINDOW);
+        }
+        list.reverse();
+        list.into_iter()
+            .filter(|&w| self.is_app_window(w))
+            .map(|w| X11Window {
+                id: w,
+                title: self.title(w),
+                pid: self.pid(w),
+                wm_class: self.wm_class(w),
+                minimized: self.is_minimized(w),
+            })
+            .filter(|w| !w.title.is_empty())
+            .collect()
+    }
+
+    pub fn pid(&self, window: Window) -> u32 {
+        self.property32(window, self.atoms._NET_WM_PID, AtomEnum::CARDINAL).first().copied().unwrap_or(0)
+    }
+
+    pub fn active_window(&self) -> Option<Window> {
+        self.property32(self.root, self.atoms._NET_ACTIVE_WINDOW, AtomEnum::WINDOW).first().copied().filter(|&w| w != 0)
+    }
+
+    pub fn is_minimized(&self, window: Window) -> bool {
+        self.property32(window, self.atoms._NET_WM_STATE, AtomEnum::ATOM).contains(&self.atoms._NET_WM_STATE_HIDDEN)
+    }
+
+    fn send_to_root(&self, window: Window, kind: u32, data: [u32; 5]) {
+        let event = ClientMessageEvent::new(32, window, kind, data);
+        let mask = EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY;
+        let _ = self.conn.send_event(false, self.root, mask, event);
+        let _ = self.conn.flush();
+    }
+
+    /// Fonte 2 = "pager": o gerenciador de janelas obedece sem aplicar a prevenção de roubo de foco.
+    pub fn activate(&self, window: Window) {
+        self.send_to_root(window, self.atoms._NET_ACTIVE_WINDOW, [2, x11rb::CURRENT_TIME, 0, 0, 0]);
+    }
+
+    pub fn minimize(&self, window: Window) {
+        const ICONIC_STATE: u32 = 3;
+        self.send_to_root(window, self.atoms.WM_CHANGE_STATE, [ICONIC_STATE, 0, 0, 0, 0]);
+    }
+
+    pub fn close(&self, window: Window) {
+        self.send_to_root(window, self.atoms._NET_CLOSE_WINDOW, [x11rb::CURRENT_TIME, 2, 0, 0, 0]);
+    }
+
+    pub fn move_resize(&self, window: Window, x: i32, y: i32, width: u32, height: u32) {
+        let aux = ConfigureWindowAux::new().x(x).y(y).width(width).height(height);
+        let _ = self.conn.configure_window(window, &aux);
+        let _ = self.conn.flush();
+    }
+
+    /// Reserva `height` pixels acima de `bottom` (coordenadas da tela), entre `x` e `x + width`.
+    /// `height == 0` remove a reserva.
+    pub fn set_strut(&self, window: Window, x: i32, width: u32, bottom: i32, height: u32) {
+        if height == 0 {
+            let _ = self.conn.delete_property(window, self.atoms._NET_WM_STRUT_PARTIAL);
+            let _ = self.conn.delete_property(window, self.atoms._NET_WM_STRUT);
+        } else {
+            // Struts são medidos a partir da borda da tela inteira (todas as telas juntas).
+            let from_bottom = (self.root_height as i32 - bottom).max(0) as u32 + height;
+            let (start, end) = (x.max(0) as u32, (x + width as i32 - 1).max(0) as u32);
+            let partial = [0, 0, 0, from_bottom, 0, 0, 0, 0, 0, 0, start, end];
+            let _ = self.conn.change_property32(PropMode::REPLACE, window, self.atoms._NET_WM_STRUT_PARTIAL, AtomEnum::CARDINAL, &partial);
+            let _ = self.conn.change_property32(PropMode::REPLACE, window, self.atoms._NET_WM_STRUT, AtomEnum::CARDINAL, &partial[..4]);
+        }
+        let _ = self.conn.flush();
+    }
+}
+
+/// Chama `on_change` quando a lista de janelas, o foco, um título ou um estado mudam. Usa uma
+/// conexão própria, já que fica bloqueada esperando eventos.
+pub fn watch(on_change: fn()) {
+    std::thread::spawn(move || {
+        let Some(x) = connect() else { return };
+        let watch_props = ChangeWindowAttributesAux::new().event_mask(EventMask::PROPERTY_CHANGE);
+        let subscribe_clients = |x: &X11| {
+            for w in x.property32(x.root, x.atoms._NET_CLIENT_LIST, AtomEnum::WINDOW) {
+                let _ = x.conn.change_window_attributes(w, &watch_props);
+            }
+            let _ = x.conn.flush();
+        };
+        let _ = x.conn.change_window_attributes(x.root, &watch_props);
+        subscribe_clients(&x);
+        while let Ok(event) = x.conn.wait_for_event() {
+            if let Event::PropertyNotify(e) = event {
+                if e.window == x.root && e.atom == x.atoms._NET_CLIENT_LIST {
+                    subscribe_clients(&x);
+                }
+                let relevant = [x.atoms._NET_CLIENT_LIST, x.atoms._NET_ACTIVE_WINDOW, x.atoms._NET_WM_NAME, x.atoms._NET_WM_STATE];
+                if relevant.contains(&e.atom) || e.atom == u32::from(AtomEnum::WM_NAME) {
+                    on_change();
+                }
+            }
+        }
+    });
+}

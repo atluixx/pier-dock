@@ -1,9 +1,8 @@
 //! Widgets do GitHub. Todas as requisições saem daqui: o token nunca chega ao WebView.
 //!
-//! O token vem de um PAT salvo no Credential Manager (se o usuário configurou um) ou do
-//! `gh auth token`.
+//! O token vem de um PAT salvo no cofre de senhas do sistema (Credential Manager, Keychain ou
+//! Secret Service), se o usuário configurou um, ou do `gh auth token`.
 
-use std::os::windows::process::CommandExt;
 use std::sync::Mutex;
 
 use serde::Serialize;
@@ -12,7 +11,6 @@ use tauri::{AppHandle, Emitter};
 
 use crate::util::ErrStr;
 
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 const KEYRING_SERVICE: &str = "win-dock";
 const KEYRING_USER: &str = "github";
 
@@ -112,12 +110,28 @@ fn stored_token() -> Option<String> {
     keyring::Entry::new(KEYRING_SERVICE, KEYRING_USER).ok()?.get_password().ok().filter(|t| !t.is_empty())
 }
 
+/// Apps abertos pelo Finder/Dock não herdam o PATH do shell, então o `gh` do Homebrew não seria
+/// achado só pelo nome.
+fn gh_program() -> &'static str {
+    #[cfg(unix)]
+    for candidate in ["/opt/homebrew/bin/gh", "/usr/local/bin/gh", "/usr/bin/gh"] {
+        if std::path::Path::new(candidate).exists() {
+            return candidate;
+        }
+    }
+    "gh"
+}
+
 fn gh_token() -> Option<String> {
-    let output = std::process::Command::new("gh")
-        .args(["auth", "token"])
-        .creation_flags(CREATE_NO_WINDOW)
-        .output()
-        .ok()?;
+    let mut command = std::process::Command::new(gh_program());
+    command.args(["auth", "token"]);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+    let output = command.output().ok()?;
     if !output.status.success() {
         return None;
     }
@@ -308,7 +322,7 @@ pub async fn github_auth_status() -> Result<AuthStatus, String> {
         .err_str()
 }
 
-/// Salva um PAT no Credential Manager; `None` ou vazio apaga e volta a usar o `gh`.
+/// Salva um PAT no cofre de senhas do sistema; `None` ou vazio apaga e volta a usar o `gh`.
 #[tauri::command]
 pub fn github_set_token(token: Option<String>) -> Result<(), String> {
     let entry = keyring::Entry::new(KEYRING_SERVICE, KEYRING_USER).err_str()?;

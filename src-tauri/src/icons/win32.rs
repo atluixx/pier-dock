@@ -1,10 +1,8 @@
-//! Ícones em alta resolução de qualquer coisa que o shell entenda (.exe, .lnk, pastas,
-//! `shell:AppsFolder\<AUMID>`), convertidos para PNG e cacheados em disco.
+//! Ícones no Windows: qualquer coisa que o shell entenda (.exe, .lnk, pastas,
+//! `shell:AppsFolder\<AUMID>`), convertida para PNG.
 
-use std::hash::{Hash, Hasher};
 use std::io::Cursor;
 
-use base64::Engine;
 use windows::core::{Interface, HSTRING};
 use windows::Win32::Foundation::SIZE;
 use windows::Win32::Graphics::Gdi::{
@@ -13,17 +11,9 @@ use windows::Win32::Graphics::Gdi::{
 };
 use windows::Win32::UI::Shell::{IShellItem, IShellItemImageFactory, SHCreateItemFromParsingName, SIIGBF_BIGGERSIZEOK, SIIGBF_ICONONLY};
 
-use crate::util::{com_init, data_dir, reject_network_path, ErrStr};
+use crate::util::{com_init, ErrStr};
 
 const ICON_SIZE: i32 = 256;
-
-fn cache_path(key: &str) -> std::path::PathBuf {
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    key.to_lowercase().hash(&mut hasher);
-    let dir = data_dir().join("icons");
-    let _ = std::fs::create_dir_all(&dir);
-    dir.join(format!("{:016x}.png", hasher.finish()))
-}
 
 fn bitmap_to_rgba(hbmp: HBITMAP) -> Option<(u32, u32, Vec<u8>)> {
     unsafe {
@@ -68,7 +58,7 @@ fn bitmap_to_rgba(hbmp: HBITMAP) -> Option<(u32, u32, Vec<u8>)> {
     }
 }
 
-fn extract_png(key: &str) -> Result<Vec<u8>, String> {
+pub fn extract(key: &str) -> Result<(Vec<u8>, &'static str), String> {
     com_init();
     let hbmp = unsafe {
         let item: IShellItem = SHCreateItemFromParsingName(&HSTRING::from(key), None).err_str()?;
@@ -85,24 +75,5 @@ fn extract_png(key: &str) -> Result<Vec<u8>, String> {
     let img = image::RgbaImage::from_raw(w, h, pixels).ok_or("bitmap inválido")?;
     let mut png = Vec::new();
     img.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png).err_str()?;
-    Ok(png)
-}
-
-pub fn icon_data_url(key: &str) -> Result<String, String> {
-    reject_network_path(key)?;
-    let path = cache_path(key);
-    let png = match std::fs::read(&path) {
-        Ok(bytes) => bytes,
-        Err(_) => {
-            let bytes = extract_png(key)?;
-            let _ = std::fs::write(&path, &bytes);
-            bytes
-        }
-    };
-    Ok(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(png)))
-}
-
-#[tauri::command]
-pub async fn get_icon(key: String) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(move || icon_data_url(&key)).await.err_str()?
+    Ok((png, "image/png"))
 }
