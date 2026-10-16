@@ -12,7 +12,7 @@ pub const SETTINGS_LABEL: &str = "settings";
 
 /// Margem transparente da janela em volta do painel e raio dos cantos, iguais a `--panel-inset` e
 /// a `--radius-window` no CSS.
-const PANEL_INSET: f64 = 12.0;
+const PANEL_INSET: f64 = 18.0;
 const PANEL_RADIUS: f64 = 18.0;
 
 /// (label, kind) do painel aberto. Cada painel ganha um label novo porque fechar uma janela é

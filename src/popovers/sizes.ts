@@ -1,5 +1,5 @@
 /** Margem transparente da janela em volta do popover, para a sombra (igual a `--panel-inset`). */
-export const PANEL_INSET = 12;
+export const PANEL_INSET = 18;
 
 /** Tamanho visível (px lógicos) do popover de cada widget, sem a margem da sombra. */
 export const PANEL_SIZES: Record<string, [number, number]> = {

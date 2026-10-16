@@ -113,7 +113,9 @@
   --popover-opacity: 0.55;
   --popover-blur: 30px;
   --popover-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  --popover-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  /* Tem que caber na margem transparente da janela do popover (--panel-inset): uma sombra maior
+     é cortada na borda da janela e vira um retângulo. Aqui ela vai no máximo 18px para baixo. */
+  --popover-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.25);
 
   /* Janela de configurações: mais opaca, pela legibilidade. */
   --window-tint: 24 24 28;

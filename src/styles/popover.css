@@ -1,5 +1,5 @@
 :root {
-  --panel-inset: 12px;
+  --panel-inset: 18px;
 }
 
 /* A janela é transparente e maior que o popover (--panel-inset em cada lado), para a sombra e
