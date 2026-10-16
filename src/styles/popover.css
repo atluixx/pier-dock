@@ -497,3 +497,461 @@
   color: var(--text-secondary);
   white-space: nowrap;
 }
+
+/* Clima */
+.wx-header,
+.pomo-header,
+.usage-header,
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 16px 16px 0;
+}
+
+.wx-city,
+.cal-heading {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wx-now {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px 14px;
+}
+
+.wx-now-temp {
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-now-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.wx-hours {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 0;
+  padding: 12px 8px;
+  list-style: none;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.wx-hours li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.wx-hour-temp {
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-days {
+  margin: 0;
+  padding: 8px 16px 10px;
+  list-style: none;
+}
+
+.wx-days li {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.wx-day {
+  width: 36px;
+  color: var(--text-muted);
+}
+
+.wx-low,
+.wx-high {
+  width: 28px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-low {
+  text-align: right;
+  color: var(--text-tertiary);
+}
+
+.wx-bar {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--fill-track);
+}
+
+.wx-bar > span {
+  position: absolute;
+  top: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--amber);
+}
+
+/* Pomodoro */
+.pomo-dial {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  margin: 18px auto 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.pomo-dial .ring {
+  position: absolute;
+  inset: 0;
+}
+
+.pomo-dial-time {
+  position: relative;
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pomo-dial .popover-meta {
+  position: relative;
+}
+
+.pomo-sessions {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 6px;
+}
+
+.pomo-sessions span {
+  width: 18px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--fill-track);
+}
+
+.pomo-sessions span.done {
+  background: var(--accent);
+}
+
+.pomo-round {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--fill-hover);
+  transition: background 0.12s ease;
+}
+
+.pomo-round:is(:hover, [data-hover]) {
+  background: var(--fill-active);
+}
+
+.pomo-main {
+  height: 48px;
+  min-width: 120px;
+  padding: 0 22px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--text);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform 0.12s ease;
+}
+
+.pomo-main:active {
+  transform: scale(0.96);
+}
+
+.pomo-settings {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+/* Uso do sistema */
+.usage-big {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.usage-big.hot {
+  color: var(--warning);
+}
+
+.usage-chart {
+  padding: 6px 16px 14px;
+  color: var(--chart-cpu);
+}
+
+.usage-chart.hot {
+  color: var(--warning);
+}
+
+.usage-chart .sparkline {
+  color: inherit;
+  border-bottom: 1px solid var(--border);
+}
+
+.usage-chart .sparkline-line {
+  stroke-width: 1.6;
+}
+
+.usage-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.usage-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.usage-bar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.usage-bar-value {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.usage-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--fill-track);
+  overflow: hidden;
+}
+
+.usage-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.usage-fill.mem {
+  background: var(--chart-memory);
+}
+
+.usage-fill.disk {
+  background: var(--chart-disk);
+}
+
+.usage-fill.hot {
+  background: var(--warning);
+}
+
+.usage-apps {
+  padding: 10px 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.usage-apps-label,
+.usage-message {
+  display: block;
+  padding: 0 8px 6px;
+}
+
+.usage-app {
+  width: 100%;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  border-radius: 7px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.usage-app:is(:hover, [data-hover]) {
+  background: var(--fill-hover);
+}
+
+.usage-app[aria-pressed="true"] {
+  background: var(--fill-selected);
+}
+
+.usage-app-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Agenda */
+.cal-header {
+  padding-bottom: 10px;
+}
+
+.cal-next {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 12px 10px;
+  padding: 14px;
+  border-radius: var(--radius-card);
+  background: var(--info-fill);
+  border: 1px solid var(--info-border);
+}
+
+.cal-next-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.cal-next-when {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-info);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cal-next-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.cal-next-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.cal-primary,
+.cal-secondary {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.cal-primary {
+  background: var(--text);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.cal-secondary {
+  padding: 0 12px;
+  background: var(--fill-selected);
+  font-weight: 500;
+}
+
+.cal-secondary:is(:hover, [data-hover]) {
+  background: var(--fill-active);
+}
+
+.cal-free {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 12px 10px;
+  padding: 14px;
+  border-radius: var(--radius-card);
+  background: var(--fill);
+  font-size: 13px;
+}
+
+/* Num dia cheio, a lista rola e o rodapé fica no lugar. */
+.cal-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0 8px;
+  list-style: none;
+}
+
+.cal-row {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.cal-time {
+  width: 48px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 13px;
+}
+
+.cal-row-text > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-tomorrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 8px 10px;
+  padding: 8px 8px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.cal-tomorrow .cal-time {
+  color: var(--text-tertiary);
+}

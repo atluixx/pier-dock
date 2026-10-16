@@ -4,13 +4,16 @@ use windows::Networking::Connectivity::{NetworkConnectivityLevel, NetworkInforma
 use windows::Win32::Media::Audio::Endpoints::IAudioEndpointVolume;
 use windows::Win32::Media::Audio::{eConsole, eRender, IMMDeviceEnumerator, MMDeviceEnumerator};
 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
+use windows::core::{HSTRING, PCWSTR};
 use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
+use windows::Win32::UI::Shell::ShellExecuteW;
+use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_A, VK_LWIN, VK_N,
 };
 
 use super::{Battery, Network, Volume};
-use crate::util::{com_init, ErrStr};
+use crate::util::{com_init, windows_dir, ErrStr};
 
 pub fn battery() -> Battery {
     let mut status = SYSTEM_POWER_STATUS::default();
@@ -84,12 +87,22 @@ pub fn set_volume(level: Option<f32>, muted: Option<bool>) -> Result<(), String>
     .err_str()
 }
 
-/// Abre os flyouts nativos: Menu Iniciar, Configurações Rápidas e Central de Notificações.
+fn shell_open(target: &str) {
+    com_init();
+    unsafe {
+        ShellExecuteW(None, &HSTRING::from("open"), &HSTRING::from(target), PCWSTR::null(), PCWSTR::null(), SW_SHOWNORMAL);
+    }
+}
+
+/// Abre os flyouts nativos (Menu Iniciar, Configurações Rápidas e Central de Notificações), o
+/// Gerenciador de Tarefas e o Calendário do Outlook.
 pub fn open_shell(kind: &str) {
     match kind {
         "start" => press(&[VK_LWIN]),
         "quick-settings" => press(&[VK_LWIN, VK_A]),
         "notifications" => press(&[VK_LWIN, VK_N]),
+        "system-monitor" => shell_open(&format!(r"{}\System32\Taskmgr.exe", windows_dir())),
+        "calendar" => shell_open("outlookcal:"),
         _ => {}
     }
 }

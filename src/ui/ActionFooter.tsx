@@ -4,16 +4,19 @@ import { Kbd } from "./Kbd";
 
 export interface Action {
   label: string;
-  /** Atalho mostrado em chips e atendido pela janela: "↵", "Ctrl <tecla>" ou "⌘ <tecla>". */
+  /** Atalho mostrado em chips e atendido pela janela: "↵", "Espaço", "Ctrl <tecla>" ou "⌘ <tecla>". */
   keys?: string;
   onClick: () => void;
 }
 
+const KEY_NAMES: Record<string, string> = { "⌫": "backspace" };
+
 function matches(keys: string, e: KeyboardEvent): boolean {
   if (keys === "↵") return e.key === "Enter" && !e.ctrlKey && !e.altKey;
+  if (keys === "Espaço") return e.key === " " && !e.ctrlKey && !e.altKey && !e.metaKey;
   const [mod, key] = keys.split(" ");
   const modifier = mod === "⌘" ? e.metaKey : mod === "Ctrl" && e.ctrlKey;
-  return modifier && e.key.toLowerCase() === key.toLowerCase();
+  return modifier && e.key.toLowerCase() === (KEY_NAMES[key] ?? key.toLowerCase());
 }
 
 /**

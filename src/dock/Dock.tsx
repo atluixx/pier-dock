@@ -22,6 +22,12 @@ import { addDivider, applyOrder, isDivider, removeItem, resolveOrder, START_KEY,
 import { MediaWidget } from "../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../widgets/GithubWidgets";
 import { BatteryWidget, ClockWidget, NetworkWidget, VolumeWidget } from "../widgets/SystemWidgets";
+import { WeatherWidget } from "../widgets/WeatherWidget";
+import { PomodoroWidget } from "../widgets/PomodoroWidget";
+import { UsageWidget } from "../widgets/UsageWidget";
+import { CalendarWidget } from "../widgets/CalendarWidget";
+import { useWeather } from "../hooks/useWeather";
+import { useCalendar } from "../hooks/useCalendar";
 
 /** Abre o lançador de apps do sistema (Menu Iniciar, Launchpad, grade de apps do GNOME). */
 function StartButton({ onRemove }: { onRemove: () => void }) {
@@ -69,6 +75,10 @@ export function Dock({ config }: { config: Config }) {
   const usesGithub = config.widgets.some((w) => w.enabled && GITHUB_WIDGETS.includes(w.kind));
   const github = useGithub(usesGithub ? config.githubPollMinutes : undefined);
   const system = useSystemStatus();
+  const enabled = (kind: string) => config.widgets.some((w) => w.enabled && w.kind === kind);
+  const place = config.weatherLocation;
+  const weather = useWeather(enabled("weather"), place ? `${place.latitude},${place.longitude}` : undefined);
+  const calendar = useCalendar(enabled("calendar"));
   const mouseX = useMotionValue(Infinity);
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -220,6 +230,14 @@ export function Dock({ config }: { config: Config }) {
         return <BatteryWidget status={system} />;
       case "clock":
         return <ClockWidget />;
+      case "weather":
+        return <WeatherWidget data={weather} wide={wide} configured={!!config.weatherLocation} />;
+      case "pomodoro":
+        return <PomodoroWidget wide={wide} />;
+      case "system-usage":
+        return <UsageWidget wide={wide} />;
+      case "calendar":
+        return <CalendarWidget data={calendar} wide={wide} />;
     }
   };
 

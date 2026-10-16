@@ -25,7 +25,8 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 - **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, and dividers.
 - **Media player:** Shows what's playing in Spotify, YouTube Music, and other players, with playback controls.
 - **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
-- **System widgets:** Network, volume, battery, and clock.
+- **System widgets:** Network, volume, battery, clock, and system usage (CPU and memory with the last minute of history).
+- **Productivity widgets:** Weather, a Pomodoro timer, and your next calendar event with a join button for video calls.
 - **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
 - **Automatic updates:** Pier checks for new versions and installs them in one click.
 
@@ -72,6 +73,11 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 ### GitHub widgets
 
 Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) automatically. To use a different account, paste a personal access token with the `repo` and `read:user` scopes in **Configurações** > **GitHub** (Settings > GitHub). The token takes priority over the GitHub CLI and is stored in your system's keychain.
+
+### Weather and calendar widgets
+
+- **Weather:** Choose your city in **Configurações** > **Widgets** > **Clima**. Forecasts come from [Open-Meteo](https://open-meteo.com) and don't need an API key.
+- **Calendar:** Paste your calendar's secret iCal address in **Configurações** > **Widgets** > **Agenda**. Google Calendar, Outlook, and iCloud all publish one. Pier stores the address in your system's keychain.
 
 ## Platform notes
 

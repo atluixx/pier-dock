@@ -3,12 +3,16 @@ import {
   ArrowDown,
   ArrowUp,
   BatteryMedium,
+  CalendarDays,
   Clock,
+  CloudSun,
+  Cpu,
   GitCommitHorizontal,
   GitCompare,
   GitPullRequest,
   LayoutGrid,
   Music,
+  Timer,
   Volume2,
   Wifi,
   type LucideIcon,
@@ -22,6 +26,13 @@ import { useSystemStatus } from "../../hooks/useSystem";
 import { MediaWidget } from "../../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../../widgets/GithubWidgets";
 import { BatteryWidget, ClockWidget, NetworkWidget, VolumeWidget } from "../../widgets/SystemWidgets";
+import { WeatherWidget } from "../../widgets/WeatherWidget";
+import { PomodoroWidget } from "../../widgets/PomodoroWidget";
+import { UsageWidget } from "../../widgets/UsageWidget";
+import { CalendarWidget } from "../../widgets/CalendarWidget";
+import { useWeather } from "../../hooks/useWeather";
+import { useCalendar } from "../../hooks/useCalendar";
+import { CalendarOptions, PomodoroOptions, WeatherOptions } from "./WidgetOptions";
 import { Card, Row, SectionLabel } from "../../ui/Card";
 import { Segmented } from "../../ui/Segmented";
 import { Switch } from "../../ui/Switch";
@@ -50,16 +61,22 @@ export const WIDGETS: Record<WidgetKind, WidgetInfo> = {
   volume: { name: "Volume", group: "Sistema", description: "Role sobre o ícone para ajustar; o botão direito silencia.", Icon: Volume2 },
   battery: { name: "Bateria", group: "Sistema", description: "Carga e se está carregando. Some em computadores sem bateria.", Icon: BatteryMedium },
   clock: { name: "Relógio", group: "Sistema", description: "Hora e data. O clique abre a central de notificações.", Icon: Clock },
+  weather: { name: "Clima", group: "Produtividade", description: "Temperatura e condição agora. O clique abre a previsão por hora e para os próximos 5 dias.", Icon: CloudSun },
+  pomodoro: { name: "Pomodoro", group: "Produtividade", description: "O anel mostra o tempo que falta. Clique no anel para pausar ou retomar; no resto do widget, para abrir os controles.", Icon: Timer },
+  "system-usage": { name: "Uso do sistema", group: "Sistema", description: "CPU e memória com o histórico do último minuto. Acima de 85% o valor fica em âmbar.", Icon: Cpu },
+  calendar: { name: "Agenda", group: "Produtividade", description: "O próximo compromisso com contagem regressiva. Faltando 5 minutos, ou com a reunião em andamento, aparece o botão Entrar.", Icon: CalendarDays },
 };
 
-const RESIZABLE = new Set<WidgetKind>(["media", "github-contrib"]);
+const RESIZABLE = new Set<WidgetKind>(["media", "github-contrib", "weather", "pomodoro", "system-usage", "calendar"]);
 const isWidget = (key: string) => key.startsWith("widget:");
 
 /** O widget de verdade, com os dados atuais, mas sem reagir ao mouse. */
-function Preview({ widget }: { widget: WidgetConfig }) {
+function Preview({ widget, configured }: { widget: WidgetConfig; configured: boolean }) {
   const media = useMedia();
   const github = useGithub();
   const system = useSystemStatus();
+  const weather = useWeather();
+  const calendar = useCalendar();
   const wide = widget.size === "wide";
   const content = {
     media: <MediaWidget media={media} wide={wide} />,
@@ -71,6 +88,10 @@ function Preview({ widget }: { widget: WidgetConfig }) {
     volume: <VolumeWidget />,
     battery: <BatteryWidget status={system} />,
     clock: <ClockWidget />,
+    weather: <WeatherWidget data={weather} wide={wide} configured={configured} />,
+    pomodoro: <PomodoroWidget wide={wide} />,
+    "system-usage": <UsageWidget wide={wide} />,
+    calendar: <CalendarWidget data={calendar} wide={wide} />,
   }[widget.kind];
   return (
     <div className="preview-stage small" aria-hidden>
@@ -125,7 +146,7 @@ export function WidgetsTab({ config, update }: TabProps) {
           <span className="detail-name">{info.name}</span>
           <span className="detail-description">{info.description}</span>
         </div>
-        <Preview widget={widget} />
+        <Preview widget={widget} configured={!!config.weatherLocation} />
         <Card>
           <Row label="Mostrar na dock">
             <Switch checked={widget.enabled} label={`Mostrar ${info.name}`} onChange={(on) => set(widget.kind, { enabled: on })} />
@@ -135,6 +156,9 @@ export function WidgetsTab({ config, update }: TabProps) {
               <span className="row-value">Automático</span>
             </Row>
           )}
+          {widget.kind === "weather" && <WeatherOptions config={config} update={update} />}
+          {widget.kind === "pomodoro" && <PomodoroOptions config={config} update={update} />}
+          {widget.kind === "calendar" && <CalendarOptions />}
           {RESIZABLE.has(widget.kind) && (
             <Row label="Largura">
               <Segmented

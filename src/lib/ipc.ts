@@ -18,12 +18,29 @@ export type WidgetKind =
   | "network"
   | "volume"
   | "battery"
-  | "clock";
+  | "clock"
+  | "weather"
+  | "pomodoro"
+  | "system-usage"
+  | "calendar";
 
 export interface WidgetConfig {
   kind: WidgetKind;
   enabled: boolean;
   size: "small" | "wide";
+}
+
+export interface WeatherLocation {
+  name: string;
+  admin: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface PomodoroConfig {
+  preset: "25-5" | "50-10" | "custom";
+  focusMinutes: number;
+  breakMinutes: number;
 }
 
 export interface Config {
@@ -42,6 +59,8 @@ export interface Config {
   /** Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. */
   dockOrder: string[];
   showStartButton: boolean;
+  weatherLocation: WeatherLocation | null;
+  pomodoro: PomodoroConfig;
 }
 
 export interface WindowInfo {
@@ -118,6 +137,64 @@ export interface SystemStatus {
   network: { connected: boolean; internet: boolean; wifi: boolean; signalBars?: number | null; name: string };
 }
 
+export interface WeatherData {
+  location: string;
+  current: { temperature: number; apparentTemperature: number; humidity: number; code: number; isDay: boolean } | null;
+  /** A hora atual e as 5 seguintes, no horário da cidade (`2026-10-16T16:00`). */
+  hourly: { time: string; temperature: number; code: number; precipitationProbability: number; isDay: boolean }[];
+  daily: { date: string; code: number; min: number; max: number }[];
+  fetchedAt: number;
+  error?: string | null;
+}
+
+export interface PomodoroState {
+  phase: "focus" | "short-break" | "long-break";
+  running: boolean;
+  started: boolean;
+  endsAtMs?: number | null;
+  remainingMs: number;
+  totalMs: number;
+  session: number;
+  sessions: number;
+  focusTodayMs: number;
+}
+
+export interface SystemUsage {
+  cpu: number;
+  mem: number;
+  memUsed: number;
+  memTotal: number;
+  diskUsed: number;
+  diskTotal: number;
+  netRx: number;
+  netTx: number;
+  cpuHistory: number[];
+  memHistory: number[];
+}
+
+export interface AppUsage {
+  name: string;
+  cpu: number;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  startMs: number;
+  endMs: number;
+  allDay: boolean;
+  location: string;
+  meetingUrl?: string | null;
+  attendees: number;
+}
+
+export interface CalendarData {
+  configured: boolean;
+  events: CalendarEvent[];
+  fetchedAt: number;
+  error?: string | null;
+}
+
 export interface Volume {
   level: number;
   muted: boolean;
@@ -167,12 +244,28 @@ export const ipc = {
   systemStatus: () => invoke<SystemStatus>("system_status"),
   getVolume: () => invoke<Volume>("get_volume"),
   setVolume: (args: { level?: number; muted?: boolean }) => invoke<void>("set_volume", args),
-  openShell: (kind: "start" | "quick-settings" | "notifications") => invoke<void>("open_shell", { kind }),
+  openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar") =>
+    invoke<void>("open_shell", { kind }),
 
   githubFetch: () => invoke<GithubData>("github_fetch"),
   githubCached: () => invoke<GithubData | null>("github_cached"),
   githubAuthStatus: () => invoke<{ source: "pat" | "gh" | null }>("github_auth_status"),
   githubSetToken: (token: string | null) => invoke<void>("github_set_token", { token }),
+
+  weatherFetch: () => invoke<WeatherData>("weather_fetch"),
+  weatherCached: () => invoke<WeatherData | null>("weather_cached"),
+  weatherSearch: (query: string) => invoke<WeatherLocation[]>("weather_search", { query }),
+
+  pomodoroState: () => invoke<PomodoroState>("pomodoro_state"),
+  pomodoroControl: (action: "toggle" | "skip" | "reset") => invoke<PomodoroState>("pomodoro_control", { action }),
+
+  systemUsage: () => invoke<SystemUsage>("system_usage"),
+  topApps: () => invoke<AppUsage[]>("top_apps_usage"),
+  quitAppProcesses: (name: string) => invoke<number>("quit_app_processes", { name }),
+
+  calendarFetch: () => invoke<CalendarData>("calendar_fetch"),
+  calendarCached: () => invoke<CalendarData | null>("calendar_cached"),
+  calendarSetUrl: (url: string | null) => invoke<void>("calendar_set_url", { url }),
 
   openPanel: (kind: string, anchorX: number, width: number, height: number) =>
     invoke<void>("open_panel", { kind, anchorX, width, height }),

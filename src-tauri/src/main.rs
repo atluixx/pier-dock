@@ -2,6 +2,7 @@
 
 mod apps;
 mod backdrop;
+mod calendar;
 mod config;
 mod dock_window;
 mod github;
@@ -9,10 +10,13 @@ mod icons;
 mod media;
 mod panels;
 mod platform;
+mod pomodoro;
 mod system;
 mod taskbar;
 mod updater;
+mod usage;
 mod util;
+mod weather;
 mod windows_list;
 
 use std::sync::Mutex;
@@ -150,6 +154,7 @@ fn main() {
         }))
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(shortcuts)
         .manage(config::ConfigState(Mutex::new(config::load())))
@@ -181,6 +186,17 @@ fn main() {
             github::github_cached,
             github::github_auth_status,
             github::github_set_token,
+            weather::weather_fetch,
+            weather::weather_cached,
+            weather::weather_search,
+            pomodoro::pomodoro_state,
+            pomodoro::pomodoro_control,
+            usage::system_usage,
+            usage::top_apps_usage,
+            usage::quit_app_processes,
+            calendar::calendar_fetch,
+            calendar::calendar_cached,
+            calendar::calendar_set_url,
             panels::open_panel,
             panels::close_panel,
             panels::open_settings,
@@ -224,6 +240,8 @@ fn main() {
             }
             windows_list::start(handle.clone());
             media::start(handle.clone());
+            pomodoro::start(handle.clone());
+            usage::start();
             register_shortcuts(&handle);
             migrate_autostart(&handle);
             #[cfg(not(debug_assertions))]

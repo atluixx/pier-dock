@@ -91,7 +91,8 @@ fn press_menu_extra(identifier: &str) -> bool {
 }
 
 /// `start` abre a grade de apps (o app Apps no macOS 26, o Launchpad antes dele),
-/// `quick-settings` o Central de Controle e `notifications` a Central de Notificações.
+/// `quick-settings` o Central de Controle, `notifications` a Central de Notificações,
+/// `system-monitor` o Monitor de Atividade e `calendar` o Calendário.
 pub fn open_shell(kind: &str) {
     match kind {
         "start" => {
@@ -110,6 +111,8 @@ pub fn open_shell(kind: &str) {
         "notifications" => {
             press_menu_extra("com.apple.menuextra.clock");
         }
+        "system-monitor" => drop(spawn_detached("/usr/bin/open", &["-b", "com.apple.ActivityMonitor"])),
+        "calendar" => drop(spawn_detached("/usr/bin/open", &["-b", "com.apple.iCal"])),
         _ => {}
     }
 }

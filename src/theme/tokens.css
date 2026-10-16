@@ -46,6 +46,14 @@
   --danger-fill: rgba(255, 99, 99, 0.14);
   --danger-border: rgba(255, 99, 99, 0.3);
   --indicator: var(--gray-500);
+  --text-info: #a9c8ff;
+  --info-fill: rgba(94, 158, 255, 0.12);
+  --info-border: rgba(94, 158, 255, 0.28);
+
+  /* Gráficos do uso do sistema */
+  --chart-cpu: var(--blue);
+  --chart-memory: #c9b2ff;
+  --chart-disk: var(--gray-500);
 
   /* Bordas e divisórias (branco sobre o escuro) */
   --border-subtle: rgba(255, 255, 255, 0.07);
