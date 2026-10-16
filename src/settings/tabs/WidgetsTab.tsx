@@ -4,6 +4,7 @@ import {
   ArrowUp,
   BatteryMedium,
   CalendarDays,
+  Asterisk,
   Clock,
   CloudSun,
   Cpu,
@@ -30,8 +31,10 @@ import { WeatherWidget } from "../../widgets/WeatherWidget";
 import { PomodoroWidget } from "../../widgets/PomodoroWidget";
 import { UsageWidget } from "../../widgets/UsageWidget";
 import { CalendarWidget } from "../../widgets/CalendarWidget";
+import { ClaudeWidget } from "../../widgets/ClaudeWidget";
 import { useWeather } from "../../hooks/useWeather";
 import { useCalendar } from "../../hooks/useCalendar";
+import { useClaudeUsage } from "../../hooks/useClaudeUsage";
 import { CalendarOptions, PomodoroOptions, WeatherOptions } from "./WidgetOptions";
 import { Card, Row, SectionLabel } from "../../ui/Card";
 import { Segmented } from "../../ui/Segmented";
@@ -65,9 +68,10 @@ export const WIDGETS: Record<WidgetKind, WidgetInfo> = {
   pomodoro: { name: "Pomodoro", group: "Produtividade", description: "O anel mostra o tempo que falta. Clique no anel para pausar ou retomar; no resto do widget, para abrir os controles.", Icon: Timer },
   "system-usage": { name: "Uso do sistema", group: "Sistema", description: "CPU e memória com o histórico do último minuto. Acima de 85% o valor fica em âmbar.", Icon: Cpu },
   calendar: { name: "Agenda", group: "Produtividade", description: "O próximo compromisso com contagem regressiva. Faltando 5 minutos, ou com a reunião em andamento, aparece o botão Entrar.", Icon: CalendarDays },
+  "claude-usage": { name: "Uso do Claude", group: "Produtividade", description: "Quanto do limite do Claude Code já foi usado na sessão de 5h e na semana, mais os tokens do dia. Lê os arquivos locais do Claude Code; nada vai para a rede.", Icon: Asterisk },
 };
 
-const RESIZABLE = new Set<WidgetKind>(["media", "github-contrib", "weather", "pomodoro", "system-usage", "calendar"]);
+const RESIZABLE = new Set<WidgetKind>(["media", "github-contrib", "weather", "pomodoro", "system-usage", "calendar", "claude-usage"]);
 const isWidget = (key: string) => key.startsWith("widget:");
 
 /** O widget de verdade, com os dados atuais, mas sem reagir ao mouse. */
@@ -77,6 +81,7 @@ function Preview({ widget, configured }: { widget: WidgetConfig; configured: boo
   const system = useSystemStatus();
   const weather = useWeather();
   const calendar = useCalendar();
+  const claude = useClaudeUsage();
   const wide = widget.size === "wide";
   const content = {
     media: <MediaWidget media={media} wide={wide} />,
@@ -92,6 +97,7 @@ function Preview({ widget, configured }: { widget: WidgetConfig; configured: boo
     pomodoro: <PomodoroWidget wide={wide} />,
     "system-usage": <UsageWidget wide={wide} />,
     calendar: <CalendarWidget data={calendar} wide={wide} />,
+    "claude-usage": <ClaudeWidget data={claude} wide={wide} />,
   }[widget.kind];
   return (
     <div className="preview-stage small" aria-hidden>

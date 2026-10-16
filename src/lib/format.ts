@@ -79,3 +79,30 @@ export function formatBytes(bytes: number): string {
 }
 
 export const formatRate = (bytesPerSecond: number) => `${formatBytes(bytesPerSecond)}/s`;
+
+/** Contagem de tokens curta: 12400000 → "12,4M", 3100 → "3k". */
+export function formatTokens(tokens: number): string {
+  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}M`;
+  if (tokens >= 1_000) return `${Math.round(tokens / 1_000)}k`;
+  return String(tokens);
+}
+
+/**
+ * Tempo até o reset de uma janela de uso: "48min", "4h18", "5d3h". Aguenta a janela semanal.
+ * Desconhecido ou já passado vira "--" — uma janela que virou não tem tempo restante.
+ */
+export function formatResetIn(minutes: number | null): string {
+  if (minutes === null || minutes <= 0) return "--";
+  if (minutes < 60) return `${minutes}min`;
+  if (minutes < 1440) return `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, "0")}`;
+  return `${Math.floor(minutes / 1440)}d${Math.floor((minutes % 1440) / 60)}h`;
+}
+
+/** Percentual de limite; `null` vira "--", porque admitir que não sabe é melhor que inventar. */
+export const formatPercent = (percent: number | null) => (percent === null ? "--" : `${percent}%`);
+
+/** "claude-opus-5" → "opus5": cabe ao lado do número no painel. */
+export function shortModel(model: string | null): string {
+  if (!model) return "";
+  return model.replace("claude-", "").replace(/-/g, "").slice(0, 8);
+}

@@ -26,7 +26,7 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 - **Media player:** Shows what's playing in Spotify, YouTube Music, and other players, with playback controls.
 - **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
 - **System widgets:** Network, volume, battery, clock, and system usage (CPU and memory with the last minute of history).
-- **Productivity widgets:** Weather, a Pomodoro timer, and your next calendar event with a join button for video calls.
+- **Productivity widgets:** Weather, a Pomodoro timer, your next calendar event with a join button for video calls, and your Claude Code usage.
 - **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
 - **Automatic updates:** Pier checks for new versions and installs them in one click.
 
@@ -78,6 +78,15 @@ Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) auto
 
 - **Weather:** Choose your city in **Configurações** > **Widgets** > **Clima**. Forecasts come from [Open-Meteo](https://open-meteo.com) and don't need an API key.
 - **Calendar:** Paste your calendar's secret iCal address in **Configurações** > **Widgets** > **Agenda**. Google Calendar, Outlook, and iCloud all publish one. Pier stores the address in your system's keychain.
+
+### Claude Code usage widget
+
+A ring shows how much of your Claude Code limit is gone in the tighter of the two windows — the 5-hour session or the week — and the panel breaks both down with the time until each resets, plus today's token count.
+
+Nothing is configured and nothing is sent anywhere. Pier reads two files the Claude Code CLI already keeps on disk:
+
+- `~/.claude.json`, field `cachedUsageUtilization`, for the limit percentages. This is the same source the `/usage` command reads, so the numbers match your terminal. The CLI only refreshes it while it runs, so with Claude Code closed the number freezes — the widget dims and says how old the reading is instead of passing a stale value off as current.
+- `~/.claude/projects/**/*.jsonl`, the session transcripts, for the token counts. Only the numeric `usage` fields, the model name, and the timestamp are read — never the content of your conversations.
 
 ## Platform notes
 

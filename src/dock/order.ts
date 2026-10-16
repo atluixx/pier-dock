@@ -17,9 +17,10 @@ function itemKeys(config: OrderConfig): string[] {
   ];
 }
 
-/** Grupo de um widget na ordem padrão: mídia, GitHub ou sistema. */
+/** Grupo de um widget na ordem padrão: mídia, GitHub, Claude ou sistema. */
 function widgetGroup(kind: string): string {
   if (kind === "media") return "media";
+  if (kind === "claude-usage") return "claude";
   return kind.startsWith("github-") ? "github" : "system";
 }
 

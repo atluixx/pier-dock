@@ -22,7 +22,8 @@ export type WidgetKind =
   | "weather"
   | "pomodoro"
   | "system-usage"
-  | "calendar";
+  | "calendar"
+  | "claude-usage";
 
 export interface WidgetConfig {
   kind: WidgetKind;
@@ -56,6 +57,7 @@ export interface Config {
   hideTaskbar: boolean;
   autoHide: "never" | "smart" | "always";
   githubPollMinutes: number;
+  claudePollMinutes: number;
   /** Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. */
   dockOrder: string[];
   showStartButton: boolean;
@@ -195,6 +197,24 @@ export interface CalendarData {
   error?: string | null;
 }
 
+export interface ClaudeUsage {
+  /** Percentuais reais do `/usage`. `null` é desconhecido — cache ausente ou janela virada. */
+  sessionPercent: number | null;
+  /** Minutos até o reset; negativo se a janela já passou. */
+  sessionResetsIn: number | null;
+  weeklyPercent: number | null;
+  weeklyResetsIn: number | null;
+  /** Idade do cache de limites, em minutos. */
+  ageMin: number | null;
+  stale: boolean;
+  todayTokens: number;
+  todayMessages: number;
+  blockTokens: number;
+  topModel: string | null;
+  fetchedAt: number;
+  error?: string | null;
+}
+
 export interface Volume {
   level: number;
   muted: boolean;
@@ -266,6 +286,9 @@ export const ipc = {
   calendarFetch: () => invoke<CalendarData>("calendar_fetch"),
   calendarCached: () => invoke<CalendarData | null>("calendar_cached"),
   calendarSetUrl: (url: string | null) => invoke<void>("calendar_set_url", { url }),
+
+  claudeUsage: () => invoke<ClaudeUsage>("claude_usage"),
+  claudeUsageCached: () => invoke<ClaudeUsage | null>("claude_usage_cached"),
 
   openPanel: (kind: string, anchorX: number, width: number, height: number) =>
     invoke<void>("open_panel", { kind, anchorX, width, height }),

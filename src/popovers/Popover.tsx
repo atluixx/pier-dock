@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { ipc } from "../lib/ipc";
 import { Calendar } from "./Calendar";
+import { ClaudeUsage } from "./ClaudeUsage";
 import { Commits } from "./Commits";
 import { Contributions } from "./Contributions";
 import { NowPlaying } from "./NowPlaying";
@@ -29,6 +30,8 @@ function Content({ kind }: { kind: string }) {
       return <SystemUsage />;
     case "calendar":
       return <Calendar />;
+    case "claude-usage":
+      return <ClaudeUsage />;
     default:
       return <div className="popover-empty">Painel desconhecido.</div>;
   }
@@ -44,6 +47,7 @@ const LABELS: Record<string, string> = {
   pomodoro: "Pomodoro",
   "system-usage": "Uso do sistema",
   calendar: "Agenda",
+  "claude-usage": "Uso do Claude",
 };
 
 /** Popover de um widget: janela própria, ancorada acima da dock (ver `panels.rs`). */
