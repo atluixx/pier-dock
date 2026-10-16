@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Minus, Plus, Search, Trash2 } from "lucide-react";
 import { ipc, type AppEntry, type Config } from "../../lib/ipc";
-import { labels } from "../../lib/platform";
+import { keys, labels } from "../../lib/platform";
 import { useIcon } from "../../hooks/useIcon";
 import { iconKeyForEntry } from "../../dock/apps";
 import { appKey, isDivider, moveAmong, removeItem, resolveOrder, START_KEY } from "../../dock/order";
@@ -36,7 +36,7 @@ export function AppsTab({ config, update }: TabProps) {
   const nameOf = (key: string) => appsByKey.get(key)?.name ?? (key === START_KEY ? `Botão ${labels.startButton}` : "Separador");
   const shortcutOf = (key: string) => {
     const n = config.pinnedApps.findIndex((p) => appKey(p.id) === key) + 1;
-    return n >= 1 && n <= 9 ? `Ctrl Alt ${n}` : null;
+    return n >= 1 && n <= 9 ? `${keys.appShortcut} ${n}` : null;
   };
 
   const q = query.trim().toLowerCase();

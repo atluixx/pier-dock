@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Activity, GitBranch, LayoutGrid, Menu, Palette } from "lucide-react";
 import { ipc, type PlatformInfo } from "../lib/ipc";
-import { labels, os } from "../lib/platform";
+import { keys, labels, os } from "../lib/platform";
 import { useConfig } from "../store/config";
 import { ActionFooter, type Action } from "../ui/ActionFooter";
 import { Logo } from "../ui/Logo";
@@ -52,7 +52,7 @@ export function Settings() {
     apps: [{ label: "Adicionar separador", onClick: () => update((c) => addDivider(c)) }],
     widgets: [],
     appearance: [],
-    github: [{ label: "Sincronizar agora", keys: "Ctrl R", onClick: refreshGithub }],
+    github: [{ label: "Sincronizar agora", keys: `${keys.command} R`, onClick: refreshGithub }],
     general: [{ label: labels.quit, onClick: () => ipc.quit() }],
   };
 

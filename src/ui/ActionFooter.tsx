@@ -4,7 +4,7 @@ import { Kbd } from "./Kbd";
 
 export interface Action {
   label: string;
-  /** Atalho mostrado em chips e atendido pela janela: "↵" ou "Ctrl <tecla>". */
+  /** Atalho mostrado em chips e atendido pela janela: "↵", "Ctrl <tecla>" ou "⌘ <tecla>". */
   keys?: string;
   onClick: () => void;
 }
@@ -12,7 +12,8 @@ export interface Action {
 function matches(keys: string, e: KeyboardEvent): boolean {
   if (keys === "↵") return e.key === "Enter" && !e.ctrlKey && !e.altKey;
   const [mod, key] = keys.split(" ");
-  return mod === "Ctrl" && e.ctrlKey && e.key.toLowerCase() === key.toLowerCase();
+  const modifier = mod === "⌘" ? e.metaKey : mod === "Ctrl" && e.ctrlKey;
+  return modifier && e.key.toLowerCase() === key.toLowerCase();
 }
 
 /**

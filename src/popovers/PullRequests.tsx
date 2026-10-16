@@ -4,6 +4,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { ipc, type GithubData, type PullRequest } from "../lib/ipc";
 import { useGithub } from "../hooks/useGithub";
 import { timeAgo } from "../lib/format";
+import { keys } from "../lib/platform";
 import { ActionFooter } from "../ui/ActionFooter";
 import { Segmented } from "../ui/Segmented";
 
@@ -124,7 +125,7 @@ export function PullRequests({ initial }: { initial: Tab }) {
         }
         actions={[
           { label: "Abrir no GitHub", keys: "↵", onClick: () => openUrl(link) },
-          { label: "Atualizar", keys: "Ctrl R", onClick: refreshGithub },
+          { label: "Atualizar", keys: `${keys.command} R`, onClick: refreshGithub },
         ]}
       />
     </>

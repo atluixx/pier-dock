@@ -118,7 +118,7 @@ fn refresh_autostart(app: &AppHandle) {
     }
 }
 
-/// Ctrl+Alt+1..9 abre/foca o app na posição N da dock (a dock decide o que fazer).
+/// Ctrl+Alt+1..9 (⌃⌥ no macOS) abre/foca o app na posição N da dock (a dock decide o que fazer).
 fn register_shortcuts(app: &AppHandle) {
     for code in APP_DIGITS {
         let _ = app.global_shortcut().register(Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), code));

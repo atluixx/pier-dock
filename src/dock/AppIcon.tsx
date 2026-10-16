@@ -4,6 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Menu } from "@tauri-apps/api/menu";
 import { ipc } from "../lib/ipc";
+import { keys } from "../lib/platform";
 import { useIcon } from "../hooks/useIcon";
 import { useConfig } from "../store/config";
 import { Tooltip } from "../ui/Tooltip";
@@ -14,7 +15,7 @@ interface Props {
   app: DockApp;
   active: boolean;
   sortable: boolean;
-  /** Posição para o atalho Ctrl+Alt+N (1 a 9), se o app tiver um. */
+  /** Posição para o atalho Ctrl+Alt+N (⌃⌥N no macOS, 1 a 9), se o app tiver um. */
   shortcut?: number;
 }
 
@@ -83,7 +84,7 @@ export function AppIcon({ app, active, sortable, shortcut }: Props) {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      {hover && !isDragging && <Tooltip label={app.name} keys={shortcut ? `Ctrl Alt ${shortcut}` : undefined} />}
+      {hover && !isDragging && <Tooltip label={app.name} keys={shortcut ? `${keys.appShortcut} ${shortcut}` : undefined} />}
       <button
         className="app-button"
         aria-label={state ? `${app.name} (${state})` : app.name}
