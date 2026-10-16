@@ -54,10 +54,12 @@ fn cached(id: i64) -> Option<Element> {
     WINDOWS.lock().unwrap().as_ref()?.get(&id).cloned()
 }
 
+/// Uma janela minimizada passa a ter subrole `AXDialog` (macOS 26) e sumiria da lista; sem ela, o
+/// clique na dock só ativava o app e a janela continuava no Dock nativo.
 fn standard_windows(app: &Element) -> impl Iterator<Item = (u32, Element)> {
     app.elements(kAXWindowsAttribute)
         .into_iter()
-        .filter(|w| w.string(kAXSubroleAttribute).as_deref() == Some(kAXStandardWindowSubrole))
+        .filter(|w| w.string(kAXSubroleAttribute).as_deref() == Some(kAXStandardWindowSubrole) || w.bool(kAXMinimizedAttribute))
         .filter_map(|w| Some((w.window_id()?, w)))
 }
 
