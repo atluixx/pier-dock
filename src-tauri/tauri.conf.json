@@ -37,6 +37,8 @@
   },
   "bundle": {
     "active": true,
+    "license": "GPL-3.0-or-later",
+    "copyright": "Copyright © 2026 Nathan Ferreira and Matheus Basilio",
     "targets": ["nsis"],
     "createUpdaterArtifacts": true,
     "icon": [

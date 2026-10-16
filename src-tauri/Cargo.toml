@@ -2,6 +2,7 @@
 name = "pier"
 version = "0.1.0"
 description = "Dock customizável para Windows, Linux (GNOME) e macOS"
+license = "GPL-3.0-or-later"
 edition = "2021"
 
 [build-dependencies]

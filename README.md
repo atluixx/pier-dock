@@ -1,105 +1,186 @@
-# Pier
+<p align="center">
+  <img src="app-icon.svg" width="96" height="96" alt="Pier logo">
+</p>
 
-A dock para macOS, Windows e Linux (GNOME). Substitui a barra nativa do sistema: apps fixados e abertos, player do Spotify/YouTube Music, widgets do GitHub (PRs, revisões, contribuições), rede, volume, bateria e relógio, em vidro líquido nativo.
+<h1 align="center">Pier</h1>
 
-Feita com Tauri 2 (Rust) + React/TypeScript. Antes se chamava WinDock: na primeira execução o Pier leva a configuração, o token do GitHub e o início automático do WinDock. No GNOME, a extensão precisa ser reinstalada pelas Configurações (a antiga é removida).
+<p align="center">
+  A customizable dock for Windows, macOS, and Linux (GNOME).
+</p>
 
-## Instalando
+<p align="center">
+  <a href="https://github.com/pier-dock/pier-dock/releases/latest"><img src="https://img.shields.io/github/v/release/pier-dock/pier-dock?label=release" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/pier-dock/pier-dock" alt="License: GPL-3.0"></a>
+  <img src="https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational" alt="Platforms: Windows, macOS, and Linux">
+</p>
 
-Baixe o instalador da sua plataforma na [página de Releases](https://github.com/pier-dock/pier-dock/releases/latest). Depois de instalado, o Pier procura versões novas sozinho (e em Configurações → Geral) e se atualiza com um clique.
+<p align="center">
+  <b>English</b> · <a href="README.pt-BR.md">Português</a>
+</p>
 
-Os instaladores ainda não têm assinatura de código, então o sistema avisa na primeira abertura:
+Pier replaces your system's taskbar or dock with a single bar that holds your pinned and running apps alongside live widgets. It's built with [Tauri 2](https://tauri.app) (Rust) and React, and draws native glass on Windows 11, macOS, and Linux compositors that support blur.
 
-- **Windows** (`Pier_x.y.z_x64-setup.exe`): no aviso do SmartScreen, clique em **Mais informações** → **Executar assim mesmo**. O Pier é instalado em `%LOCALAPPDATA%\Pier`, sem pedir administrador.
-- **macOS** (`Pier_x.y.z_universal.dmg`, Intel e Apple Silicon): arraste o Pier para Aplicativos e abra. Quando o macOS disser que não pôde verificar o app, vá em **Ajustes do Sistema → Privacidade e Segurança** e clique em **Abrir mesmo assim**. Ou, no Terminal: `xattr -dr com.apple.quarantine /Applications/Pier.app`. Sem assinatura da Apple, o macOS pede a permissão de Acessibilidade de novo a cada atualização.
-- **Linux** (GNOME): `sudo apt install ./Pier_x.y.z_amd64.deb`, ou o AppImage (`chmod +x Pier_x.y.z_amd64.AppImage` e execute). A atualização automática funciona no AppImage; no `.deb`, instale a versão nova pelo Releases.
+## Features
 
-## Rodando a partir do código
+- **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, and dividers.
+- **Media player:** Shows what's playing in Spotify, YouTube Music, and other players, with playback controls.
+- **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
+- **System widgets:** Network, volume, battery, and clock.
+- **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
+- **Automatic updates:** Pier checks for new versions and installs them in one click.
 
-Pré-requisitos: Node 22+, Rust (toolchain `stable-x86_64-pc-windows-msvc`), Visual Studio Build Tools com C++ e o Windows SDK.
+> [!NOTE]
+> Pier's interface is currently available in Portuguese only. This README shows each label as it appears on screen, followed by its English translation.
+
+## Installation
+
+Download the installer for your platform from the [latest release](https://github.com/pier-dock/pier-dock/releases/latest).
+
+| Platform | File | Notes |
+| --- | --- | --- |
+| Windows 10 and 11 | `Pier_x.y.z_x64-setup.exe` | Installs to `%LOCALAPPDATA%\Pier` without admin rights. |
+| macOS 12 or later | `Pier_x.y.z_universal.dmg` | Runs natively on Apple silicon and Intel Macs. |
+| Linux (GNOME 45 to 49) | `Pier_x.y.z_amd64.deb` or `Pier_x.y.z_amd64.AppImage` | Install the `.deb` with `sudo apt install ./Pier_x.y.z_amd64.deb`, or make the AppImage executable with `chmod +x` and run it. |
+
+### First launch
+
+The installers aren't code-signed yet, so your system warns you the first time you open Pier.
+
+- **Windows:** When SmartScreen appears, select **More info**, and then select **Run anyway**.
+- **macOS:** Drag Pier to **Applications** and open it. When macOS says it can't verify the app, go to **System Settings** > **Privacy & Security** and select **Open Anyway**. Alternatively, run `xattr -dr com.apple.quarantine /Applications/Pier.app` in Terminal.
+- **Linux:** On GNOME, open Pier's settings and select **Instalar extensão** (Install extension), and then log out and log back in. The extension lets Pier see and focus windows, reserve screen space, hide the Dash, and register shortcuts.
+
+### Updates
+
+Pier checks for updates shortly after it starts and every 12 hours. When a new version is available, select **Atualizar para x.y.z** (Update to x.y.z) in the tray menu, or select **Instalar e reiniciar** (Install and restart) in **Configurações** > **Geral** (Settings > General).
+
+Automatic updates work with the Windows installer, the macOS app, and the AppImage. If you installed the `.deb` package, download and install each new version from the releases page.
+
+## Usage
+
+- **Click** an app to open or focus it. Click the active app to minimize it. If the app has several windows, clicking cycles through them.
+- **Shift+click** an app to open a new instance.
+- **Right-click** an app to see its windows, pin or unpin it, or close it.
+- **Right-click** the dock background to open settings or quit.
+- **Drag** pinned apps to reorder them. To pin an app, drop it on the dock (an `.exe` or shortcut on Windows, an `.app` on macOS, or a `.desktop` file on Linux), or add it in **Configurações** > **Apps** (Settings > Apps).
+- **Click** a widget to open its panel. On the volume widget, scroll to adjust the volume and right-click to mute.
+
+| Shortcut | Windows and Linux | macOS |
+| --- | --- | --- |
+| Open or focus the app in position N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
+
+### GitHub widgets
+
+Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) automatically. To use a different account, paste a personal access token with the `repo` and `read:user` scopes in **Configurações** > **GitHub** (Settings > GitHub). The token takes priority over the GitHub CLI and is stored in your system's keychain.
+
+## Platform notes
+
+### macOS
+
+Pier asks for two permissions:
+
+- **Accessibility** (**System Settings** > **Privacy & Security** > **Accessibility**) to list, focus, minimize, and close windows. Without it, Pier still shows running apps and can focus, hide, and quit them. Pier's settings show a **Conceder permissão** (Grant permission) button that requests it.
+- **Automation**, the first time Spotify or Music plays something, so the media widget can read and control them through AppleScript.
+
+Because the app isn't signed with an Apple Developer ID yet, macOS asks for the Accessibility permission again after each update.
+
+macOS has some limitations compared to Windows:
+
+- Apps can't reserve screen space, so maximized windows extend under the dock. To avoid this, turn on **Ocultar automaticamente** (Auto-hide) in **Configurações** > **Aparência** (Settings > Appearance).
+- The native Dock can't be removed. Pier sets it to auto-hide with a very long reveal delay and restores your original preferences when it quits.
+- The media widget supports only Spotify and Music.
+- The Wi-Fi widget shows the network name only if Pier has Location permission.
+
+### Linux
+
+Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
+
+## Configuration
+
+Pier stores its settings in `config.json`:
+
+- **Windows:** `%APPDATA%\pier\config.json`
+- **macOS:** `~/Library/Application Support/pier/config.json`
+- **Linux:** `~/.config/pier/config.json`
+
+If you used Pier when it was called WinDock, Pier imports your settings, GitHub token, and launch-at-login setting the first time it runs. On GNOME, reinstall the extension from Pier's settings.
+
+## Troubleshooting
+
+### The taskbar or Dock doesn't come back
+
+Pier restores the native taskbar (or the macOS Dock) when it quits. If the process is killed, run the following command to restore it:
 
 ```sh
-npm install
-npm run tauri dev      # desenvolvimento
-npm run tauri build    # instalador em src-tauri/target/release/bundle/nsis
-```
-
-## macOS
-
-Pré-requisitos: Node 22+, Xcode Command Line Tools (`xcode-select --install`) e Rust via [rustup](https://rustup.rs).
-
-```sh
-npm install
-npm run tauri dev      # desenvolvimento
-npm run tauri build    # Pier.app e .dmg em src-tauri/target/release/bundle/
-```
-
-Permissões que o macOS pede:
-
-- **Acessibilidade** (Ajustes do Sistema → Privacidade e Segurança → Acessibilidade): listar, focar, minimizar e fechar janelas. Sem ela a dock ainda mostra os apps abertos e consegue focá-los, escondê-los e encerrá-los. As Configurações da dock mostram um aviso com o botão para pedir a permissão.
-- **Automação**, na primeira vez que o Spotify ou o Música tocarem algo: o widget de mídia lê e controla esses apps por AppleScript.
-
-No `npm run tauri dev` as permissões ficam com o terminal que rodou o comando, não com o Pier.
-
-Diferenças em relação ao Windows:
-
-- O macOS não deixa outros apps reservarem área da tela, então janelas maximizadas passam por baixo da dock (use "ocultar automaticamente").
-- O Dock nativo não pode ser removido: o Pier o deixa em "ocultar automaticamente" com um atraso enorme para reaparecer, e devolve as preferências originais ao sair.
-- O widget de mídia só enxerga o Spotify e o Música.
-- O nome da rede Wi‑Fi só aparece se o app tiver permissão de Localização; sem ela o widget mostra "Wi‑Fi".
-- Os atalhos são **Control+Option+1..9**.
-
-## Usando
-
-- **Clique** num app abre ou foca. Clicar no app ativo minimiza; com várias janelas, alterna entre elas. **Shift+clique** abre uma nova instância.
-- **Botão direito** num app: lista de janelas, fixar/desafixar, fechar.
-- **Botão direito** no fundo da dock: configurações e sair.
-- **Ctrl+Alt+1..9** abre/foca o app na posição N.
-- **Reordenar:** arraste os apps fixados. **Fixar:** solte um `.exe`/atalho na dock ou use Configurações → Apps.
-- **Widgets:** clique para abrir o painel. No volume, a roda do mouse ajusta e o botão direito silencia.
-- **GitHub:** usa o token do `gh auth login` automaticamente. Um Personal Access Token colado nas configurações tem prioridade.
-
-A configuração fica em `%APPDATA%\pier\config.json` (no macOS, `~/Library/Application Support/pier/config.json`).
-
-## Se a barra de tarefas não voltar
-
-Ao sair, a dock restaura a barra de tarefas (ou o Dock do macOS). Se o processo for encerrado à força, rode:
-
-```sh
-%LOCALAPPDATA%\Pier\pier.exe --restore-taskbar               # Windows
+%LOCALAPPDATA%\Pier\pier.exe --restore-taskbar                # Windows
 /Applications/Pier.app/Contents/MacOS/pier --restore-taskbar   # macOS
 ```
 
-## Ícones
+On GNOME, the Dash comes back automatically.
 
-Os ícones de todas as plataformas saem de `app-icon.svg` e `src-tauri/icons/source/` (versão simplificada para 32px ou menos e o ícone monocromático da bandeja):
+## Building from source
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org) 22 or later
+- [Rust](https://rustup.rs) (stable)
+- Platform tools:
+  - **Windows:** Visual Studio Build Tools with the C++ workload and the Windows SDK. Use the `stable-x86_64-pc-windows-msvc` Rust toolchain.
+  - **macOS:** Xcode Command Line Tools (`xcode-select --install`).
+  - **Linux:** `libwebkit2gtk-4.1-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, and `patchelf`.
+
+### Run and build
 
 ```sh
-./scripts/icons.sh     # precisa do macOS (iconutil)
+npm install
+npm run tauri dev     # run in development mode
+npm run tauri build   # build the installers into src-tauri/target/release/bundle/
 ```
 
-## Pré-visualização no navegador
+When you run `npm run tauri dev` on macOS, the system grants permissions to the terminal that ran the command, not to Pier.
 
-`npm run dev` fora do Tauri responde o IPC com dados de exemplo, para conferir as telas no navegador: `?view=dock`, `?view=panel&kind=media` (ou `github-mine`, `github-review`, `github-contrib`) e `?view=settings`.
+### Preview in the browser
 
-## Testes
+Outside Tauri, `npm run dev` answers IPC calls with sample data so you can review the UI in a browser. Open `http://localhost:1420` with one of these query strings:
+
+- `?view=dock`
+- `?view=panel&kind=media` (or `github-mine`, `github-review`, `github-contrib`)
+- `?view=settings`
+
+### Tests
 
 ```sh
-npm test                         # ordem da dock (frontend)
+npm test                               # frontend tests
 cd src-tauri
-cargo test                       # testes unitários
-cargo test -- --ignored --nocapture   # smoke tests contra o sistema real (janelas, apps, mídia, GitHub)
+cargo test                             # Rust unit tests
+cargo test -- --ignored --nocapture    # smoke tests against the real system
 ```
 
-## Publicando uma versão
+The smoke tests exercise real windows, apps, media sessions, and the GitHub API on the machine that runs them.
 
-```sh
-./scripts/release.sh 0.2.0     # atualiza as versões, faz o commit e cria a tag v0.2.0
-git push --follow-tags
-```
+### Icons
 
-O push da tag dispara `.github/workflows/release.yml`, que compila no macOS (binário universal), no Windows e no Linux e cria um Release **rascunho** com os instaladores e o `latest.json` do atualizador. Confira os arquivos e publique o rascunho: só então os apps instalados enxergam a versão nova. Para só testar o build, rode o workflow à mão (aba Actions → Release → Run workflow); os instaladores ficam como artefatos da execução.
+All platform icons come from `app-icon.svg` and `src-tauri/icons/source/`. To regenerate them, run `./scripts/icons.sh` on macOS (it requires `iconutil`).
 
-Os pacotes de atualização são assinados com a chave do atualizador (a pública está em `src-tauri/tauri.conf.json`). A privada e a senha ficam nos secrets `TAURI_SIGNING_PRIVATE_KEY` e `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` do repositório. Sem a mesma chave, os apps já instalados recusam as atualizações, então guarde uma cópia dela.
+## Releasing
 
-Para assinar e notarizar o app do macOS no futuro (conta Apple Developer): adicione os secrets `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD` e `APPLE_TEAM_ID`, passe-os no `env` do passo `tauri-action` e remova o `"signingIdentity": "-"` de `src-tauri/tauri.macos.conf.json`.
+To publish a new version:
+
+1. Run `./scripts/release.sh x.y.z`. The script updates the version in `package.json` and `Cargo.toml`, commits the change, and creates the `vx.y.z` tag.
+2. Run `git push --follow-tags`.
+3. Wait for the **Release** workflow to finish. It builds Pier on macOS, Windows, and Linux and creates a draft release with the installers and the updater's `latest.json`.
+4. Review the draft and publish it. Installed copies of Pier see the new version only after you publish.
+
+To test the build without creating a release, run the workflow manually from **Actions** > **Release** > **Run workflow**. The installers are attached to the workflow run as artifacts.
+
+The workflow signs update packages with the updater key stored in the `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` repository secrets. The matching public key is in `src-tauri/tauri.conf.json`. Keep a backup of the private key: if it's lost, installed copies of Pier reject future updates.
+
+To sign and notarize the macOS app later, add the `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, and `APPLE_TEAM_ID` secrets, pass them in the `env` of the `tauri-action` step, and remove `"signingIdentity": "-"` from `src-tauri/tauri.macos.conf.json`.
+
+## License
+
+Copyright © 2026 Nathan Ferreira and Matheus Basilio.
+
+Pier is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](LICENSE) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+Pier is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
