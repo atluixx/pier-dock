@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMotionValue } from "framer-motion";
+import { Search } from "lucide-react";
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { listen } from "@tauri-apps/api/event";
@@ -14,7 +15,7 @@ import { useGithub } from "../hooks/useGithub";
 import { useSystemStatus } from "../hooks/useSystem";
 import { buildDockApps, type DockApp } from "./apps";
 import { dockMetrics } from "./layout";
-import { MagnifyCtx, Magnify } from "./Magnify";
+import { MagnifyCtx } from "./Magnify";
 import { AppIcon } from "./AppIcon";
 import { SortableItem } from "./SortableItem";
 import { addDivider, applyOrder, isDivider, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
@@ -22,6 +23,7 @@ import { MediaWidget } from "../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../widgets/GithubWidgets";
 import { BatteryWidget, ClockWidget, NetworkWidget, VolumeWidget } from "../widgets/SystemWidgets";
 
+/** Abre o lançador de apps do sistema (Menu Iniciar, Launchpad, grade de apps do GNOME). */
 function StartButton({ onRemove }: { onRemove: () => void }) {
   const onContextMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -30,25 +32,10 @@ function StartButton({ onRemove }: { onRemove: () => void }) {
     await menu.popup();
   };
   return (
-    <SortableItem id={START_KEY} className="dock-item" onContextMenu={onContextMenu}>
-      <Magnify>
-        <button className="app-icon start-button" onClick={() => ipc.openShell("start")} title={labels.startButton}>
-          {os === "windows" ? (
-            <svg viewBox="0 0 24 24" aria-hidden>
-              <rect x="2" y="2" width="9.5" height="9.5" rx="1.2" />
-              <rect x="12.5" y="2" width="9.5" height="9.5" rx="1.2" />
-              <rect x="2" y="12.5" width="9.5" height="9.5" rx="1.2" />
-              <rect x="12.5" y="12.5" width="9.5" height="9.5" rx="1.2" />
-            </svg>
-          ) : (
-            // Grade de apps (GNOME / Launchpad).
-            <svg viewBox="0 0 24 24" aria-hidden>
-              {[4, 12, 20].flatMap((cy) => [4, 12, 20].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2.6" />))}
-            </svg>
-          )}
-        </button>
-      </Magnify>
-      <div className="indicator" />
+    <SortableItem id={START_KEY} className="widget-slot" onContextMenu={onContextMenu}>
+      <button className="launcher-button" aria-label={labels.startButton} title={labels.startButton} onClick={() => ipc.openShell("start")}>
+        <Search size={18} strokeWidth={2} aria-hidden />
+      </button>
     </SortableItem>
   );
 }
@@ -240,12 +227,16 @@ export function Dock({ config }: { config: Config }) {
   const unpinnedApps = apps.filter((a) => !a.pinned);
   const widgets = new Map(config.widgets.filter((w) => w.enabled).map((w) => [widgetKey(w.kind), w]));
   const activeKey = apps.find((a) => a.windows.some((w) => w.id === snapshot.foreground))?.key;
+  const shortcutFor = (app: DockApp) => {
+    const n = apps.indexOf(app) + 1;
+    return n >= 1 && n <= 9 ? n : undefined;
+  };
 
   const renderItem = (key: string) => {
     if (key === START_KEY) return <StartButton key={key} onRemove={() => remove(key)} />;
     if (isDivider(key)) return <Divider key={key} id={key} onRemove={() => remove(key)} />;
     const app = pinnedApps.get(key);
-    if (app) return <AppIcon key={key} app={app} active={key === activeKey} sortable />;
+    if (app) return <AppIcon key={key} app={app} active={key === activeKey} sortable shortcut={shortcutFor(app)} />;
     const widget = widgets.get(key);
     if (widget) {
       return (
@@ -259,7 +250,7 @@ export function Dock({ config }: { config: Config }) {
 
   // Clicar em qualquer outro lugar da dock fecha o painel aberto; o próprio tile alterna o dele.
   const onPointerDown = (e: React.PointerEvent) => {
-    if (!(e.target as Element).closest(".tile")) ipc.closePanel();
+    if (!(e.target as Element).closest("[data-widget]")) ipc.closePanel();
   };
 
   return (
@@ -281,7 +272,7 @@ export function Dock({ config }: { config: Config }) {
             </SortableContext>
           </DndContext>
           {unpinnedApps.map((app) => (
-            <AppIcon key={app.key} app={app} active={app.key === activeKey} sortable={false} />
+            <AppIcon key={app.key} app={app} active={app.key === activeKey} sortable={false} shortcut={shortcutFor(app)} />
           ))}
         </MagnifyCtx.Provider>
       </div>

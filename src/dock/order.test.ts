@@ -12,8 +12,29 @@ const base = {
   showStartButton: true,
 };
 
-test("config antiga vira botão de apps, apps, separador e widgets", () => {
-  assert.deepEqual(resolveOrder(base), ["start", "app:finder", "app:safari", "divider:default", "widget:media", "widget:clock"]);
+test("config antiga vira os grupos do botão de apps, apps, mídia e sistema, com separadores", () => {
+  assert.deepEqual(resolveOrder(base), [
+    "start",
+    "divider:apps",
+    "app:finder",
+    "app:safari",
+    "divider:media",
+    "widget:media",
+    "divider:system",
+    "widget:clock",
+  ]);
+});
+
+test("config antiga com widgets do GitHub ganha um grupo para eles", () => {
+  const widgets = [widget("media"), widget("github-mine"), widget("github-review"), widget("clock")];
+  assert.deepEqual(resolveOrder({ ...base, showStartButton: false, pinnedApps: [], widgets }), [
+    "widget:media",
+    "divider:github",
+    "widget:github-mine",
+    "widget:github-review",
+    "divider:system",
+    "widget:clock",
+  ]);
 });
 
 test("ordem salva mistura apps e widgets e é respeitada", () => {
@@ -54,6 +75,6 @@ test("removeItem desafixa, desliga, esconde ou apaga conforme o item", () => {
 
 test("addDivider põe um separador novo no fim", () => {
   const order = addDivider(base).dockOrder!;
-  assert.equal(order.length, 7);
-  assert.match(order[6], /^divider:/);
+  assert.deepEqual(order.slice(0, -1), resolveOrder(base));
+  assert.match(order[order.length - 1], /^divider:/);
 });

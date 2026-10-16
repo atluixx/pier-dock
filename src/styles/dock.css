@@ -5,14 +5,13 @@
 }
 
 .dock-bar {
+  --glass-blur: var(--dock-blur);
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  padding-bottom: 8px !important;
-  --glass-blur: var(--dock-blur);
+  align-items: center;
+  gap: 4px;
   background: rgb(var(--glass-tint) / var(--dock-opacity));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-dock);
@@ -41,17 +40,37 @@
   }
 }
 
-.dock-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  touch-action: none;
-}
-
 .dragging {
   z-index: 10;
   opacity: 0.85;
+}
+
+/* Apps: presos à base da barra, crescem para cima com a magnificação. */
+.dock-item {
+  position: relative;
+  align-self: flex-end;
+  margin-bottom: 3px;
+  display: flex;
+  touch-action: none;
+}
+
+.dock-item + .dock-item {
+  margin-left: -2px;
+}
+
+.app-button {
+  min-width: calc(var(--icon) + 8px);
+  padding: 3.5px 4px;
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s ease;
+}
+
+.app-button:is(:hover, [data-hover]) {
+  background: var(--fill-hover);
 }
 
 .magnify {
@@ -63,7 +82,6 @@
 .app-icon {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,70 +95,67 @@
   filter: var(--shadow-icon);
 }
 
-.app-icon:active img {
+.app-button:active img {
   filter: brightness(0.75);
 }
 
 .app-icon-fallback {
-  width: 82%;
-  height: 82%;
-  border-radius: var(--radius-card);
-  background: var(--fill-selected);
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background: var(--surface-icon);
+  border: 1px solid var(--border);
   display: grid;
   place-items: center;
   font-weight: 600;
-  font-size: calc(var(--icon) * 0.4);
+  font-size: calc(var(--icon) * 0.35);
 }
 
-.start-button svg {
-  width: 62%;
-  height: 62%;
-  fill: var(--accent);
-  filter: drop-shadow(0 1px 4px var(--fill));
-}
-
-.start-button {
-  background: var(--fill-selected);
-}
-
-.start-button:is(:hover, [data-hover]) {
-  background: var(--fill-active);
+.indicators {
+  display: flex;
+  gap: 3px;
+  height: 4px;
 }
 
 .indicator {
-  position: absolute;
-  bottom: -6px;
-  width: 0;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--indicator);
-  transition: width 0.25s ease, background 0.25s ease;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.indicator.on {
-  width: 6px;
-}
-
-.indicator.active {
-  width: 16px;
-  background: var(--accent);
-}
-
-.indicator-dot {
-  position: absolute;
-  right: -7px;
   width: 4px;
   height: 4px;
   border-radius: 2px;
+  background: transparent;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease;
+}
+
+.indicator.on {
   background: var(--indicator);
+}
+
+.indicator.active {
+  width: 14px;
+  background: var(--accent);
+}
+
+.launcher-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-card);
+  background: var(--fill-control);
+  border: 1px solid var(--fill-control);
+  transition: background 0.15s ease;
+}
+
+.launcher-button:is(:hover, [data-hover]) {
+  background: var(--fill-active);
 }
 
 /* A área do separador é mais larga que a linha, para dar para arrastá-lo. */
 .divider-item {
-  height: var(--icon);
-  padding: 0 4px;
+  height: 28px;
+  padding: 0 6px;
   display: flex;
   align-items: center;
   touch-action: none;
@@ -148,33 +163,40 @@
 
 .divider {
   width: 1px;
-  height: 75%;
+  height: 28px;
   background: var(--divider);
 }
 
 .tooltip {
   position: absolute;
-  bottom: calc(100% + 10px);
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  padding: 4px 10px;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-control);
   background: var(--surface-raised);
-  color: var(--text);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-tooltip);
+  color: var(--text);
   font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
   max-width: 420px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   pointer-events: none;
   z-index: 100;
   animation: fade-in 0.12s ease;
 }
 
-.dock-item .tooltip {
-  bottom: calc(100% + 6px);
+.tooltip.with-keys {
+  padding-right: 8px;
+}
+
+.tooltip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @keyframes fade-in {

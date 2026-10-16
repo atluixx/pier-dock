@@ -1,4 +1,4 @@
-import { GitCommitHorizontal, GitPullRequest, GitPullRequestArrow } from "lucide-react";
+import { GitCommitHorizontal, GitCompare, GitPullRequest } from "lucide-react";
 import type { GithubData, PullRequest } from "../lib/ipc";
 import { Tile } from "./Tile";
 
@@ -9,17 +9,18 @@ export function checksState(prs: PullRequest[]): "failure" | "pending" | "succes
   return "none";
 }
 
-function Badge({ count }: { count: number }) {
-  if (!count) return null;
-  return <span className="badge">{count > 99 ? "99+" : count}</span>;
+/** Contagem ao lado do ícone; com `highlight` vira um selo na cor de destaque. */
+function Count({ value, highlight = false }: { value: number; highlight?: boolean }) {
+  const text = value > 99 ? "99+" : String(value);
+  return <span className={highlight && value > 0 ? "tile-badge" : "tile-count"}>{text}</span>;
 }
 
 export function GithubReviewWidget({ data }: { data: GithubData | null }) {
   const count = data?.reviewCount ?? 0;
   return (
-    <Tile kind="github-review" label={data?.error ?? `${count} PR(s) aguardando seu review`}>
-      <GitPullRequest size={22} />
-      <Badge count={count} />
+    <Tile kind="github-review" label={data?.error ?? `Revisões pendentes: ${count}`}>
+      <GitCompare size={18} strokeWidth={1.8} />
+      <Count value={count} highlight />
       {data?.error && <span className="status-dot failure" />}
     </Tile>
   );
@@ -29,9 +30,9 @@ export function GithubMineWidget({ data }: { data: GithubData | null }) {
   const count = data?.myPrCount ?? 0;
   const state = checksState(data?.myPrs ?? []);
   return (
-    <Tile kind="github-mine" label={`${count} PR(s) seus abertos`}>
-      <GitPullRequestArrow size={22} />
-      <Badge count={count} />
+    <Tile kind="github-mine" label={`Seus pull requests abertos: ${count}`}>
+      <GitPullRequest size={18} strokeWidth={1.8} />
+      <Count value={count} />
       {state !== "none" && <span className={`status-dot ${state}`} />}
     </Tile>
   );
@@ -44,9 +45,9 @@ function isToday(iso: string): boolean {
 export function GithubCommitsWidget({ data }: { data: GithubData | null }) {
   const todayCount = data?.commits.filter((c) => isToday(c.date)).length ?? 0;
   return (
-    <Tile kind="github-commits" label={`Commits recentes (${todayCount} hoje)`}>
-      <GitCommitHorizontal size={24} />
-      <Badge count={todayCount} />
+    <Tile kind="github-commits" label={`Commits recentes: ${todayCount} hoje`}>
+      <GitCommitHorizontal size={18} strokeWidth={1.8} />
+      <Count value={todayCount} />
     </Tile>
   );
 }
@@ -94,28 +95,39 @@ export function HeatmapGrid({ weeks, className }: { weeks: ContributionDay[][]; 
 }
 
 /** Contribuições do ano corrente (o calendário do GitHub cobre os últimos 12 meses). */
-function contributionsThisYear(weeks: ContributionDay[][]): number {
+export function contributionsThisYear(weeks: ContributionDay[][]): number {
   const year = String(new Date().getFullYear());
   return weeks.flat().reduce((sum, d) => (d.date.startsWith(year) ? sum + d.count : sum), 0);
 }
 
+/** Mapa pequeno da dock: células de tamanho fixo, uma coluna por semana. */
+function MiniHeatmap({ weeks }: { weeks: ContributionDay[][] }) {
+  const max = Math.max(1, ...weeks.flat().map((d) => d.count));
+  return (
+    <span className="mini-heatmap" aria-hidden>
+      {padWeeks(weeks)
+        .flat()
+        .map((day, i) => (
+          <span key={day?.date ?? `blank-${i}`} className={`heat ${day ? `l${contributionLevel(day.count, max)}` : "blank"}`} />
+        ))}
+    </span>
+  );
+}
+
+const DOCK_WEEKS = 20;
+
 export function ContributionsWidget({ data, wide }: { data: GithubData | null; wide: boolean }) {
   const all = data?.weeks ?? [];
-  const weeks = all.slice(wide ? -26 : -7);
+  const year = contributionsThisYear(all).toLocaleString("pt-BR");
   return (
-    <Tile
-      kind="github-contrib"
-      wide={wide}
-      label={`${data?.totalContributions ?? 0} contribuições no último ano`}
-      className="contrib-tile"
-    >
+    <Tile kind="github-contrib" label={`Contribuições: ${year} neste ano`} className="contrib-tile">
       {wide && (
-        <div className="contrib-summary">
-          <span className="contrib-total">{contributionsThisYear(all).toLocaleString("pt-BR")}</span>
+        <span className="contrib-summary">
+          <span className="contrib-total">{year}</span>
           <span className="contrib-caption">neste ano</span>
-        </div>
+        </span>
       )}
-      <HeatmapGrid weeks={weeks} className="mini-heatmap" />
+      <MiniHeatmap weeks={all.slice(-DOCK_WEEKS)} />
     </Tile>
   );
 }

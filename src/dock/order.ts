@@ -17,15 +17,28 @@ function itemKeys(config: OrderConfig): string[] {
   ];
 }
 
-/** A dock antes da ordem livre: botão de apps, apps, um separador e os widgets. */
+/** Grupo de um widget na ordem padrão: mídia, GitHub ou sistema. */
+function widgetGroup(kind: string): string {
+  if (kind === "media") return "media";
+  return kind.startsWith("github-") ? "github" : "system";
+}
+
+/**
+ * Ordem de quem ainda não arrumou a dock: botão de apps, apps, mídia, GitHub e sistema, com um
+ * separador entre cada grupo.
+ */
 function legacyOrder(config: OrderConfig): string[] {
-  const widgets = config.widgets.filter((w) => w.enabled).map((w) => widgetKey(w.kind));
-  return [
-    ...(config.showStartButton ? [START_KEY] : []),
-    ...config.pinnedApps.map((p) => appKey(p.id)),
-    ...(widgets.length ? ["divider:default"] : []),
-    ...widgets,
-  ];
+  const groups = new Map<string, string[]>([
+    ["start", config.showStartButton ? [START_KEY] : []],
+    ["apps", config.pinnedApps.map((p) => appKey(p.id))],
+  ]);
+  for (const w of config.widgets.filter((w) => w.enabled)) {
+    const group = widgetGroup(w.kind);
+    groups.set(group, [...(groups.get(group) ?? []), widgetKey(w.kind)]);
+  }
+  return [...groups]
+    .filter(([, keys]) => keys.length)
+    .flatMap(([group, keys], i) => (i === 0 ? keys : [`divider:${group}`, ...keys]));
 }
 
 /**

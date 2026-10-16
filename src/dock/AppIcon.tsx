@@ -6,6 +6,7 @@ import { Menu } from "@tauri-apps/api/menu";
 import { ipc } from "../lib/ipc";
 import { useIcon } from "../hooks/useIcon";
 import { useConfig } from "../store/config";
+import { Tooltip } from "../ui/Tooltip";
 import { Magnify } from "./Magnify";
 import { toPinned, type DockApp } from "./apps";
 
@@ -13,14 +14,16 @@ interface Props {
   app: DockApp;
   active: boolean;
   sortable: boolean;
+  /** Posição para o atalho Ctrl+Alt+N (1 a 9), se o app tiver um. */
+  shortcut?: number;
 }
 
-export function AppIcon({ app, active, sortable }: Props) {
+export function AppIcon({ app, active, sortable, shortcut }: Props) {
   const src = useIcon(app.iconKey);
   const bounce = useAnimationControls();
   const [hover, setHover] = useState(false);
   const update = useConfig((s) => s.update);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: app.key,
     disabled: !sortable,
   });
@@ -70,7 +73,8 @@ export function AppIcon({ app, active, sortable }: Props) {
     await menu.popup();
   };
 
-  const running = app.windows.length > 0;
+  const windows = app.windows.length;
+  const state = active ? "em foco" : windows > 1 ? `${windows} janelas` : windows ? "aberto" : "";
   return (
     <div
       ref={setNodeRef}
@@ -78,18 +82,25 @@ export function AppIcon({ app, active, sortable }: Props) {
       style={{ transform: CSS.Translate.toString(transform), transition }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      {...attributes}
-      {...listeners}
     >
-      {hover && !isDragging && <div className="tooltip">{app.name}</div>}
-      <Magnify>
-        <motion.button className="app-icon" animate={bounce} onClick={onClick} onContextMenu={onContextMenu}>
-          {src ? <img src={src} alt="" draggable={false} /> : <div className="app-icon-fallback">{app.name[0]}</div>}
-        </motion.button>
-      </Magnify>
-      <div className={`indicator ${running ? "on" : ""} ${active ? "active" : ""}`}>
-        {app.windows.length > 1 && <span className="indicator-dot" />}
-      </div>
+      {hover && !isDragging && <Tooltip label={app.name} keys={shortcut ? `Ctrl Alt ${shortcut}` : undefined} />}
+      <button
+        className="app-button"
+        aria-label={state ? `${app.name} (${state})` : app.name}
+        onClick={onClick}
+        onContextMenu={onContextMenu}
+        {...listeners}
+      >
+        <Magnify>
+          <motion.span className="app-icon" animate={bounce}>
+            {src ? <img src={src} alt="" draggable={false} /> : <span className="app-icon-fallback">{app.name[0]}</span>}
+          </motion.span>
+        </Magnify>
+        <span className="indicators" aria-hidden>
+          <span className={`indicator ${active ? "active" : windows ? "on" : ""}`} />
+          {windows > 1 && <span className="indicator on" />}
+        </span>
+      </button>
     </div>
   );
 }

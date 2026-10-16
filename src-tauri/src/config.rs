@@ -62,6 +62,10 @@ fn widget(kind: &str, size: &str) -> WidgetConfig {
     WidgetConfig { kind: kind.into(), enabled: true, size: size.into() }
 }
 
+fn disabled(kind: &str) -> WidgetConfig {
+    WidgetConfig { enabled: false, ..widget(kind, "small") }
+}
+
 /// O gerenciador de arquivos do sistema, fixado na primeira execução.
 fn file_manager() -> AppEntry {
     #[cfg(windows)]
@@ -96,10 +100,10 @@ impl Default for Config {
             pinned_apps: vec![file_manager()],
             widgets: vec![
                 widget("media", "wide"),
-                widget("github-review", "small"),
                 widget("github-mine", "small"),
-                widget("github-commits", "small"),
-                widget("github-contrib", "small"),
+                widget("github-review", "small"),
+                disabled("github-commits"),
+                widget("github-contrib", "wide"),
                 widget("network", "small"),
                 widget("volume", "small"),
                 widget("battery", "small"),
@@ -108,7 +112,7 @@ impl Default for Config {
             material: "glass".into(),
             glass_opacity: 0.4,
             accent: "coral".into(),
-            icon_size: 44,
+            icon_size: 40,
             magnification: 1.6,
             show_running_unpinned: true,
             hide_taskbar: true,
