@@ -16,8 +16,11 @@ use std::time::Duration;
 
 use tauri::WebviewWindow;
 use windows::core::{s, w};
-use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, RECT, WPARAM};
-use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_DONOTROUND};
+use windows::Win32::Foundation::{BOOL, HINSTANCE, HWND, LPARAM, LRESULT, RECT, WPARAM};
+use windows::Win32::Graphics::Dwm::{
+    DwmSetWindowAttribute, DWMNCRP_DISABLED, DWMWA_NCRENDERING_POLICY, DWMWA_USE_IMMERSIVE_DARK_MODE, DWMWA_WINDOW_CORNER_PREFERENCE,
+    DWMWCP_DONOTROUND,
+};
 use windows::Win32::Graphics::Gdi::{CreateRoundRectRgn, SetWindowRgn};
 use windows::Win32::System::LibraryLoader::{GetModuleHandleW, GetProcAddress};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
@@ -100,8 +103,9 @@ unsafe fn enable_acrylic(hwnd: HWND) {
     let Ok(user32) = GetModuleHandleW(w!("user32.dll")) else { return };
     let Some(proc) = GetProcAddress(user32, s!("SetWindowCompositionAttribute")) else { return };
     let set: unsafe extern "system" fn(HWND, *mut CompositionAttributeData) -> i32 = std::mem::transmute(proc);
-    // A cor é ABGR. Alfa zero deixa a janela preta em alguns builds; a tinta de verdade é do CSS.
-    let mut policy = AccentPolicy { state: ACCENT_ENABLE_ACRYLICBLURBEHIND, flags: 0, gradient_color: 0x0100_0000, animation_id: 0 };
+    // A cor é ABGR: `--glass-tint` (28 28 34) com alfa ~0,4. Sem tinta o Acrylic do Windows 11 fica
+    // quase branco, e a tinta do CSS por cima não basta para escurecê-lo.
+    let mut policy = AccentPolicy { state: ACCENT_ENABLE_ACRYLICBLURBEHIND, flags: 0, gradient_color: 0x6622_1C1C, animation_id: 0 };
     let mut data = CompositionAttributeData {
         attribute: WCA_ACCENT_POLICY,
         data: &mut policy as *mut _ as *mut c_void,
@@ -145,6 +149,12 @@ fn create_window() -> Option<isize> {
         .ok()?;
         let corners = DWMWCP_DONOTROUND;
         let _ = DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corners as *const _ as *const c_void, std::mem::size_of_val(&corners) as u32);
+        let dark = BOOL::from(true);
+        let _ = DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark as *const _ as *const c_void, std::mem::size_of_val(&dark) as u32);
+        // A sombra que o DWM desenha em volta da janela ignora a região arredondada e aparece como
+        // um retângulo em volta da barra e dos painéis.
+        let policy = DWMNCRP_DISABLED;
+        let _ = DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &policy as *const _ as *const c_void, std::mem::size_of_val(&policy) as u32);
         enable_acrylic(hwnd);
         Some(hwnd.0 as isize)
     }
