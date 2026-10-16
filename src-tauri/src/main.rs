@@ -97,6 +97,17 @@ fn migrate_autostart(app: &AppHandle) {
     }
 }
 
+/// O início automático guarda o caminho do executável de quando foi ligado (o do `tauri dev`, por
+/// exemplo): a versão instalada o atualiza para o próprio caminho.
+#[cfg(not(debug_assertions))]
+fn refresh_autostart(app: &AppHandle) {
+    use tauri_plugin_autostart::ManagerExt;
+    let autolaunch = app.autolaunch();
+    if autolaunch.is_enabled().unwrap_or(false) {
+        let _ = autolaunch.enable();
+    }
+}
+
 /// Ctrl+Alt+1..9 abre/foca o app na posição N da dock (a dock decide o que fazer).
 fn register_shortcuts(app: &AppHandle) {
     for code in APP_DIGITS {
@@ -201,6 +212,8 @@ fn main() {
             media::start(handle.clone());
             register_shortcuts(&handle);
             migrate_autostart(&handle);
+            #[cfg(not(debug_assertions))]
+            refresh_autostart(&handle);
             // No GNOME (inclusive Wayland) quem registra os atalhos é a extensão.
             #[cfg(target_os = "linux")]
             platform::linux::gnome_shell::set_shortcuts_enabled(true);
