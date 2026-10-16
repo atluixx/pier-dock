@@ -8,8 +8,8 @@ import { Switch } from "../../ui/Switch";
 import type { TabProps } from "../shared";
 
 const RESTORE_HINT = {
-  windows: "Se a dock travar e a barra de tarefas não voltar, rode win-dock.exe --restore-taskbar (ou reinicie o explorer.exe e rode o comando).",
-  macos: "Se a dock travar e o Dock do macOS não voltar, rode /Applications/WinDock.app/Contents/MacOS/win-dock --restore-taskbar.",
+  windows: "Se a dock travar e a barra de tarefas não voltar, rode pier.exe --restore-taskbar (ou reinicie o explorer.exe e rode o comando).",
+  macos: "Se a dock travar e o Dock do macOS não voltar, rode /Applications/Pier.app/Contents/MacOS/pier --restore-taskbar.",
   linux: "O Dash volta sozinho se a dock for encerrada, mesmo num travamento.",
 }[os];
 
@@ -64,7 +64,7 @@ export function GeneralTab({ config, update, platform }: TabProps) {
           <Logo size={30} />
         </span>
         <div className="account-text">
-          <span className="version-name">WinDock {version}</span>
+          <span className="version-name">Pier {version}</span>
           <span className="account-sub">macOS · Windows · Linux</span>
         </div>
       </div>

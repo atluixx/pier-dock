@@ -1,5 +1,5 @@
 //! GNOME: a extensão esconde o Dash (e o Dash to Dock / Ubuntu Dock). Ela mesma desfaz isso quando
-//! o WinDock some do session bus, então não há estado em disco nem watchdog.
+//! o Pier some do session bus, então não há estado em disco nem watchdog.
 
 use crate::platform::linux::gnome_shell;
 

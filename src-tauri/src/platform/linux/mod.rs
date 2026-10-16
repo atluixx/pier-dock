@@ -1,4 +1,4 @@
-//! Linux. No GNOME (Wayland ou X11) a extensão `windock@windock.dev` dá acesso às janelas; nas
+//! Linux. No GNOME (Wayland ou X11) a extensão `pier@pier.dev` dá acesso às janelas; nas
 //! outras DEs, só sessões X11 funcionam (EWMH). A janela da dock roda sempre via X11/XWayland,
 //! porque um cliente Wayland comum não pode se posicionar na tela.
 

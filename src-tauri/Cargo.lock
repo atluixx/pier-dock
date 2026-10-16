@@ -2956,6 +2956,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "pier"
+version = "0.1.0"
+dependencies = [
+ "accessibility-sys",
+ "auto-launch",
+ "base64 0.22.1",
+ "block2",
+ "core-foundation 0.10.1",
+ "dirs 6.0.0",
+ "gdkx11",
+ "gtk",
+ "image",
+ "keyring",
+ "objc2",
+ "objc2-app-kit",
+ "objc2-core-wlan",
+ "objc2-foundation",
+ "objc2-quartz-core",
+ "plist",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "signal-hook",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-autostart",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-opener",
+ "tauri-plugin-single-instance",
+ "windows 0.58.0",
+ "x11rb",
+ "zbus 5.19.0",
+]
+
+[[package]]
 name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5151,40 +5186,6 @@ dependencies = [
  "thiserror 2.0.21",
  "windows 0.62.2",
  "windows-core 0.62.2",
-]
-
-[[package]]
-name = "win-dock"
-version = "0.1.0"
-dependencies = [
- "accessibility-sys",
- "base64 0.22.1",
- "block2",
- "core-foundation 0.10.1",
- "dirs 6.0.0",
- "gdkx11",
- "gtk",
- "image",
- "keyring",
- "objc2",
- "objc2-app-kit",
- "objc2-core-wlan",
- "objc2-foundation",
- "objc2-quartz-core",
- "plist",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "signal-hook",
- "tauri",
- "tauri-build",
- "tauri-plugin-autostart",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-opener",
- "tauri-plugin-single-instance",
- "windows 0.58.0",
- "x11rb",
- "zbus 5.19.0",
 ]
 
 [[package]]

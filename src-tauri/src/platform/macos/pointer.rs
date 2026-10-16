@@ -1,4 +1,4 @@
-//! Hover nas janelas da WinDock. O WKWebView só recebe o movimento do mouse quando a janela é a
+//! Hover nas janelas do Pier. O WKWebView só recebe o movimento do mouse quando a janela é a
 //! janela-chave, e a dock e os painéis nunca são: o app é `Accessory` e não toma o foco de quem
 //! está em uso. Então uma thread lê o cursor e manda a posição para a página (`pointer-bridge`),
 //! que gera os eventos de mouse e o estado de hover por conta própria (`src/lib/pointerBridge.ts`).

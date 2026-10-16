@@ -1,8 +1,8 @@
-//! Cliente da extensão `windock@windock.dev` (pasta `gnome-extension/`), que roda dentro do GNOME
-//! Shell e expõe janelas, overview, menus, área reservada e atalhos em `dev.windock.Shell`.
+//! Cliente da extensão `pier@pier.dev` (pasta `gnome-extension/`), que roda dentro do GNOME
+//! Shell e expõe janelas, overview, menus, área reservada e atalhos em `dev.pier.Shell`.
 //!
 //! O estado pedido (esconder o Dash, altura reservada, atalhos) fica guardado aqui e é reaplicado
-//! sempre que a extensão aparece — ela desfaz tudo quando o WinDock some do bus, inclusive num
+//! sempre que a extensão aparece — ela desfaz tudo quando o Pier some do bus, inclusive num
 //! crash, e também é recarregada quando o Shell reinicia.
 
 use std::path::PathBuf;
@@ -14,14 +14,14 @@ use zbus::proxy::CacheProperties;
 
 use super::dbus;
 
-const UUID: &str = "windock@windock.dev";
-const METADATA_JSON: &str = include_str!("../../../../gnome-extension/windock@windock.dev/metadata.json");
-const EXTENSION_JS: &str = include_str!("../../../../gnome-extension/windock@windock.dev/extension.js");
+const UUID: &str = "pier@pier.dev";
+const METADATA_JSON: &str = include_str!("../../../../gnome-extension/pier@pier.dev/metadata.json");
+const EXTENSION_JS: &str = include_str!("../../../../gnome-extension/pier@pier.dev/extension.js");
 
 #[zbus::proxy(
-    interface = "dev.windock.Shell",
-    default_service = "dev.windock.Shell",
-    default_path = "/dev/windock/Shell",
+    interface = "dev.pier.Shell",
+    default_service = "dev.pier.Shell",
+    default_path = "/dev/pier/Shell",
     gen_async = false,
     blocking_name = "ShellProxy"
 )]
@@ -177,6 +177,7 @@ pub fn extension_installed() -> bool {
 /// Copia a extensão embutida para `~/.local/share/gnome-shell/extensions` e a habilita. No
 /// Wayland o Shell só carrega extensões novas no próximo login.
 pub fn install_extension() -> Result<(), String> {
+    remove_legacy_extension();
     let dir = extension_dir().ok_or("pasta de dados do usuário não encontrada")?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     std::fs::write(dir.join("metadata.json"), METADATA_JSON).map_err(|e| e.to_string())?;
@@ -186,6 +187,16 @@ pub fn install_extension() -> Result<(), String> {
         enable_in_settings()?;
     }
     Ok(())
+}
+
+/// A extensão do WinDock (`windock@windock.dev`) espera um dono de bus que não existe mais: sai
+/// do Shell e do disco quando a do Pier é instalada.
+fn remove_legacy_extension() {
+    const LEGACY_UUID: &str = "windock@windock.dev";
+    let _ = crate::util::run("gnome-extensions", &["disable", LEGACY_UUID]);
+    if let Some(dir) = dirs::data_dir().map(|d| d.join("gnome-shell/extensions").join(LEGACY_UUID)) {
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }
 
 fn enable_in_settings() -> Result<(), String> {

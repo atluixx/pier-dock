@@ -25,7 +25,7 @@ pub fn is_trusted() -> bool {
     unsafe { AXIsProcessTrusted() }
 }
 
-/// Mostra o pedido do sistema para incluir a WinDock na lista de Acessibilidade.
+/// Mostra o pedido do sistema para incluir o Pier na lista de Acessibilidade.
 pub fn request_trust() {
     let key = unsafe { CFString::wrap_under_get_rule(kAXTrustedCheckOptionPrompt) };
     let options = CFDictionary::from_CFType_pairs(&[(key.as_CFType(), CFBoolean::true_value().as_CFType())]);

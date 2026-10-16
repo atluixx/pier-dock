@@ -39,18 +39,29 @@ fn restart_dock() {
     let _ = run("/usr/bin/killall", &["Dock"]);
 }
 
+/// Atraso que esconde o Dock na prática; nunca é um valor original do usuário.
+const HIDDEN_DELAY: &str = "1000";
+
 pub fn hide() {
     let path = state_path();
     // Se já existe, é de uma execução que não chegou a restaurar: os valores ali são os originais.
     if !path.exists() {
-        let saved = SavedState { autohide: read_default("autohide"), autohide_delay: read_default("autohide-delay") };
+        let delay = read_default("autohide-delay");
+        // Com o atraso de esconder, o Dock já está escondido por uma execução que perdeu o próprio
+        // estado: os originais são desconhecidos, e restaurar o padrão do sistema é melhor do que
+        // deixar o Dock escondido para sempre.
+        let saved = if delay.as_deref() == Some(HIDDEN_DELAY) {
+            SavedState { autohide: None, autohide_delay: None }
+        } else {
+            SavedState { autohide: read_default("autohide"), autohide_delay: delay }
+        };
         let Ok(json) = serde_json::to_string(&saved) else { return };
         if std::fs::write(&path, json).is_err() {
             return;
         }
     }
     write_default("autohide", "-bool", "true");
-    write_default("autohide-delay", "-float", "1000");
+    write_default("autohide-delay", "-float", HIDDEN_DELAY);
     restart_dock();
 }
 

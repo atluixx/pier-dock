@@ -16,6 +16,7 @@ mod windows_list;
 
 use std::sync::Mutex;
 
+use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
@@ -51,8 +52,8 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let quit_item = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&settings, &reload, &separator, &quit_item])?;
 
-    let mut tray = TrayIconBuilder::with_id("main")
-        .tooltip("WinDock")
+    let tray = TrayIconBuilder::with_id("main")
+        .tooltip("Pier")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
@@ -72,11 +73,28 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                 let _ = panels::open_settings_window(tray.app_handle());
             }
         });
-    if let Some(icon) = app.default_window_icon() {
-        tray = tray.icon(icon.clone());
-    }
+    // Monocromático: no macOS como imagem-modelo (o sistema pinta na cor da barra de menus).
+    #[cfg(target_os = "macos")]
+    let tray = tray.icon(Image::from_bytes(include_bytes!("../icons/tray-template.png"))?).icon_as_template(true);
+    #[cfg(not(target_os = "macos"))]
+    let tray = tray.icon(Image::from_bytes(include_bytes!("../icons/tray.png"))?);
     tray.build(app)?;
     Ok(())
+}
+
+/// O WinDock registrava o início automático com o nome dele, apontando para o executável antigo:
+/// troca esse registro pelo do Pier.
+fn migrate_autostart(app: &AppHandle) {
+    use tauri_plugin_autostart::ManagerExt;
+    let Ok(exe) = std::env::current_exe() else { return };
+    let mut builder = auto_launch::AutoLaunchBuilder::new();
+    builder.set_app_name("WinDock").set_app_path(&exe.display().to_string());
+    #[cfg(target_os = "macos")]
+    builder.set_macos_launch_mode(auto_launch::MacOSLaunchMode::LaunchAgent);
+    let Ok(legacy) = builder.build() else { return };
+    if legacy.is_enabled().unwrap_or(false) && legacy.disable().is_ok() {
+        let _ = app.autolaunch().enable();
+    }
 }
 
 /// Ctrl+Alt+1..9 abre/foca o app na posição N da dock (a dock decide o que fazer).
@@ -182,6 +200,7 @@ fn main() {
             windows_list::start(handle.clone());
             media::start(handle.clone());
             register_shortcuts(&handle);
+            migrate_autostart(&handle);
             // No GNOME (inclusive Wayland) quem registra os atalhos é a extensão.
             #[cfg(target_os = "linux")]
             platform::linux::gnome_shell::set_shortcuts_enabled(true);
@@ -191,7 +210,7 @@ fn main() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("erro ao iniciar o WinDock");
+        .expect("erro ao iniciar o Pier");
 
     app.run(|app, event| match event {
         // Fechar a janela de configurações ou um painel não deve encerrar a dock.

@@ -149,7 +149,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
 };
 
 if (!insideTauri) {
-  window.__WINDOCK_VIEW__ = { view: view as "dock" | "panel" | "settings", kind };
+  window.__PIER_VIEW__ = { view: view as "dock" | "panel" | "settings", kind };
   document.documentElement.dataset.mock = "";
   // O fundo dos quadros do canvas. No app quem borra o que está atrás é o sistema; aqui o
   // `backdrop-filter` faz esse papel.

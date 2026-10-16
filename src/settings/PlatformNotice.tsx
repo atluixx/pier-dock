@@ -22,11 +22,11 @@ export function PlatformNotice({ platform, refresh }: { platform: PlatformInfo |
     case "needs-extension":
       text = installed
         ? "Extensão instalada. Encerre a sessão e entre de novo para o GNOME carregá-la."
-        : "Instale a extensão WinDock do GNOME Shell para a dock ver e focar as janelas, reservar o espaço na tela, esconder o Dash e registrar os atalhos.";
+        : "Instale a extensão Pier do GNOME Shell para a dock ver e focar as janelas, reservar o espaço na tela, esconder o Dash e registrar os atalhos.";
       if (!installed) action = { label: "Instalar extensão", run: () => run("install-extension") };
       break;
     case "needs-relogin":
-      text = "A extensão WinDock está instalada, mas o GNOME só a carrega no próximo login. Encerre a sessão e entre de novo.";
+      text = "A extensão Pier está instalada, mas o GNOME só a carrega no próximo login. Encerre a sessão e entre de novo.";
       break;
     case "needs-accessibility":
       text = "Permissão de Acessibilidade necessária para listar, focar, minimizar e fechar janelas.";

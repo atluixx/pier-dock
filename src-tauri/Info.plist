@@ -5,6 +5,6 @@
   <key>LSUIElement</key>
   <true/>
   <key>NSAppleEventsUsageDescription</key>
-  <string>A WinDock controla o Spotify e o Música para mostrar o que está tocando no widget de mídia.</string>
+  <string>O Pier controla o Spotify e o Música para mostrar o que está tocando no widget de mídia.</string>
 </dict>
 </plist>

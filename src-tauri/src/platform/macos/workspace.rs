@@ -30,7 +30,7 @@ fn describe(app: &NSRunningApplication) -> RunningApp {
     }
 }
 
-/// Apps "regulares" (com ícone no Dock), sem a própria WinDock.
+/// Apps "regulares" (com ícone no Dock), sem o próprio Pier.
 pub fn running_apps() -> Vec<RunningApp> {
     let own = std::process::id() as i32;
     NSWorkspace::sharedWorkspace()

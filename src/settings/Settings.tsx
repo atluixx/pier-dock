@@ -63,7 +63,7 @@ export function Settings() {
         {os === "macos" && (
           <span className="settings-title" data-tauri-drag-region>
             <Logo size={16} />
-            WinDock — Configurações
+            Pier — Configurações
           </span>
         )}
         <div className="settings-tabs" role="tablist" aria-label="Seções" onKeyDown={onTabKey}>
@@ -89,7 +89,7 @@ export function Settings() {
       <main className="settings-main" id="settings-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
         <Content {...props} />
       </main>
-      <ActionFooter keyboard context={`WinDock · ${OS_NAMES[os]}`} actions={actions[tab]} />
+      <ActionFooter keyboard context={`Pier · ${OS_NAMES[os]}`} actions={actions[tab]} />
     </div>
   );
 }

@@ -125,12 +125,12 @@ fn create_window() -> Option<isize> {
         let instance = HINSTANCE(GetModuleHandleW(None).ok()?.0);
         static REGISTERED: OnceLock<()> = OnceLock::new();
         REGISTERED.get_or_init(|| {
-            let class = WNDCLASSW { lpfnWndProc: Some(wnd_proc), hInstance: instance, lpszClassName: w!("WinDockBackdrop"), ..Default::default() };
+            let class = WNDCLASSW { lpfnWndProc: Some(wnd_proc), hInstance: instance, lpszClassName: w!("PierBackdrop"), ..Default::default() };
             RegisterClassW(&class);
         });
         let hwnd = CreateWindowExW(
             WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_TOPMOST,
-            w!("WinDockBackdrop"),
+            w!("PierBackdrop"),
             w!(""),
             WS_POPUP,
             0,

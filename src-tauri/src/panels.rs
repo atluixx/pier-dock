@@ -23,7 +23,7 @@ static PANEL_COUNTER: AtomicU32 = AtomicU32::new(0);
 /// O frontend decide o que renderizar por esta variável global, injetada antes da página carregar.
 fn view_script(view: &str, kind: &str) -> String {
     format!(
-        "window.__WINDOCK_VIEW__ = {};",
+        "window.__PIER_VIEW__ = {};",
         serde_json::json!({ "view": view, "kind": kind })
     )
 }
@@ -56,7 +56,7 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64,
     let label = format!("panel-{}", PANEL_COUNTER.fetch_add(1, Ordering::SeqCst));
     let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App("index.html".into()))
         .initialization_script(&view_script("panel", &kind))
-        .title("WinDock")
+        .title("Pier")
         .decorations(false)
         .transparent(true)
         .shadow(false)
@@ -124,7 +124,7 @@ pub fn open_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     }
     let builder = WebviewWindowBuilder::new(app, SETTINGS_LABEL, WebviewUrl::App("index.html".into()))
         .initialization_script(&view_script("settings", ""))
-        .title("WinDock — Configurações")
+        .title("Pier — Configurações")
         .inner_size(1040.0, 720.0)
         .min_inner_size(880.0, 600.0)
         .theme(Some(tauri::Theme::Dark))

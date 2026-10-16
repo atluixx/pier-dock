@@ -1,5 +1,5 @@
 [package]
-name = "win-dock"
+name = "pier"
 version = "0.1.0"
 description = "Dock customizável para Windows, Linux (GNOME) e macOS"
 edition = "2021"
@@ -10,6 +10,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["tray-icon", "image-png", "macos-private-api"] }
 tauri-plugin-autostart = "2"
+auto-launch = "0.6"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-opener = "2"
