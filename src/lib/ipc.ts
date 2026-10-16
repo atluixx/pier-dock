@@ -132,6 +132,11 @@ export interface PlatformInfo {
   glass: boolean;
 }
 
+export interface UpdateInfo {
+  version: string;
+  notes?: string | null;
+}
+
 export const ipc = {
   getConfig: () => invoke<Config>("get_config"),
   saveConfig: (config: Config) => invoke<void>("save_config", { config }),
@@ -176,4 +181,7 @@ export const ipc = {
 
   platformInfo: () => invoke<PlatformInfo>("platform_info"),
   platformSetup: (action: "install-extension" | "request-accessibility") => invoke<void>("platform_setup", { action }),
+
+  checkUpdate: () => invoke<UpdateInfo | null>("check_update"),
+  installUpdate: () => invoke<void>("install_update"),
 };

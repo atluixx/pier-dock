@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
+import { listen } from "@tauri-apps/api/event";
 import { disable as disableAutostart, enable as enableAutostart, isEnabled as autostartEnabled } from "@tauri-apps/plugin-autostart";
+import { ipc, type UpdateInfo } from "../../lib/ipc";
 import { labels, os } from "../../lib/platform";
 import { Card, Row, SectionLabel } from "../../ui/Card";
 import { Logo } from "../../ui/Logo";
@@ -21,12 +23,56 @@ const PERMISSION = {
   unsupported: "Este ambiente não permite ver as janelas",
 };
 
+type UpdateStatus =
+  | { kind: "checking" }
+  | { kind: "latest" }
+  | { kind: "available"; version: string }
+  | { kind: "installing"; version: string }
+  | { kind: "error"; message: string };
+
+function updateText(status: UpdateStatus) {
+  switch (status.kind) {
+    case "checking":
+      return "Procurando atualizações…";
+    case "latest":
+      return "Você está na versão mais recente";
+    case "available":
+      return `Versão ${status.version} disponível`;
+    case "installing":
+      return `Instalando a versão ${status.version}…`;
+    case "error":
+      return status.message;
+  }
+}
+
 export function GeneralTab({ config, update, platform }: TabProps) {
   const [autostart, setAutostart] = useState<boolean | null>(null);
   const [version, setVersion] = useState("");
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ kind: "checking" });
+
+  const checkUpdate = () => {
+    setUpdateStatus({ kind: "checking" });
+    ipc
+      .checkUpdate()
+      .then((info) => setUpdateStatus(info ? { kind: "available", version: info.version } : { kind: "latest" }))
+      .catch(() => setUpdateStatus({ kind: "error", message: "Não foi possível procurar atualizações" }));
+  };
+
+  const installUpdate = (version: string) => {
+    setUpdateStatus({ kind: "installing", version });
+    ipc.installUpdate().catch(() => setUpdateStatus({ kind: "error", message: "A atualização falhou. Tente de novo." }));
+  };
+
   useEffect(() => {
     autostartEnabled().then(setAutostart).catch(() => setAutostart(false));
     getVersion().then(setVersion).catch(() => {});
+    checkUpdate();
+    const unlisten = listen<UpdateInfo>("update-available", (e) =>
+      setUpdateStatus((s) => (s.kind === "installing" ? s : { kind: "available", version: e.payload.version })),
+    );
+    return () => {
+      unlisten.then((f) => f());
+    };
   }, []);
 
   const toggleAutostart = async (on: boolean) => {
@@ -65,8 +111,17 @@ export function GeneralTab({ config, update, platform }: TabProps) {
         </span>
         <div className="account-text">
           <span className="version-name">Pier {version}</span>
-          <span className="account-sub">macOS · Windows · Linux</span>
+          <span className="account-sub">{updateText(updateStatus)}</span>
         </div>
+        {updateStatus.kind === "available" ? (
+          <button className="btn btn-primary" onClick={() => installUpdate(updateStatus.version)}>
+            Instalar e reiniciar
+          </button>
+        ) : (
+          <button className="btn" disabled={updateStatus.kind === "checking" || updateStatus.kind === "installing"} onClick={checkUpdate}>
+            Procurar atualizações
+          </button>
+        )}
       </div>
 
       <p className="field-hint">{RESTORE_HINT}</p>

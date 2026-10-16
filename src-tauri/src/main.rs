@@ -11,6 +11,7 @@ mod panels;
 mod platform;
 mod system;
 mod taskbar;
+mod updater;
 mod util;
 mod windows_list;
 
@@ -66,6 +67,14 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                 }
             }
             "quit" => quit(app),
+            updater::MENU_ID => {
+                let app = app.clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Err(e) = updater::install_update(app).await {
+                        eprintln!("falha ao instalar a atualização: {e}");
+                    }
+                });
+            }
             _ => {}
         })
         .on_tray_icon_event(|tray, event| {
@@ -79,6 +88,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     #[cfg(not(target_os = "macos"))]
     let tray = tray.icon(Image::from_bytes(include_bytes!("../icons/tray.png"))?);
     tray.build(app)?;
+    app.manage(updater::TrayMenu(menu));
     Ok(())
 }
 
@@ -140,8 +150,10 @@ fn main() {
         }))
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(shortcuts)
         .manage(config::ConfigState(Mutex::new(config::load())))
+        .manage(updater::UpdateState::default())
         .invoke_handler(tauri::generate_handler![
             quit_app,
             config::get_config,
@@ -174,6 +186,8 @@ fn main() {
             panels::open_settings,
             platform::platform_info,
             platform::platform_setup,
+            updater::check_update,
+            updater::install_update,
         ])
         .setup(|app| {
             // Sem ícone no Dock nem barra de menus: a dock é o app.
@@ -214,6 +228,8 @@ fn main() {
             migrate_autostart(&handle);
             #[cfg(not(debug_assertions))]
             refresh_autostart(&handle);
+            #[cfg(not(debug_assertions))]
+            updater::start(handle.clone());
             // No GNOME (inclusive Wayland) quem registra os atalhos é a extensão.
             #[cfg(target_os = "linux")]
             platform::linux::gnome_shell::set_shortcuts_enabled(true);
