@@ -8,6 +8,7 @@
  */
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import type { AppEntry, Config, GithubData, MediaState, WindowsSnapshot } from "../lib/ipc";
+import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
 
 const insideTauri = "__TAURI_INTERNALS__" in window;
 const params = new URLSearchParams(location.search);
@@ -160,6 +161,14 @@ if (!insideTauri) {
         radial-gradient(circle at 60% 80%, rgba(30,58,138,.9), transparent 40%),
         radial-gradient(circle at 85% 5%, rgba(15,82,87,.85), transparent 30%),
         #0E0F14 !important;
+    }
+    html[data-mock][data-view="panel"] #root {
+      position: absolute;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      width: ${(PANEL_SIZES[kind]?.[0] ?? 380) + 2 * PANEL_INSET}px;
+      height: ${(PANEL_SIZES[kind]?.[1] ?? 420) + 2 * PANEL_INSET}px;
     }
     html[data-mock] [data-glass] {
       backdrop-filter: blur(var(--glass-blur)) saturate(180%);

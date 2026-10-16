@@ -1,18 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { ipc } from "../lib/ipc";
 import { Tooltip } from "../ui/Tooltip";
-
-/** Margem transparente da janela em volta do painel, para a sombra (igual a `--panel-inset`). */
-export const PANEL_INSET = 12;
-
-/** Tamanho visível (px lógicos) do painel de cada widget, sem a margem da sombra. */
-export const PANEL_SIZES: Record<string, [number, number]> = {
-  media: [360, 430],
-  "github-review": [420, 480],
-  "github-mine": [420, 480],
-  "github-commits": [420, 480],
-  "github-contrib": [800, 216],
-};
+import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
 
 /** Abre (ou fecha, se já estiver aberto) o painel do widget, centrado acima de `el`. */
 export function togglePanel(kind: string, el: Element) {

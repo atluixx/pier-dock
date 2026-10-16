@@ -263,6 +263,13 @@
   border-radius: 1px;
 }
 
+/* Células do mapa de contribuições (dock e popover). */
+.heat {
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+}
+
 /* Mapa de contribuições (dock e painel). */
 .heatmap {
   display: flex;

@@ -71,29 +71,6 @@ export function padWeeks(weeks: ContributionDay[][]): (ContributionDay | null)[]
   });
 }
 
-export function HeatmapGrid({ weeks, className }: { weeks: ContributionDay[][]; className: string }) {
-  const max = Math.max(1, ...weeks.flat().map((d) => d.count));
-  return (
-    <div className={className}>
-      {padWeeks(weeks).map((week, i) => (
-        <div key={i} className="heat-col">
-          {week.map((day, j) =>
-            day ? (
-              <span
-                key={day.date}
-                className={`heat l${contributionLevel(day.count, max)}`}
-                title={`${day.count} contribuição(ões) em ${new Date(day.date + "T12:00").toLocaleDateString("pt-BR")}`}
-              />
-            ) : (
-              <span key={`blank-${j}`} className="heat blank" />
-            ),
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /** Contribuições do ano corrente (o calendário do GitHub cobre os últimos 12 meses). */
 export function contributionsThisYear(weeks: ContributionDay[][]): number {
   const year = String(new Date().getFullYear());

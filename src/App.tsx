@@ -3,7 +3,7 @@ import { ipc } from "./lib/ipc";
 import { currentView } from "./lib/view";
 import { useConfig } from "./store/config";
 import { Dock } from "./dock/Dock";
-import { Panel } from "./panels/Panel";
+import { Popover } from "./popovers/Popover";
 import { Settings } from "./settings/Settings";
 
 export function App() {
@@ -29,7 +29,7 @@ export function App() {
   }, [config?.accent, config?.material, config?.glassOpacity, glassSupported]);
 
   if (!config) return null;
-  if (currentView.view === "panel") return <Panel kind={currentView.kind} />;
+  if (currentView.view === "panel") return <Popover kind={currentView.kind} />;
   if (currentView.view === "settings") return <Settings />;
   return <Dock config={config} />;
 }
