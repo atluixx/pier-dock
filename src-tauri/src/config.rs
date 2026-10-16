@@ -88,6 +88,8 @@ pub struct Config {
     /// "never", "smart" (esconde quando um app está em foco) ou "always".
     pub auto_hide: String,
     pub github_poll_minutes: u32,
+    /// De quantos em quantos minutos o uso do Claude Code é relido do disco.
+    pub claude_poll_minutes: u32,
     /// Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. Vazia em
     /// configs antigas; o frontend completa e limpa a lista.
     pub dock_order: Vec<String>,
@@ -150,6 +152,7 @@ impl Default for Config {
                 disabled("pomodoro", "wide"),
                 disabled("system-usage", "wide"),
                 disabled("calendar", "wide"),
+                disabled("claude-usage", "small"),
             ],
             material: "glass".into(),
             glass_opacity: 0.4,
@@ -160,6 +163,7 @@ impl Default for Config {
             hide_taskbar: true,
             auto_hide: "smart".into(),
             github_poll_minutes: 3,
+            claude_poll_minutes: 1,
             dock_order: Vec::new(),
             show_start_button: true,
             weather_location: None,

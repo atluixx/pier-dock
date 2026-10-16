@@ -7,7 +7,7 @@
  * chama `listen` ao ser carregado. Dentro do Tauri ele não faz nada.
  */
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
-import type { AppEntry, CalendarData, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
+import type { AppEntry, CalendarData, ClaudeUsage, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
 import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
 
 const insideTauri = "__TAURI_INTERNALS__" in window;
@@ -45,6 +45,7 @@ const config: Config = {
     { kind: "pomodoro", enabled: params.has("new"), size: "wide" },
     { kind: "system-usage", enabled: params.has("new"), size: "wide" },
     { kind: "calendar", enabled: params.has("new"), size: "wide" },
+    { kind: "claude-usage", enabled: params.has("new"), size: "wide" },
   ],
   material: "glass",
   glassOpacity: 0.4,
@@ -55,6 +56,7 @@ const config: Config = {
   hideTaskbar: true,
   autoHide: "smart",
   githubPollMinutes: 3,
+  claudePollMinutes: 1,
   dockOrder: [],
   showStartButton: true,
   weatherLocation: { name: "Campinas", admin: "São Paulo, Brasil", latitude: -22.9, longitude: -47.06 },
@@ -223,6 +225,20 @@ const calendar: CalendarData = {
   fetchedAt: Date.now() - MINUTE,
 };
 
+const claudeUsage: ClaudeUsage = {
+  sessionPercent: 42,
+  sessionResetsIn: 229,
+  weeklyPercent: 78,
+  weeklyResetsIn: 3_128,
+  ageMin: 4,
+  stale: false,
+  todayTokens: 12_400_000,
+  todayMessages: 210,
+  blockTokens: 3_100_000,
+  topModel: "claude-opus-5",
+  fetchedAt: Date.now(),
+};
+
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   get_config: () => config,
   save_config: (args) => Object.assign(config, args.config),
@@ -263,6 +279,8 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   ],
   calendar_cached: () => calendar,
   calendar_fetch: () => calendar,
+  claude_usage: () => claudeUsage,
+  claude_usage_cached: () => claudeUsage,
   platform_info: () => ({ os: "macos", windowList: "needs-accessibility", hideNative: true, shortcuts: true, glass: true }),
   "plugin:autostart|is_enabled": () => true,
   "plugin:app|version": () => "0.1.0",

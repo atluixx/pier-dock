@@ -3,6 +3,7 @@
 mod apps;
 mod backdrop;
 mod calendar;
+mod claude;
 mod config;
 mod dock_window;
 mod github;
@@ -197,6 +198,8 @@ fn main() {
             calendar::calendar_fetch,
             calendar::calendar_cached,
             calendar::calendar_set_url,
+            claude::claude_usage,
+            claude::claude_usage_cached,
             panels::open_panel,
             panels::close_panel,
             panels::open_settings,

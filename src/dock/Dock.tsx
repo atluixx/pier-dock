@@ -26,8 +26,10 @@ import { WeatherWidget } from "../widgets/WeatherWidget";
 import { PomodoroWidget } from "../widgets/PomodoroWidget";
 import { UsageWidget } from "../widgets/UsageWidget";
 import { CalendarWidget } from "../widgets/CalendarWidget";
+import { ClaudeWidget } from "../widgets/ClaudeWidget";
 import { useWeather } from "../hooks/useWeather";
 import { useCalendar } from "../hooks/useCalendar";
+import { useClaudeUsage } from "../hooks/useClaudeUsage";
 
 /** Abre o lançador de apps do sistema (Menu Iniciar, Launchpad, grade de apps do GNOME). */
 function StartButton({ onRemove }: { onRemove: () => void }) {
@@ -79,6 +81,7 @@ export function Dock({ config }: { config: Config }) {
   const place = config.weatherLocation;
   const weather = useWeather(enabled("weather"), place ? `${place.latitude},${place.longitude}` : undefined);
   const calendar = useCalendar(enabled("calendar"));
+  const claude = useClaudeUsage(enabled("claude-usage") ? config.claudePollMinutes : undefined);
   const mouseX = useMotionValue(Infinity);
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -238,6 +241,8 @@ export function Dock({ config }: { config: Config }) {
         return <UsageWidget wide={wide} />;
       case "calendar":
         return <CalendarWidget data={calendar} wide={wide} />;
+      case "claude-usage":
+        return <ClaudeWidget data={claude} wide={wide} />;
     }
   };
 

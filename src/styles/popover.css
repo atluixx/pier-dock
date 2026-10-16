@@ -955,3 +955,27 @@
 .cal-tomorrow .cal-time {
   color: var(--text-tertiary);
 }
+
+/* Uso do Claude: as barras logo abaixo do cabeçalho, sem a divisória das seções seguintes. */
+.claude-limits {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px 14px;
+}
+
+/* As barras usam as faixas de cor definidas em widgets.css. */
+.usage-fill.claude-normal,
+.usage-fill.claude-warn,
+.usage-fill.claude-critical {
+  background: var(--claude);
+}
+
+/* Percentual desconhecido: barra vazia em vez de zero pintado. */
+.usage-fill.claude-unknown {
+  background: transparent;
+}
+
+.popover-meta.claude-stale {
+  color: var(--warning);
+}
