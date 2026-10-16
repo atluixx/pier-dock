@@ -89,3 +89,23 @@ export function removeItem(config: OrderConfig, key: string): Partial<Config> {
 export function addDivider(config: OrderConfig): Partial<Config> {
   return { dockOrder: [...resolveOrder(config), `divider:${Date.now().toString(36)}`] };
 }
+
+/**
+ * Move `key` uma posição para cima (-1) ou para baixo (+1) entre os itens que passam em `among`
+ * (só os apps, só os widgets…); os outros itens ficam onde estão. `null` se não dá para mover.
+ */
+export function moveAmong(
+  config: OrderConfig,
+  key: string,
+  delta: -1 | 1,
+  among: (key: string) => boolean,
+): Pick<Config, "dockOrder" | "pinnedApps" | "widgets"> | null {
+  const keys = resolveOrder(config);
+  const slots = keys.flatMap((k, i) => (among(k) ? [i] : []));
+  const from = slots.findIndex((i) => keys[i] === key);
+  const to = from + delta;
+  if (from < 0 || to < 0 || to >= slots.length) return null;
+  const next = [...keys];
+  [next[slots[from]], next[slots[to]]] = [next[slots[to]], next[slots[from]]];
+  return applyOrder(config, next);
+}

@@ -73,6 +73,15 @@
   --heat-3: #26a641;
   --heat-4: #39d353;
 
+  /* Fundo das pré-visualizações nas configurações (o mesmo do design) */
+  --stage-base: #0e0f14;
+  --stage-wine: #7a2e3a;
+  --stage-navy: #1e3a8a;
+  --stage-teal: #0f5257;
+  --stage-window: rgba(240, 240, 244, 0.9);
+  --stage-window-line: #dadadf;
+  --stage-window-title: #c8c8cc;
+
   /* Raios */
   --radius-kbd: 4px;
   --radius-control: 8px;

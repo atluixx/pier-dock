@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { addDivider, applyOrder, removeItem, resolveOrder } from "./order.ts";
+import { addDivider, applyOrder, moveAmong, removeItem, resolveOrder } from "./order.ts";
 
 const app = (id: string) => ({ id, name: id, target: `/Applications/${id}.app` });
 const widget = (kind: string, enabled = true) => ({ kind, enabled, size: "small" }) as const;
@@ -77,4 +77,19 @@ test("addDivider põe um separador novo no fim", () => {
   const order = addDivider(base).dockOrder!;
   assert.deepEqual(order.slice(0, -1), resolveOrder(base));
   assert.match(order[order.length - 1], /^divider:/);
+});
+
+test("moveAmong troca só com o vizinho do mesmo tipo", () => {
+  const dockOrder = ["app:finder", "widget:media", "app:safari", "widget:clock"];
+  const isApp = (k: string) => k.startsWith("app:");
+  const result = moveAmong({ ...base, showStartButton: false, dockOrder }, "app:safari", -1, isApp)!;
+  assert.deepEqual(result.dockOrder, ["app:safari", "widget:media", "app:finder", "widget:clock"]);
+  assert.deepEqual(result.pinnedApps.map((p) => p.id), ["safari", "finder"]);
+});
+
+test("moveAmong não passa das pontas", () => {
+  const dockOrder = ["app:finder", "app:safari", "widget:media", "widget:clock"];
+  const isWidget = (k: string) => k.startsWith("widget:");
+  assert.equal(moveAmong({ ...base, dockOrder }, "widget:clock", 1, isWidget), null);
+  assert.equal(moveAmong({ ...base, dockOrder }, "widget:media", -1, isWidget), null);
 });

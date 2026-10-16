@@ -125,11 +125,14 @@ pub fn open_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     let builder = WebviewWindowBuilder::new(app, SETTINGS_LABEL, WebviewUrl::App("index.html".into()))
         .initialization_script(&view_script("settings", ""))
         .title("WinDock — Configurações")
-        .inner_size(920.0, 660.0)
-        .min_inner_size(720.0, 480.0)
+        .inner_size(1040.0, 720.0)
+        .min_inner_size(880.0, 600.0)
         .theme(Some(tauri::Theme::Dark))
         .center()
         .focused(true);
+    // O cabeçalho da página faz as vezes da barra de título, com os semáforos por cima.
+    #[cfg(target_os = "macos")]
+    let builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay).hidden_title(true);
     // O material da janela inteira vem do sistema; no Linux não há, e a página pinta o sólido.
     #[cfg(not(target_os = "linux"))]
     let builder = builder.transparent(true).effects(settings_effects());

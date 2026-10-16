@@ -17,10 +17,18 @@ function matches(keys: string, e: KeyboardEvent): boolean {
 
 /**
  * Rodapé de ações no padrão do Raycast: contexto à esquerda, ações à direita (a primeira é a
- * principal). No macOS os popovers nunca recebem o teclado, então os atalhos não aparecem.
+ * principal).
  */
-export function ActionFooter({ context, actions }: { context: ReactNode; actions: Action[] }) {
-  const keyboard = os !== "macos";
+export function ActionFooter({
+  context,
+  actions,
+  keyboard = os !== "macos",
+}: {
+  context: ReactNode;
+  actions: Action[];
+  /** A janela recebe o teclado? Os popovers do macOS não recebem; as configurações, sim. */
+  keyboard?: boolean;
+}) {
   useEffect(() => {
     if (!keyboard) return;
     const onKey = (e: KeyboardEvent) => {
