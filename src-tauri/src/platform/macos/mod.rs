@@ -3,7 +3,6 @@
 
 pub mod ax;
 pub mod events;
-pub mod glass;
 pub mod pointer;
 pub mod workspace;
 
@@ -11,7 +10,7 @@ use super::PlatformInfo;
 
 pub fn info() -> PlatformInfo {
     let window_list = if ax::is_trusted() { "ok" } else { "needs-accessibility" };
-    PlatformInfo { os: "macos", window_list, hide_native: true, shortcuts: true }
+    PlatformInfo { os: "macos", window_list, hide_native: true, shortcuts: true, glass: true }
 }
 
 /// Roda um AppleScript e devolve o resultado (sem a quebra de linha final).

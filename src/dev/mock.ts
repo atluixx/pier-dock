@@ -41,7 +41,8 @@ const config: Config = {
     { kind: "battery", enabled: true, size: "small" },
     { kind: "clock", enabled: true, size: "small" },
   ],
-  theme: "glass",
+  material: "glass",
+  glassOpacity: 0.4,
   accent: "coral",
   iconSize: 40,
   magnification: 1,
@@ -141,7 +142,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   github_fetch: () => github,
   github_auth_status: () => ({ source: "gh" }),
   dock_visible: () => true,
-  platform_info: () => ({ os: "macos", windowList: "needs-accessibility", hideNative: true, shortcuts: true }),
+  platform_info: () => ({ os: "macos", windowList: "needs-accessibility", hideNative: true, shortcuts: true, glass: true }),
   "plugin:autostart|is_enabled": () => true,
   "plugin:app|version": () => "0.1.0",
 };

@@ -51,12 +51,10 @@ pub struct HitRect {
     pub x: f64,
     pub y: f64,
     pub width: f64,
-    /// A área clicável vai do topo da barra até a base da tela; a altura só serve ao vidro do macOS.
-    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    /// A área clicável vai do topo da barra até a base da tela; a altura só serve ao vidro.
     pub height: f64,
-    /// Raio dos cantos da barra, para o vidro do macOS acompanhar o tema.
+    /// Raio dos cantos da barra, para o vidro acompanhar.
     #[serde(default)]
-    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     pub radius: f64,
 }
 
@@ -85,12 +83,14 @@ fn want_visible(hovering: bool, app_focused: impl FnOnce() -> bool) -> bool {
     }
 }
 
-/// Atualiza a visibilidade e avisa o frontend, que anima a dock para dentro/fora da tela.
+/// Atualiza a visibilidade e avisa o frontend, que anima a dock para dentro/fora da tela; o vidro
+/// nativo acompanha.
 #[allow(dead_code)]
 fn set_visible(window: &WebviewWindow, visible: bool) {
     use tauri::Emitter;
     if VISIBLE.swap(visible, Ordering::SeqCst) != visible {
         let _ = window.emit("dock-visibility", visible);
+        crate::backdrop::set_hidden(window, !visible);
     }
 }
 
@@ -137,9 +137,14 @@ pub fn set_dock_hover(hovering: bool) {
     backend::set_hover(hovering);
 }
 
+/// A barra mudou de tamanho (itens, magnificação): atualiza a área clicável e o vidro.
 #[tauri::command]
 pub fn set_hit_rect(app: AppHandle, rect: HitRect) {
     *HIT.lock().unwrap() = rect;
+    if let Some(window) = app.get_webview_window(DOCK_LABEL) {
+        let glass = crate::backdrop::Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+        crate::backdrop::set_frame(&window, glass, rect.radius);
+    }
     backend::hit_rect_changed(&app);
 }
 

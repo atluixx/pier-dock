@@ -45,5 +45,11 @@ pub fn info() -> PlatformInfo {
     } else {
         "unsupported"
     };
-    PlatformInfo { os: "linux", window_list, hide_native: extension, shortcuts: extension || is_x11_session() }
+    PlatformInfo {
+        os: "linux",
+        window_list,
+        hide_native: extension,
+        shortcuts: extension || is_x11_session(),
+        glass: crate::backdrop::supported(),
+    }
 }

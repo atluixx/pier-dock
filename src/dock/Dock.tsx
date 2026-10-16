@@ -132,8 +132,7 @@ export function Dock({ config }: { config: Config }) {
       observer.disconnect();
       window.removeEventListener("resize", report);
     };
-    // O tema muda o raio dos cantos, que o vidro do macOS acompanha.
-  }, [config.theme]);
+  }, []);
 
   // Ocultar automaticamente: o Rust decide quando a dock aparece; aqui só anima.
   const [visible, setVisible] = useState(true);
@@ -268,6 +267,7 @@ export function Dock({ config }: { config: Config }) {
       <div
         ref={barRef}
         className={`dock-bar ${visible ? "" : "dock-hidden"}`}
+        data-glass
         style={{ bottom: metrics.margin, height: metrics.barHeight, padding: `0 ${metrics.padding}px` }}
         onMouseMove={(e) => mouseX.set(e.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}

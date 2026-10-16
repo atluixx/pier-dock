@@ -10,8 +10,8 @@ use std::time::{Duration, Instant};
 use objc2_app_kit::{NSWindow, NSWindowCollectionBehavior};
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
 
-use super::{hit_rect, layout, place_window, set_visible, want_visible, DOCK_LABEL, HOVER_GRACE_MS};
-use crate::platform::macos::{glass, pointer};
+use super::{hit_rect, layout, place_window, set_visible, want_visible, HOVER_GRACE_MS};
+use crate::platform::macos::pointer;
 
 pub fn init(window: &WebviewWindow) {
     let w = window.clone();
@@ -45,7 +45,6 @@ fn start_pointer_thread(window: WebviewWindow) {
         let mut hover_until = Instant::now();
         let mut frame: Option<(PhysicalPosition<i32>, PhysicalSize<u32>, f64)> = None;
         let mut frame_read = Instant::now();
-        let mut was_visible = super::dock_visible();
         loop {
             std::thread::sleep(Duration::from_millis(if ignoring { 30 } else { 16 }));
             if frame.is_none() || frame_read.elapsed() > Duration::from_millis(500) {
@@ -76,11 +75,6 @@ fn start_pointer_thread(window: WebviewWindow) {
                 hover_until = now + Duration::from_millis(HOVER_GRACE_MS);
             }
             set_visible(&window, want_visible(now < hover_until, crate::windows_list::app_has_focus));
-            let visible = super::dock_visible();
-            if visible != was_visible {
-                was_visible = visible;
-                glass::set_hidden(&window, !visible);
-            }
 
             if over_dock == ignoring {
                 ignoring = !over_dock;
@@ -93,12 +87,7 @@ fn start_pointer_thread(window: WebviewWindow) {
     });
 }
 
-/// O vidro acompanha a barra, inclusive enquanto ela cresce com a magnificação.
-pub fn hit_rect_changed(app: &AppHandle) {
-    let Some(window) = app.get_webview_window(DOCK_LABEL) else { return };
-    let hit = hit_rect();
-    glass::set_frame(&window, glass::Rect { x: hit.x, y: hit.y, width: hit.width, height: hit.height }, hit.radius);
-}
+pub fn hit_rect_changed(_app: &AppHandle) {}
 
 /// O hover vem da thread que acompanha o cursor.
 pub fn set_hover(_hovering: bool) {}

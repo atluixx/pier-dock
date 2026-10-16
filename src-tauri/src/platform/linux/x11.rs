@@ -29,6 +29,7 @@ x11rb::atom_manager! {
         _NET_CLOSE_WINDOW,
         WM_CHANGE_STATE,
         UTF8_STRING,
+        _KDE_NET_WM_BLUR_BEHIND_REGION,
     }
 }
 
@@ -173,6 +174,34 @@ impl X11 {
             let partial = [0, 0, 0, from_bottom, 0, 0, 0, 0, 0, 0, start, end];
             let _ = self.conn.change_property32(PropMode::REPLACE, window, self.atoms._NET_WM_STRUT_PARTIAL, AtomEnum::CARDINAL, &partial);
             let _ = self.conn.change_property32(PropMode::REPLACE, window, self.atoms._NET_WM_STRUT, AtomEnum::CARDINAL, &partial[..4]);
+        }
+        let _ = self.conn.flush();
+    }
+
+    /// O KWin anuncia o efeito de blur pondo a propriedade na janela raiz.
+    pub fn blur_supported(&self) -> bool {
+        self.conn
+            .get_property(false, self.root, self.atoms._KDE_NET_WM_BLUR_BEHIND_REGION, AtomEnum::ANY, 0, 0)
+            .ok()
+            .and_then(|c| c.reply().ok())
+            .map(|r| r.type_ != u32::from(AtomEnum::NONE))
+            .unwrap_or(false)
+    }
+
+    /// Regiões `[x, y, largura, altura]` (pixels da janela) que o KWin borra atrás da janela.
+    /// Vazia remove o blur.
+    pub fn set_blur_region(&self, window: Window, regions: &[[u32; 4]]) {
+        if regions.is_empty() {
+            let _ = self.conn.delete_property(window, self.atoms._KDE_NET_WM_BLUR_BEHIND_REGION);
+        } else {
+            let flat: Vec<u32> = regions.iter().flatten().copied().collect();
+            let _ = self.conn.change_property32(
+                PropMode::REPLACE,
+                window,
+                self.atoms._KDE_NET_WM_BLUR_BEHIND_REGION,
+                AtomEnum::CARDINAL,
+                &flat,
+            );
         }
         let _ = self.conn.flush();
     }

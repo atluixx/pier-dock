@@ -1,6 +1,15 @@
 html[data-view="settings"] body {
-  background: var(--surface);
   user-select: auto;
+}
+
+/* Com vidro a janela é transparente e o sistema desenha o material atrás; sem ele, opaca. */
+html[data-view="settings"][data-material="solid"] {
+  background: var(--surface);
+}
+
+.settings {
+  --glass-blur: var(--window-blur);
+  background: rgb(var(--window-tint) / var(--window-opacity));
 }
 
 .settings {

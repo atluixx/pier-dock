@@ -178,9 +178,41 @@ function WidgetsTab({ config, update }: { config: Config; update: (p: Partial<Co
   );
 }
 
-function AppearanceTab({ config, update }: { config: Config; update: (p: Partial<Config>) => void }) {
+function AppearanceTab({ config, update, platform }: { config: Config; update: (p: Partial<Config>) => void; platform: PlatformInfo | null }) {
+  const glass = config.material === "glass" && !!platform?.glass;
   return (
     <>
+      <section>
+        <h3>Material</h3>
+        <div className="inline" role="radiogroup" aria-label="Material">
+          {(["glass", "solid"] as const).map((m) => (
+            <label key={m} className="check">
+              <input
+                type="radio"
+                name="material"
+                checked={config.material === m}
+                disabled={m === "glass" && platform?.glass === false}
+                onChange={() => update({ material: m })}
+              />
+              {m === "glass" ? "Vidro líquido" : "Sólido"}
+            </label>
+          ))}
+        </div>
+        {platform?.glass === false && <p className="hint">Este sistema não desenha vidro; a dock usa o material sólido.</p>}
+        {glass && (
+          <label className="slider">
+            Opacidade: {Math.round(config.glassOpacity * 100)}%
+            <input
+              type="range"
+              min={0.15}
+              max={0.9}
+              step={0.05}
+              value={config.glassOpacity}
+              onChange={(e) => update({ glassOpacity: Number(e.target.value) })}
+            />
+          </label>
+        )}
+      </section>
       <section>
         <h3>Cor de destaque</h3>
         <div className="accents" role="radiogroup" aria-label="Cor de destaque">
@@ -428,7 +460,7 @@ export function Settings() {
   useEffect(refreshPlatform, []);
   const props = { config, update: (p: Partial<Config>) => void update(p) };
   return (
-    <div className="settings">
+    <div className="settings" data-glass>
       <nav>
         <div className="brand">WinDock</div>
         {TABS.map((t) => (
@@ -441,7 +473,7 @@ export function Settings() {
         <PlatformNotice platform={platform} refresh={refreshPlatform} />
         {tab === "Apps" && <AppsTab {...props} />}
         {tab === "Widgets" && <WidgetsTab {...props} />}
-        {tab === "Aparência" && <AppearanceTab {...props} />}
+        {tab === "Aparência" && <AppearanceTab {...props} platform={platform} />}
         {tab === "GitHub" && <GithubTab {...props} />}
         {tab === "Geral" && <GeneralTab {...props} platform={platform} />}
       </main>

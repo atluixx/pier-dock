@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod apps;
+mod backdrop;
 mod config;
 mod dock_window;
 mod github;
@@ -150,12 +151,13 @@ fn main() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let handle = app.handle().clone();
-            let (hide_taskbar, auto_hide) = {
+            let (hide_taskbar, auto_hide, material) = {
                 let config = app.state::<config::ConfigState>();
                 let config = config.0.lock().unwrap();
-                (config.hide_taskbar, config.auto_hide.clone())
+                (config.hide_taskbar, config.auto_hide.clone(), config.material.clone())
             };
             dock_window::init_auto_hide(&auto_hide);
+            backdrop::init_material(&material);
             if hide_taskbar {
                 taskbar::hide();
             }

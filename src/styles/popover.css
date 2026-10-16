@@ -5,14 +5,13 @@
 }
 
 .panel {
-  --glass-opacity: var(--popover-opacity);
   --glass-blur: var(--popover-blur);
   position: absolute;
   inset: var(--panel-inset);
   display: flex;
   flex-direction: column;
   padding: 14px 16px;
-  background: rgb(var(--glass-tint) / var(--glass-opacity));
+  background: rgb(var(--glass-tint) / var(--popover-opacity));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-window);
   box-shadow: var(--popover-highlight), var(--popover-shadow);

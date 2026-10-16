@@ -29,7 +29,9 @@ export interface WidgetConfig {
 export interface Config {
   pinnedApps: AppEntry[];
   widgets: WidgetConfig[];
-  theme: string;
+  material: "glass" | "solid";
+  /** Opacidade da tinta sobre o vidro da dock (0 a 1). */
+  glassOpacity: number;
   accent: Accent;
   iconSize: number;
   magnification: number;
@@ -126,6 +128,8 @@ export interface PlatformInfo {
   windowList: "ok" | "needs-extension" | "needs-relogin" | "needs-accessibility" | "unsupported";
   hideNative: boolean;
   shortcuts: boolean;
+  /** O sistema desenha o vidro; sem ele o material é sempre sólido. */
+  glass: boolean;
 }
 
 export const ipc = {

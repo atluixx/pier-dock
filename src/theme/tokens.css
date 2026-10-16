@@ -89,15 +89,17 @@
   --shadow-control: 0 1px 3px rgba(0, 0, 0, 0.2);
   --shadow-icon: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 
-  /* Vidro líquido. Cada superfície escolhe a sua receita (abaixo); o material sólido troca a
-     opacidade e tira o desfoque. */
+  /* Vidro líquido: tinta por cima do desfoque nativo do sistema. O desfoque só vale para a
+     pré-visualização no navegador; no app quem desenha é o sistema (ver `backdrop` no Rust). */
   --glass-tint: 28 28 34;
-  --glass-opacity: 0.4;
-  --glass-blur: 28px;
   --glass-border: var(--border-strong);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.22);
   --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
   --solid-opacity: 0.94;
+
+  /* A opacidade da dock vem das configurações (o App sobrescreve). */
+  --dock-opacity: 0.4;
+  --dock-blur: 28px;
 
   --popover-opacity: 0.55;
   --popover-blur: 30px;
@@ -109,6 +111,16 @@
   --window-opacity: 0.72;
   --window-blur: 40px;
   --window-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* Material sólido: escolhido nas configurações ou sem suporte a vidro no sistema. */
+html[data-material="solid"] {
+  --dock-opacity: var(--solid-opacity) !important;
+  --popover-opacity: var(--solid-opacity);
+  --window-opacity: var(--solid-opacity);
+  --dock-blur: 0px;
+  --popover-blur: 0px;
+  --window-blur: 0px;
 }
 
 /* Cor de destaque escolhida nas configurações. */

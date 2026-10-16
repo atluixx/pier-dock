@@ -1,7 +1,6 @@
 //! Vidro nativo atrás do WebView: o Liquid Glass (`NSGlassEffectView`, macOS 26) ou, antes dele,
 //! o material translúcido do sistema (`NSVisualEffectView`). O WebView é transparente, então o
-//! vidro aparece onde a página não pinta nada — o `backdrop-filter` do CSS não enxerga o que está
-//! atrás da janela.
+//! vidro aparece onde a página só tinge.
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -16,14 +15,7 @@ use objc2_app_kit::{
 use objc2_foundation::{NSPoint, NSRect, NSSize};
 use tauri::WebviewWindow;
 
-/// Retângulo em pixels CSS, relativo ao topo esquerdo do WebView.
-#[derive(Clone, Copy, Debug, Default)]
-pub struct Rect {
-    pub x: f64,
-    pub y: f64,
-    pub width: f64,
-    pub height: f64,
-}
+use super::Rect;
 
 struct Backdrop {
     view: Retained<NSView>,
@@ -74,14 +66,21 @@ fn frame(parent: &NSView, webview: &NSView, b: &Backdrop) -> NSRect {
     NSRect::new(NSPoint::new(web.origin.x + b.rect.x, y), NSSize::new(b.rect.width, b.rect.height))
 }
 
-/// Aplica `change` ao vidro da janela, criando-o atrás do WebView na primeira vez.
-fn update(window: &WebviewWindow, change: impl FnOnce(&mut Backdrop) -> bool + Send + 'static) {
+pub fn supported() -> bool {
+    true
+}
+
+/// Aplica `change` ao vidro da janela, criando-o atrás do WebView na primeira vez (se `create`).
+fn update(window: &WebviewWindow, create: bool, change: impl FnOnce(&mut Backdrop) -> bool + Send + 'static) {
     let label = window.label().to_string();
     let _ = window.with_webview(move |platform| {
         let Some(mtm) = MainThreadMarker::new() else { return };
         let webview = unsafe { &*(platform.inner() as *const NSView) };
         let Some(parent) = (unsafe { webview.superview() }) else { return };
         BACKDROPS.with_borrow_mut(|backdrops| {
+            if !create && !backdrops.contains_key(&label) {
+                return;
+            }
             let b = backdrops.entry(label).or_insert_with(|| {
                 let view = make_view(mtm);
                 parent.addSubview_positioned_relativeTo(&view, NSWindowOrderingMode::Below, Some(webview));
@@ -90,7 +89,7 @@ fn update(window: &WebviewWindow, change: impl FnOnce(&mut Backdrop) -> bool + S
             let animate = change(b);
             set_radius(&b.view, b.radius);
             let target = frame(&parent, webview, b);
-            let alpha = if b.hidden { 0.0 } else { 1.0 };
+            let alpha = if b.hidden || !super::active() { 0.0 } else { 1.0 };
             if animate {
                 // O `animator` usa a duração padrão do AppKit (0,25 s), a mesma da transição do CSS.
                 let animator = b.view.animator();
@@ -105,7 +104,7 @@ fn update(window: &WebviewWindow, change: impl FnOnce(&mut Backdrop) -> bool + S
 }
 
 pub fn set_frame(window: &WebviewWindow, rect: Rect, radius: f64) {
-    update(window, move |b| {
+    update(window, true, move |b| {
         b.rect = rect;
         b.radius = radius;
         false
@@ -113,10 +112,15 @@ pub fn set_frame(window: &WebviewWindow, rect: Rect, radius: f64) {
 }
 
 pub fn set_hidden(window: &WebviewWindow, hidden: bool) {
-    update(window, move |b| {
+    update(window, false, move |b| {
         b.hidden = hidden;
         true
     });
+}
+
+/// Reaplica o material escolhido (vidro ou sólido) ao vidro que a janela já tem.
+pub fn refresh(window: &WebviewWindow) {
+    update(window, false, |_| true);
 }
 
 /// Esquece o vidro de uma janela destruída. Chamado na thread principal (eventos de janela).

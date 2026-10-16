@@ -12,7 +12,8 @@
   align-items: flex-end;
   gap: 6px;
   padding-bottom: 8px !important;
-  background: rgb(var(--glass-tint) / var(--glass-opacity));
+  --glass-blur: var(--dock-blur);
+  background: rgb(var(--glass-tint) / var(--dock-opacity));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-dock);
   box-shadow: var(--glass-highlight), var(--glass-shadow);

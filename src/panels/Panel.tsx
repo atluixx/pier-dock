@@ -292,5 +292,5 @@ export function Panel({ kind }: { kind: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   const Content = PANELS[kind];
-  return <div className="panel">{Content ? <Content /> : <div className="empty">Painel desconhecido.</div>}</div>;
+  return <div className="panel" data-glass>{Content ? <Content /> : <div className="empty">Painel desconhecido.</div>}</div>;
 }
