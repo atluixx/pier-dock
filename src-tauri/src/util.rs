@@ -1,12 +1,25 @@
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
-/// Config, cache de ícones e estado da taskbar: `%APPDATA%\win-dock`, `~/.config/win-dock` ou
-/// `~/Library/Application Support/win-dock`.
+/// Nome antigo do app, para migrar o que ele deixou (pasta de dados, token, autostart).
+pub const LEGACY_NAME: &str = "win-dock";
+
+/// Config, cache de ícones e estado da taskbar: `%APPDATA%\pier`, `~/.config/pier` ou
+/// `~/Library/Application Support/pier`. Na primeira execução como Pier, a pasta do WinDock é
+/// renomeada, levando a config e o estado da barra nativa (que o `--restore-taskbar` usa).
 pub fn data_dir() -> PathBuf {
-    let base = dirs::config_dir().unwrap_or_else(|| ".".into());
-    let dir = base.join("win-dock");
-    let _ = std::fs::create_dir_all(&dir);
-    dir
+    static DIR: OnceLock<PathBuf> = OnceLock::new();
+    DIR.get_or_init(|| {
+        let base = dirs::config_dir().unwrap_or_else(|| ".".into());
+        let dir = base.join("pier");
+        let legacy = base.join(LEGACY_NAME);
+        if !dir.exists() && legacy.is_dir() {
+            let _ = std::fs::rename(&legacy, &dir);
+        }
+        let _ = std::fs::create_dir_all(&dir);
+        dir
+    })
+    .clone()
 }
 
 /// Inicializa COM (STA) na thread atual. Chamadas repetidas são inofensivas.

@@ -1,5 +1,5 @@
 [package]
-name = "win-dock"
+name = "pier"
 version = "0.1.0"
 description = "Dock customizável para Windows, Linux (GNOME) e macOS"
 edition = "2021"
@@ -8,8 +8,9 @@ edition = "2021"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri = { version = "2", features = ["tray-icon", "image-png", "macos-private-api"] }
 tauri-plugin-autostart = "2"
+auto-launch = "0.6"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-opener = "2"
@@ -36,9 +37,11 @@ objc2 = "0.6"
 objc2-foundation = "0.3"
 objc2-app-kit = "0.3"
 core-foundation = "0.10"
-core-graphics = "0.24"
 accessibility-sys = "0.1"
 plist = "1"
+objc2-core-wlan = "0.3"
+objc2-quartz-core = "0.3"
+block2 = "0.6"
 
 [target.'cfg(windows)'.dependencies]
 keyring = { version = "3", features = ["windows-native"] }
@@ -61,6 +64,7 @@ features = [
   "Win32_System_Com",
   "Win32_System_Com_StructuredStorage",
   "Win32_System_Console",
+  "Win32_System_LibraryLoader",
   "Win32_System_Power",
   "Win32_System_Threading",
   "Win32_System_Variant",

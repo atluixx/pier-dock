@@ -39,7 +39,12 @@ impl Default for WidgetConfig {
 pub struct Config {
     pub pinned_apps: Vec<AppEntry>,
     pub widgets: Vec<WidgetConfig>,
-    pub theme: String,
+    /// "glass" (vidro líquido, onde o sistema permite) ou "solid".
+    pub material: String,
+    /// Opacidade da tinta sobre o vidro da dock (0 a 1).
+    pub glass_opacity: f32,
+    /// Cor de destaque: "coral", "blue", "green", "amber" ou "lilac".
+    pub accent: String,
     pub icon_size: u32,
     pub magnification: f32,
     pub show_running_unpinned: bool,
@@ -47,10 +52,18 @@ pub struct Config {
     /// "never", "smart" (esconde quando um app está em foco) ou "always".
     pub auto_hide: String,
     pub github_poll_minutes: u32,
+    /// Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. Vazia em
+    /// configs antigas; o frontend completa e limpa a lista.
+    pub dock_order: Vec<String>,
+    pub show_start_button: bool,
 }
 
 fn widget(kind: &str, size: &str) -> WidgetConfig {
     WidgetConfig { kind: kind.into(), enabled: true, size: size.into() }
+}
+
+fn disabled(kind: &str) -> WidgetConfig {
+    WidgetConfig { enabled: false, ..widget(kind, "small") }
 }
 
 /// O gerenciador de arquivos do sistema, fixado na primeira execução.
@@ -87,22 +100,26 @@ impl Default for Config {
             pinned_apps: vec![file_manager()],
             widgets: vec![
                 widget("media", "wide"),
-                widget("github-review", "small"),
                 widget("github-mine", "small"),
-                widget("github-commits", "small"),
-                widget("github-contrib", "small"),
+                widget("github-review", "small"),
+                disabled("github-commits"),
+                widget("github-contrib", "wide"),
                 widget("network", "small"),
                 widget("volume", "small"),
                 widget("battery", "small"),
                 widget("clock", "small"),
             ],
-            theme: "glass".into(),
-            icon_size: 44,
+            material: "glass".into(),
+            glass_opacity: 0.4,
+            accent: "coral".into(),
+            icon_size: 40,
             magnification: 1.6,
             show_running_unpinned: true,
             hide_taskbar: true,
             auto_hide: "smart".into(),
             github_poll_minutes: 3,
+            dock_order: Vec::new(),
+            show_start_button: true,
         }
     }
 }
@@ -117,7 +134,28 @@ pub fn load() -> Config {
     std::fs::read_to_string(config_path())
         .ok()
         .and_then(|s| serde_json::from_str(&s).ok())
+        .map(migrate)
+        .and_then(|v| serde_json::from_value(v).ok())
         .unwrap_or_default()
+}
+
+/// Os temas antigos viram material + cor de destaque: "glass" continua vidro; os outros eram
+/// opacos e ficam sólidos, com o destaque mais próximo da cor do tema.
+fn migrate(mut value: serde_json::Value) -> serde_json::Value {
+    let Some(obj) = value.as_object_mut() else { return value };
+    let Some(theme) = obj.remove("theme") else { return value };
+    if obj.contains_key("material") {
+        return value;
+    }
+    let (material, accent) = match theme.as_str().unwrap_or("glass") {
+        "glass" => ("glass", "coral"),
+        "midnight" => ("solid", "lilac"),
+        "canarinho" => ("solid", "amber"),
+        _ => ("solid", "blue"),
+    };
+    obj.insert("material".into(), material.into());
+    obj.entry("accent").or_insert(accent.into());
+    value
 }
 
 fn persist(config: &Config) -> Result<(), String> {
@@ -140,6 +178,7 @@ pub fn save_config(app: AppHandle, state: State<ConfigState>, config: Config) ->
         old
     };
     crate::dock_window::set_auto_hide(&app, &config.auto_hide);
+    crate::backdrop::set_material(&app, &config.material);
     if old_hide != config.hide_taskbar {
         if config.hide_taskbar {
             crate::taskbar::hide();
@@ -163,9 +202,32 @@ mod tests {
 
     #[test]
     fn partial_config_fills_defaults() {
-        let config: Config = serde_json::from_str(r#"{"theme":"neon"}"#).unwrap();
-        assert_eq!(config.theme, "neon");
-        assert_eq!(config.icon_size, 44);
+        let config: Config = serde_json::from_str(r#"{"iconSize":40}"#).unwrap();
+        assert_eq!(config.material, "glass");
+        assert_eq!(config.icon_size, 40);
+        assert_eq!(config.accent, "coral");
         assert!(!config.widgets.is_empty());
+        assert!(config.dock_order.is_empty());
+        assert!(config.show_start_button);
+    }
+
+    fn migrated(json: &str) -> Config {
+        serde_json::from_value(migrate(serde_json::from_str(json).unwrap())).unwrap()
+    }
+
+    #[test]
+    fn old_themes_become_material_and_accent() {
+        let glass = migrated(r#"{"theme":"glass"}"#);
+        assert_eq!((glass.material.as_str(), glass.accent.as_str()), ("glass", "coral"));
+        let midnight = migrated(r#"{"theme":"midnight"}"#);
+        assert_eq!((midnight.material.as_str(), midnight.accent.as_str()), ("solid", "lilac"));
+        let paper = migrated(r#"{"theme":"paper","accent":"green"}"#);
+        assert_eq!((paper.material.as_str(), paper.accent.as_str()), ("solid", "green"));
+    }
+
+    #[test]
+    fn migration_keeps_new_configs() {
+        let config = migrated(r#"{"material":"solid","accent":"blue"}"#);
+        assert_eq!((config.material.as_str(), config.accent.as_str()), ("solid", "blue"));
     }
 }

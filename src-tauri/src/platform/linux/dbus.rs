@@ -5,9 +5,9 @@ use std::sync::OnceLock;
 use zbus::blocking::{Connection, Proxy};
 use zbus::proxy::CacheProperties;
 
-/// Nome que o WinDock ocupa no session bus. A extensão do GNOME só aceita chamadas deste dono e
+/// Nome que o Pier ocupa no session bus. A extensão do GNOME só aceita chamadas deste dono e
 /// desfaz tudo quando ele some.
-pub const APP_BUS_NAME: &str = "dev.windock.App";
+pub const APP_BUS_NAME: &str = "dev.pier.App";
 
 pub fn session() -> Option<&'static Connection> {
     static CONN: OnceLock<Option<Connection>> = OnceLock::new();

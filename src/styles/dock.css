@@ -1,0 +1,207 @@
+.dock-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.dock-bar {
+  --glass-blur: var(--dock-blur);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgb(var(--glass-tint) / var(--dock-opacity));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-dock);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  white-space: nowrap;
+  animation: dock-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  transition:
+    transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.1),
+    opacity 0.22s ease;
+}
+
+/* Ocultar automaticamente: desliza para baixo da borda da tela. */
+.dock-bar.dock-hidden {
+  transform: translateX(-50%) translateY(calc(100% + 24px));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.26s ease-in,
+    opacity 0.26s ease-in;
+}
+
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(30px);
+  }
+}
+
+.dragging {
+  z-index: 10;
+  opacity: 0.85;
+}
+
+/* Apps: presos à base da barra, crescem para cima com a magnificação. */
+.dock-item {
+  position: relative;
+  align-self: flex-end;
+  margin-bottom: 3px;
+  display: flex;
+  touch-action: none;
+}
+
+.dock-item + .dock-item {
+  margin-left: -2px;
+}
+
+.app-button {
+  min-width: calc(var(--icon) + 8px);
+  padding: 3.5px 4px;
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s ease;
+}
+
+.app-button:is(:hover, [data-hover]) {
+  background: var(--fill-hover);
+}
+
+.magnify {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.app-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: var(--shadow-icon);
+}
+
+.app-button:active img {
+  filter: brightness(0.75);
+}
+
+.app-icon-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background: var(--surface-icon);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: calc(var(--icon) * 0.35);
+}
+
+.indicators {
+  display: flex;
+  gap: 3px;
+  height: 4px;
+}
+
+.indicator {
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: transparent;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease;
+}
+
+.indicator.on {
+  background: var(--indicator);
+}
+
+.indicator.active {
+  width: 14px;
+  background: var(--accent);
+}
+
+.launcher-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-card);
+  background: var(--fill-control);
+  border: 1px solid var(--fill-control);
+  transition: background 0.15s ease;
+}
+
+.launcher-button:is(:hover, [data-hover]) {
+  background: var(--fill-active);
+}
+
+/* A área do separador é mais larga que a linha, para dar para arrastá-lo. */
+.divider-item {
+  height: 28px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  touch-action: none;
+}
+
+.divider {
+  width: 1px;
+  height: 28px;
+  background: var(--divider);
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-control);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-tooltip);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 420px;
+  pointer-events: none;
+  z-index: 100;
+  animation: fade-in 0.12s ease;
+}
+
+.tooltip.with-keys {
+  padding-right: 8px;
+}
+
+.tooltip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+}

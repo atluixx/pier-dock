@@ -1,0 +1,180 @@
+/**
+ * Pré-visualização no navegador (`npm run dev` fora do Tauri): responde o IPC com os dados do
+ * canvas de design para comparar as telas lado a lado. A view vem da URL:
+ * `?view=dock`, `?view=panel&kind=media` ou `?view=settings`.
+ *
+ * O Vite injeta este script só no `vite dev`, antes do `main.tsx`, porque o store de config já
+ * chama `listen` ao ser carregado. Dentro do Tauri ele não faz nada.
+ */
+import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
+import type { AppEntry, Config, GithubData, MediaState, WindowsSnapshot } from "../lib/ipc";
+import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
+
+const insideTauri = "__TAURI_INTERNALS__" in window;
+const params = new URLSearchParams(location.search);
+const view = params.get("view") ?? "dock";
+const kind = params.get("kind") ?? "";
+
+const apps: (AppEntry & { color: string; init: string })[] = [
+  { id: "finder", name: "Finder", target: "/System/Library/CoreServices/Finder.app", color: "#2A6FDB", init: "Fi" },
+  { id: "spotify", name: "Spotify", target: "/Applications/Spotify.app", color: "#1A9E4B", init: "Sp" },
+  { id: "terminal", name: "Terminal", target: "/System/Applications/Utilities/Terminal.app", color: "#2B2B2F", init: ">_" },
+  { id: "brave", name: "Brave Browser", target: "/Applications/Brave Browser.app", color: "#E5502B", init: "Br" },
+];
+const installedNames = ["Activity Monitor", "AirPort Utility", "App Store", "Audio MIDI Setup", "Automator", "Books"];
+const installed: AppEntry[] = installedNames.map((name) => ({ id: name, name, target: `/Applications/${name}.app` }));
+
+function iconDataUrl(color: string, init: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="20" fill="${color}"/><text x="40" y="49" font-family="system-ui" font-weight="600" font-size="26" fill="#fff" text-anchor="middle">${init.replace(">", "&gt;")}</text></svg>`;
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
+}
+
+const config: Config = {
+  pinnedApps: apps.map(({ id, name, target }) => ({ id, name, target, exe: target, aumid: null })),
+  widgets: [
+    { kind: "media", enabled: true, size: "wide" },
+    { kind: "github-mine", enabled: true, size: "small" },
+    { kind: "github-review", enabled: true, size: "small" },
+    { kind: "github-commits", enabled: false, size: "small" },
+    { kind: "github-contrib", enabled: true, size: "wide" },
+    { kind: "network", enabled: true, size: "small" },
+    { kind: "volume", enabled: true, size: "small" },
+    { kind: "battery", enabled: true, size: "small" },
+    { kind: "clock", enabled: true, size: "small" },
+  ],
+  material: "glass",
+  glassOpacity: 0.4,
+  accent: "coral",
+  iconSize: 40,
+  magnification: 1,
+  showRunningUnpinned: true,
+  hideTaskbar: true,
+  autoHide: "smart",
+  githubPollMinutes: 3,
+  dockOrder: [],
+  showStartButton: true,
+};
+
+const windows: WindowsSnapshot = {
+  windows: apps.map((a, i) => ({ id: i + 1, title: a.name, exe: a.target, minimized: false })),
+  foreground: 4,
+};
+
+const media: MediaState = {
+  sessions: [
+    {
+      id: "com.spotify.client",
+      title: "Money Trees",
+      artist: "Kendrick Lamar",
+      album: "good kid, m.A.A.d city",
+      playing: params.get("playing") === "1",
+      positionMs: 147_000,
+      durationMs: 386_000,
+      updatedAtMs: Date.now(),
+      canNext: true,
+      canPrev: true,
+      canSeek: true,
+    },
+  ],
+};
+
+/** Mesmo gerador pseudoaleatório dos quadros do canvas, para os mapas de contribuição baterem. */
+function contributionWeeks(): GithubData["weeks"] {
+  const start = new Date();
+  start.setDate(start.getDate() - 52 * 7 - start.getDay());
+  const weeks: GithubData["weeks"] = [];
+  for (let w = 0; w < 53; w++) {
+    const week = [];
+    for (let d = 0; d < 7; d++) {
+      const i = w * 7 + d;
+      const date = new Date(start);
+      date.setDate(start.getDate() + i);
+      if (date > new Date()) break;
+      const v = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+      const level = v < 0.35 ? 0 : v < 0.6 ? 1 : v < 0.8 ? 2 : v < 0.93 ? 3 : 4;
+      week.push({ date: date.toISOString().slice(0, 10), count: [0, 2, 5, 9, 14][level] });
+    }
+    weeks.push(week);
+  }
+  return weeks;
+}
+
+const github: GithubData = {
+  login: "nahtanpng",
+  avatarUrl: "",
+  reviewCount: 12,
+  reviewRequests: Array.from({ length: 12 }, (_, i) => ({
+    number: 340 + i,
+    title: ["Corrige vazamento no cache de ícones", "Adiciona suporte a MPRIS", "Refatora o layout da dock"][i % 3],
+    url: `https://github.com/acme/dock/pull/${340 + i}`,
+    repo: "acme/dock",
+    author: ["ana", "bruno", "carla"][i % 3],
+    authorAvatar: "",
+    isDraft: i === 2,
+    updatedAt: new Date(Date.now() - i * 3_600_000).toISOString(),
+    checks: (["SUCCESS", "PENDING", "FAILURE"] as const)[i % 3],
+    reviewDecision: "REVIEW_REQUIRED",
+  })),
+  myPrCount: 0,
+  myPrs: [],
+  commits: [],
+  totalContributions: 2142,
+  weeks: contributionWeeks(),
+  fetchedAt: Date.now() - 120_000,
+};
+
+const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
+  get_config: () => config,
+  save_config: (args) => Object.assign(config, args.config),
+  get_windows: () => windows,
+  list_installed_apps: () => installed,
+  get_icon: (args) => {
+    const app = apps.find((a) => a.target === args.key);
+    return app ? iconDataUrl(app.color, app.init) : iconDataUrl("#2B2B2F", String(args.key).split("/").pop()!.slice(0, 2));
+  },
+  media_state: () => media,
+  media_thumbnail: () => null,
+  system_status: () => ({
+    battery: { present: true, percent: 79, charging: false },
+    network: { connected: true, internet: true, wifi: true, signalBars: 4, name: "Casa" },
+  }),
+  get_volume: () => ({ level: 0.6, muted: false }),
+  github_cached: () => github,
+  github_fetch: () => github,
+  github_auth_status: () => ({ source: "gh" }),
+  dock_visible: () => true,
+  platform_info: () => ({ os: "macos", windowList: "needs-accessibility", hideNative: true, shortcuts: true, glass: true }),
+  "plugin:autostart|is_enabled": () => true,
+  "plugin:app|version": () => "0.1.0",
+};
+
+if (!insideTauri) {
+  window.__PIER_VIEW__ = { view: view as "dock" | "panel" | "settings", kind };
+  document.documentElement.dataset.mock = "";
+  // O fundo dos quadros do canvas. No app quem borra o que está atrás é o sistema; aqui o
+  // `backdrop-filter` faz esse papel.
+  const style = document.createElement("style");
+  style.textContent = `
+    html[data-mock] body {
+      background:
+        radial-gradient(circle at 22% 10%, rgba(122,46,58,.9), transparent 35%),
+        radial-gradient(circle at 60% 80%, rgba(30,58,138,.9), transparent 40%),
+        radial-gradient(circle at 85% 5%, rgba(15,82,87,.85), transparent 30%),
+        #0E0F14 !important;
+    }
+    html[data-mock][data-view="panel"] #root {
+      position: absolute;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      width: ${(PANEL_SIZES[kind]?.[0] ?? 380) + 2 * PANEL_INSET}px;
+      height: ${(PANEL_SIZES[kind]?.[1] ?? 420) + 2 * PANEL_INSET}px;
+    }
+    html[data-mock] [data-glass] {
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    }`;
+  document.head.append(style);
+  mockWindows(view === "panel" ? "panel-0" : view);
+  mockIPC((cmd, args) => handlers[cmd]?.((args ?? {}) as Record<string, unknown>) ?? null, { shouldMockEvents: true });
+}

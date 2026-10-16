@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMotionValue } from "framer-motion";
+import { Search } from "lucide-react";
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { listen } from "@tauri-apps/api/event";
@@ -14,34 +15,42 @@ import { useGithub } from "../hooks/useGithub";
 import { useSystemStatus } from "../hooks/useSystem";
 import { buildDockApps, type DockApp } from "./apps";
 import { dockMetrics } from "./layout";
-import { MagnifyCtx, Magnify } from "./Magnify";
+import { MagnifyCtx } from "./Magnify";
 import { AppIcon } from "./AppIcon";
+import { SortableItem } from "./SortableItem";
+import { addDivider, applyOrder, isDivider, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
 import { MediaWidget } from "../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../widgets/GithubWidgets";
 import { BatteryWidget, ClockWidget, NetworkWidget, VolumeWidget } from "../widgets/SystemWidgets";
 
-function StartButton() {
+/** Abre o lançador de apps do sistema (Menu Iniciar, Launchpad, grade de apps do GNOME). */
+function StartButton({ onRemove }: { onRemove: () => void }) {
+  const onContextMenu = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const menu = await Menu.new({ items: [{ id: "remove", text: "Remover da dock", action: onRemove }] });
+    await menu.popup();
+  };
   return (
-    <div className="dock-item">
-      <Magnify>
-        <button className="app-icon start-button" onClick={() => ipc.openShell("start")} title={labels.startButton}>
-          {os === "windows" ? (
-            <svg viewBox="0 0 24 24" aria-hidden>
-              <rect x="2" y="2" width="9.5" height="9.5" rx="1.2" />
-              <rect x="12.5" y="2" width="9.5" height="9.5" rx="1.2" />
-              <rect x="2" y="12.5" width="9.5" height="9.5" rx="1.2" />
-              <rect x="12.5" y="12.5" width="9.5" height="9.5" rx="1.2" />
-            </svg>
-          ) : (
-            // Grade de apps (GNOME / Launchpad).
-            <svg viewBox="0 0 24 24" aria-hidden>
-              {[4, 12, 20].flatMap((cy) => [4, 12, 20].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2.6" />))}
-            </svg>
-          )}
-        </button>
-      </Magnify>
-      <div className="indicator" />
-    </div>
+    <SortableItem id={START_KEY} className="widget-slot" onContextMenu={onContextMenu}>
+      <button className="launcher-button" aria-label={labels.startButton} title={labels.startButton} onClick={() => ipc.openShell("start")}>
+        <Search size={18} strokeWidth={2} aria-hidden />
+      </button>
+    </SortableItem>
+  );
+}
+
+function Divider({ id, onRemove }: { id: string; onRemove: () => void }) {
+  const onContextMenu = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const menu = await Menu.new({ items: [{ id: "remove", text: "Remover separador", action: onRemove }] });
+    await menu.popup();
+  };
+  return (
+    <SortableItem id={id} className="divider-item" onContextMenu={onContextMenu}>
+      <div className="divider" />
+    </SortableItem>
   );
 }
 
@@ -97,8 +106,10 @@ export function Dock({ config }: { config: Config }) {
     const report = () => {
       const width = bar.offsetWidth;
       const height = bar.offsetHeight;
-      const bottom = parseFloat(getComputedStyle(bar).bottom) || 0;
-      ipc.setHitRect({ x: (window.innerWidth - width) / 2, y: window.innerHeight - bottom - height, width, height });
+      const style = getComputedStyle(bar);
+      const bottom = parseFloat(style.bottom) || 0;
+      const radius = parseFloat(style.borderTopLeftRadius) || 0;
+      ipc.setHitRect({ x: (window.innerWidth - width) / 2, y: window.innerHeight - bottom - height, width, height, radius });
     };
     const observer = new ResizeObserver(report);
     observer.observe(bar);
@@ -142,7 +153,8 @@ export function Dock({ config }: { config: Config }) {
         const app = appsRef.current[e.payload];
         if (app) clickApp(app);
       }),
-      // Arrastar um .exe/.lnk/.desktop/.app/pasta do gerenciador de arquivos para a dock fixa o item.
+      // Arrastar um .exe/.lnk/.desktop/.app/pasta do gerenciador de arquivos para a dock fixa o item
+      // (no fim da ordem).
       getCurrentWebview().onDragDropEvent(async (e) => {
         if (e.payload.type !== "drop") return;
         const entries = await Promise.all(e.payload.paths.map((p) => ipc.resolveAppPath(p)));
@@ -155,24 +167,30 @@ export function Dock({ config }: { config: Config }) {
   }, [mouseX, update]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const pinnedKeys = apps.filter((a) => a.pinned).map((a) => a.key);
+  const order = resolveOrder(config);
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
     update((c) => {
-      const ids = c.pinnedApps.map((p) => `pin:${p.id}`);
-      const from = ids.indexOf(String(active.id));
-      const to = ids.indexOf(String(over.id));
+      const keys = resolveOrder(c);
+      const from = keys.indexOf(String(active.id));
+      const to = keys.indexOf(String(over.id));
       if (from < 0 || to < 0) return {};
-      return { pinnedApps: arrayMove(c.pinnedApps, from, to) };
+      return applyOrder(c, arrayMove(keys, from, to));
     });
   };
+
+  const remove = (key: string) => update((c) => removeItem(c, key));
 
   const onBackgroundMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
     const menu = await Menu.new({
       items: [
         { id: "settings", text: "Configurações da dock", action: () => ipc.openSettings() },
+        { id: "divider", text: "Adicionar separador", action: () => update((c) => addDivider(c)) },
+        ...(config.showStartButton
+          ? []
+          : [{ id: "start", text: `Mostrar botão ${labels.startButton}`, action: () => update({ showStartButton: true }) }]),
         { id: "reload", text: "Recarregar", action: () => location.reload() },
         { item: "Separator" },
         { id: "quit", text: labels.quit, action: () => ipc.quit() },
@@ -205,35 +223,58 @@ export function Dock({ config }: { config: Config }) {
     }
   };
 
-  const widgets = config.widgets.filter((w) => w.enabled);
+  const pinnedApps = new Map(apps.filter((a) => a.pinned).map((a) => [a.key, a]));
+  const unpinnedApps = apps.filter((a) => !a.pinned);
+  const widgets = new Map(config.widgets.filter((w) => w.enabled).map((w) => [widgetKey(w.kind), w]));
   const activeKey = apps.find((a) => a.windows.some((w) => w.id === snapshot.foreground))?.key;
+  const shortcutFor = (app: DockApp) => {
+    const n = apps.indexOf(app) + 1;
+    return n >= 1 && n <= 9 ? n : undefined;
+  };
+
+  const renderItem = (key: string) => {
+    if (key === START_KEY) return <StartButton key={key} onRemove={() => remove(key)} />;
+    if (isDivider(key)) return <Divider key={key} id={key} onRemove={() => remove(key)} />;
+    const app = pinnedApps.get(key);
+    if (app) return <AppIcon key={key} app={app} active={key === activeKey} sortable shortcut={shortcutFor(app)} />;
+    const widget = widgets.get(key);
+    if (widget) {
+      return (
+        <SortableItem key={key} id={key} className="widget-slot">
+          {renderWidget(widget)}
+        </SortableItem>
+      );
+    }
+    return null;
+  };
+
+  // Clicar em qualquer outro lugar da dock fecha o painel aberto; o próprio tile alterna o dele.
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!(e.target as Element).closest("[data-widget]")) ipc.closePanel();
+  };
 
   return (
     <div className="dock-root" style={{ ["--icon" as string]: `${config.iconSize}px` }}>
       <div
         ref={barRef}
         className={`dock-bar ${visible ? "" : "dock-hidden"}`}
+        data-glass
         style={{ bottom: metrics.margin, height: metrics.barHeight, padding: `0 ${metrics.padding}px` }}
         onMouseMove={(e) => mouseX.set(e.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}
+        onPointerDown={onPointerDown}
         onContextMenu={onBackgroundMenu}
       >
         <MagnifyCtx.Provider value={{ mouseX, base: config.iconSize, scale: Math.max(1, config.magnification) }}>
-          <StartButton />
           <DndContext sensors={sensors} onDragStart={() => mouseX.set(Infinity)} onDragEnd={onDragEnd}>
-            <SortableContext items={pinnedKeys} strategy={horizontalListSortingStrategy}>
-              {apps.map((app) => (
-                <AppIcon key={app.key} app={app} active={app.key === activeKey} sortable={!!app.pinned} />
-              ))}
+            <SortableContext items={order} strategy={horizontalListSortingStrategy}>
+              {order.map(renderItem)}
             </SortableContext>
           </DndContext>
+          {unpinnedApps.map((app) => (
+            <AppIcon key={app.key} app={app} active={app.key === activeKey} sortable={false} shortcut={shortcutFor(app)} />
+          ))}
         </MagnifyCtx.Provider>
-        {widgets.length > 0 && <div className="divider" />}
-        {widgets.map((w) => (
-          <div key={w.kind} className="widget-slot">
-            {renderWidget(w)}
-          </div>
-        ))}
       </div>
     </div>
   );

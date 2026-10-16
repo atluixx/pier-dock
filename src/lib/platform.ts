@@ -19,5 +19,10 @@ export const labels = {
     linux: "solte um arquivo .desktop, executável ou pasta nela para fixar",
     macos: "solte um app (.app) ou pasta nela para fixar",
   }[os],
+  autoHideNever: {
+    windows: "Nunca (reserva espaço na tela)",
+    linux: "Nunca (reserva espaço na tela)",
+    macos: "Nunca (fica por cima das janelas)",
+  }[os],
   keychain: { windows: "no Gerenciador de Credenciais", linux: "no chaveiro do sistema", macos: "nas Chaves (Keychain)" }[os],
 };

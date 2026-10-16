@@ -1,21 +1,23 @@
 import { useRef, useState, type ReactNode } from "react";
 import { ipc } from "../lib/ipc";
+import { Tooltip } from "../ui/Tooltip";
+import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
 
-/** Margem transparente da janela em volta do painel, para a sombra (igual a `--panel-inset`). */
-export const PANEL_INSET = 12;
+/** Abre (ou fecha, se já estiver aberto) o painel do widget, centrado acima de `el`. */
+export function togglePanel(kind: string, el: Element) {
+  const rect = el.getBoundingClientRect();
+  const [w, h] = PANEL_SIZES[kind] ?? [380, 420];
+  ipc.openPanel(kind, rect.left + rect.width / 2, w + 2 * PANEL_INSET, h + 2 * PANEL_INSET).catch(console.error);
+}
 
-/** Tamanho visível (px lógicos) do painel de cada widget, sem a margem da sombra. */
-export const PANEL_SIZES: Record<string, [number, number]> = {
-  media: [360, 430],
-  "github-review": [420, 480],
-  "github-mine": [420, 480],
-  "github-commits": [420, 480],
-  "github-contrib": [800, 216],
-};
+/** Mostra o tooltip enquanto o mouse está sobre o elemento. */
+export function useHover() {
+  const [hover, setHover] = useState(false);
+  return { hover, bind: { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false) } };
+}
 
 interface TileProps {
   kind: string;
-  wide?: boolean;
   label: string;
   panel?: boolean;
   onClick?: () => void;
@@ -25,30 +27,29 @@ interface TileProps {
   children: ReactNode;
 }
 
-export function Tile({ kind, wide, label, panel = true, onClick, onWheel, onContextMenu, className = "", children }: TileProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [hover, setHover] = useState(false);
+/** Widget de um botão só: clicar abre o painel dele (ou faz `onClick`). */
+export function Tile({ kind, label, panel = true, onClick, onWheel, onContextMenu, className = "", children }: TileProps) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const { hover, bind } = useHover();
 
   const handleClick = () => {
     if (onClick) return onClick();
-    if (!panel || !ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const [w, h] = PANEL_SIZES[kind] ?? [380, 420];
-    ipc.openPanel(kind, rect.left + rect.width / 2, w + 2 * PANEL_INSET, h + 2 * PANEL_INSET).catch(console.error);
+    if (panel && ref.current) togglePanel(kind, ref.current);
   };
 
   return (
-    <div
+    <button
       ref={ref}
-      className={`tile ${wide ? "wide" : ""} ${className}`}
+      className={`tile ${className}`}
+      data-widget
+      aria-label={label}
       onClick={handleClick}
       onWheel={onWheel}
       onContextMenu={onContextMenu}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      {...bind}
     >
-      {hover && <div className="tooltip">{label}</div>}
+      {hover && <Tooltip label={label} />}
       {children}
-    </div>
+    </button>
   );
 }

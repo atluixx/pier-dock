@@ -134,8 +134,13 @@ fn start_pointer_thread(window: WebviewWindow) {
         let own_pid = std::process::id();
         let mut ignoring = true;
         let mut hover_until = Instant::now();
+        let mut backdrop_checked = Instant::now();
         loop {
             std::thread::sleep(Duration::from_millis(if ignoring { 30 } else { 16 }));
+            if backdrop_checked.elapsed() > Duration::from_secs(1) {
+                backdrop_checked = Instant::now();
+                crate::backdrop::refresh(&window);
+            }
             let hwnd = dock_hwnd();
             ensure_ex_style(hwnd, ignoring);
             let mut cursor = POINT::default();
@@ -224,6 +229,7 @@ fn start_fullscreen_thread(app: AppHandle) {
             if fullscreen != HIDDEN_FOR_FULLSCREEN.load(Ordering::SeqCst) {
                 HIDDEN_FOR_FULLSCREEN.store(fullscreen, Ordering::SeqCst);
                 let _ = if fullscreen { window.hide() } else { window.show() };
+                crate::backdrop::set_hidden(&window, fullscreen || !super::dock_visible());
             }
         }
     });

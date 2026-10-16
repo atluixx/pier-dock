@@ -51,13 +51,15 @@ pub struct HitRect {
     pub x: f64,
     pub y: f64,
     pub width: f64,
-    /// Não usado hoje: a área clicável vai do topo da barra até a base da tela.
-    #[allow(dead_code)]
+    /// A área clicável vai do topo da barra até a base da tela; a altura só serve ao vidro.
     pub height: f64,
+    /// Raio dos cantos da barra, para o vidro acompanhar.
+    #[serde(default)]
+    pub radius: f64,
 }
 
 static LAYOUT: Mutex<Layout> = Mutex::new(Layout { reserved_height: 72.0, window_height: 170.0, hover_headroom: 80.0 });
-static HIT: Mutex<HitRect> = Mutex::new(HitRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 });
+static HIT: Mutex<HitRect> = Mutex::new(HitRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0, radius: 0.0 });
 
 fn layout() -> Layout {
     *LAYOUT.lock().unwrap()
@@ -81,12 +83,14 @@ fn want_visible(hovering: bool, app_focused: impl FnOnce() -> bool) -> bool {
     }
 }
 
-/// Atualiza a visibilidade e avisa o frontend, que anima a dock para dentro/fora da tela.
+/// Atualiza a visibilidade e avisa o frontend, que anima a dock para dentro/fora da tela; o vidro
+/// nativo acompanha.
 #[allow(dead_code)]
 fn set_visible(window: &WebviewWindow, visible: bool) {
     use tauri::Emitter;
     if VISIBLE.swap(visible, Ordering::SeqCst) != visible {
         let _ = window.emit("dock-visibility", visible);
+        crate::backdrop::set_hidden(window, !visible);
     }
 }
 
@@ -133,9 +137,14 @@ pub fn set_dock_hover(hovering: bool) {
     backend::set_hover(hovering);
 }
 
+/// A barra mudou de tamanho (itens, magnificação): atualiza a área clicável e o vidro.
 #[tauri::command]
 pub fn set_hit_rect(app: AppHandle, rect: HitRect) {
     *HIT.lock().unwrap() = rect;
+    if let Some(window) = app.get_webview_window(DOCK_LABEL) {
+        let glass = crate::backdrop::Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+        crate::backdrop::set_frame(&window, glass, rect.radius);
+    }
     backend::hit_rect_changed(&app);
 }
 
@@ -150,6 +159,8 @@ pub fn reserved_top_and_scale(window: &WebviewWindow) -> Option<(f64, f64, f64, 
 
 /// Onde a janela da dock fica, em pixels físicos de tela.
 #[derive(Clone, Copy, Debug)]
+// O macOS não reserva área de trabalho, então só posiciona a janela.
+#[cfg_attr(target_os = "macos", allow(dead_code))]
 struct Placement {
     x: i32,
     /// Topo da janela.

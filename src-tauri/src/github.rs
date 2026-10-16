@@ -11,7 +11,7 @@ use tauri::{AppHandle, Emitter};
 
 use crate::util::ErrStr;
 
-const KEYRING_SERVICE: &str = "win-dock";
+const KEYRING_SERVICE: &str = "pier";
 const KEYRING_USER: &str = "github";
 
 const QUERY: &str = r#"
@@ -107,7 +107,17 @@ pub struct AuthStatus {
 static CACHE: Mutex<Option<GithubData>> = Mutex::new(None);
 
 fn stored_token() -> Option<String> {
-    keyring::Entry::new(KEYRING_SERVICE, KEYRING_USER).ok()?.get_password().ok().filter(|t| !t.is_empty())
+    let read = |service: &str| keyring::Entry::new(service, KEYRING_USER).ok()?.get_password().ok().filter(|t| !t.is_empty());
+    read(KEYRING_SERVICE).or_else(migrate_legacy_token)
+}
+
+/// O token salvo pelo WinDock vai para o serviço novo do cofre e sai do antigo.
+fn migrate_legacy_token() -> Option<String> {
+    let legacy = keyring::Entry::new(crate::util::LEGACY_NAME, KEYRING_USER).ok()?;
+    let token = legacy.get_password().ok().filter(|t| !t.is_empty())?;
+    keyring::Entry::new(KEYRING_SERVICE, KEYRING_USER).ok()?.set_password(&token).ok()?;
+    let _ = legacy.delete_credential();
+    Some(token)
 }
 
 /// Apps abertos pelo Finder/Dock não herdam o PATH do shell, então o `gh` do Homebrew não seria
@@ -240,7 +250,7 @@ pub fn parse_commits(search: &Value) -> Vec<Commit> {
 }
 
 async fn fetch(token: &str) -> Result<GithubData, String> {
-    let client = reqwest::Client::builder().user_agent("win-dock").build().err_str()?;
+    let client = reqwest::Client::builder().user_agent("pier").build().err_str()?;
 
     let response: Value = client
         .post("https://api.github.com/graphql")

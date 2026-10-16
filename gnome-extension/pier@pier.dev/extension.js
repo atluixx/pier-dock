@@ -1,8 +1,8 @@
-// Ponte entre o GNOME Shell e o WinDock.
+// Ponte entre o GNOME Shell e o Pier.
 //
 // No Wayland um app comum não enxerga as janelas dos outros, não consegue focá-las e não reserva
 // espaço na tela. Esta extensão roda dentro do Shell e expõe isso no session bus como
-// `dev.windock.Shell`. Só o processo dono de `dev.windock.App` (o WinDock) pode chamar os
+// `dev.pier.Shell`. Só o processo dono de `dev.pier.App` (o Pier) pode chamar os
 // métodos; quando ele some (inclusive num crash), tudo o que foi alterado é desfeito.
 
 import Gio from 'gi://Gio';
@@ -15,10 +15,10 @@ import {ExtensionState} from 'resource:///org/gnome/shell/misc/extensionUtils.js
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 const VERSION = 1;
-const APP_NAME = 'dev.windock.App';
-const BUS_NAME = 'dev.windock.Shell';
-const OBJECT_PATH = '/dev/windock/Shell';
-// Docks de outras extensões, que ficariam por cima da do WinDock.
+const APP_NAME = 'dev.pier.App';
+const BUS_NAME = 'dev.pier.Shell';
+const OBJECT_PATH = '/dev/pier/Shell';
+// Docks de outras extensões, que ficariam por cima da do Pier.
 const DOCK_EXTENSIONS = [
     'dash-to-dock@micxgx.gmail.com',
     'ubuntu-dock@ubuntu.com',
@@ -28,7 +28,7 @@ const DOCK_EXTENSIONS = [
 
 const IFACE = `
 <node>
-  <interface name="dev.windock.Shell">
+  <interface name="dev.pier.Shell">
     <method name="ListWindows"><arg type="s" direction="out" name="json"/></method>
     <method name="Activate"><arg type="t" direction="in" name="id"/></method>
     <method name="Minimize"><arg type="t" direction="in" name="id"/></method>
@@ -45,7 +45,7 @@ const IFACE = `
   </interface>
 </node>`;
 
-class WinDockService {
+class PierService {
     constructor() {
         this._appOwner = null;
         this._windowSignals = new Map();
@@ -115,12 +115,12 @@ class WinDockService {
         this._dbus = null;
     }
 
-    // ---- D-Bus: só o WinDock pode chamar ----
+    // ---- D-Bus: só o Pier pode chamar ----
 
     _guard(invocation) {
         if (this._appOwner && invocation.get_sender() === this._appOwner)
             return true;
-        invocation.return_dbus_error('dev.windock.Shell.Error.AccessDenied', 'só o WinDock pode usar esta interface');
+        invocation.return_dbus_error('dev.pier.Shell.Error.AccessDenied', 'só o Pier pode usar esta interface');
         return false;
     }
 
@@ -131,7 +131,7 @@ class WinDockService {
             const result = fn();
             invocation.return_value(result ?? null);
         } catch (e) {
-            invocation.return_dbus_error('dev.windock.Shell.Error.Failed', String(e));
+            invocation.return_dbus_error('dev.pier.Shell.Error.Failed', String(e));
         }
     }
 
@@ -264,7 +264,7 @@ class WinDockService {
                     ext.stateObj.disable();
                     suspended.push(ext);
                 } catch (e) {
-                    console.error(`WinDock: falha ao suspender ${uuid}: ${e}`);
+                    console.error(`Pier: falha ao suspender ${uuid}: ${e}`);
                 }
             }
             // Depois das extensões: o disable() delas costuma reexibir o Dash.
@@ -284,7 +284,7 @@ class WinDockService {
                 try {
                     ext.stateObj.enable();
                 } catch (e) {
-                    console.error(`WinDock: falha ao reativar ${ext.uuid}: ${e}`);
+                    console.error(`Pier: falha ao reativar ${ext.uuid}: ${e}`);
                 }
             }
         }
@@ -296,7 +296,7 @@ class WinDockService {
         this._reservedHeight = height;
         if (height > 0 && !this._reserve) {
             // Ator invisível que só existe para o Mutter tirar esta faixa da área de trabalho.
-            this._reserve = new St.Widget({name: 'windockReserve', reactive: false});
+            this._reserve = new St.Widget({name: 'pierReserve', reactive: false});
             Main.layoutManager.addChrome(this._reserve, {affectsStruts: true, affectsInputRegion: false, trackFullscreen: true});
         } else if (height === 0 && this._reserve) {
             Main.layoutManager.removeChrome(this._reserve);
@@ -350,9 +350,9 @@ class WinDockService {
     }
 }
 
-export default class WinDockExtension extends Extension {
+export default class PierExtension extends Extension {
     enable() {
-        this._service = new WinDockService();
+        this._service = new PierService();
         this._service.enable();
     }
 

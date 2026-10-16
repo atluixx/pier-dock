@@ -19,6 +19,8 @@ pub struct PlatformInfo {
     pub hide_native: bool,
     /// Os atalhos Ctrl+Alt+1..9 funcionam?
     pub shortcuts: bool,
+    /// O sistema desenha o vidro (blur atrás da janela)? Sem ele o material é sempre sólido.
+    pub glass: bool,
 }
 
 #[tauri::command]
@@ -28,7 +30,7 @@ pub async fn platform_info() -> Result<PlatformInfo, String> {
 
 #[cfg(windows)]
 fn info() -> PlatformInfo {
-    PlatformInfo { os: "windows", window_list: "ok", hide_native: true, shortcuts: true }
+    PlatformInfo { os: "windows", window_list: "ok", hide_native: true, shortcuts: true, glass: crate::backdrop::supported() }
 }
 
 #[cfg(target_os = "linux")]

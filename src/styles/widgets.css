@@ -1,0 +1,317 @@
+.widget-slot {
+  display: flex;
+  align-items: center;
+  touch-action: none;
+}
+
+.widget-slot + .widget-slot {
+  margin-left: -2px;
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.tile:is(:hover, [data-hover]),
+.media-open:is(:hover, [data-hover]) {
+  background: var(--fill-hover);
+}
+
+.tile:active {
+  background: var(--fill-active);
+}
+
+.tile-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.tile-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-on-accent);
+  background: var(--accent);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+/* Estado dos checks dos seus PRs, no canto do ícone. */
+.status-dot {
+  position: absolute;
+  top: 10px;
+  left: 22px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgb(var(--glass-tint));
+}
+
+.status-dot.success {
+  background: var(--success);
+}
+
+.status-dot.failure {
+  background: var(--danger);
+}
+
+.status-dot.pending {
+  background: var(--warning);
+}
+
+.sys-tile {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--radius-control);
+}
+
+.battery-tile {
+  height: 34px;
+  padding: 0 8px;
+  gap: 6px;
+  border-radius: var(--radius-control);
+  font-size: 13px;
+}
+
+.battery-tile.low {
+  color: var(--danger);
+}
+
+.clock-tile {
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1px;
+  padding: 0 6px 0 10px;
+  border-radius: var(--radius-control);
+}
+
+.clock-time {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.clock-date {
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--text-secondary);
+}
+
+/* Mídia */
+.media-tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+  padding: 0 2px;
+}
+
+.media-open {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 6px;
+  border-radius: var(--radius-card);
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.media-tile.compact .media-open {
+  padding: 0 4px;
+}
+
+.media-cover {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface-artwork) center / cover no-repeat;
+  color: var(--text-tertiary);
+  display: grid;
+  place-items: center;
+}
+
+.media-idle {
+  padding: 0 6px;
+  height: 48px;
+  border-radius: var(--radius-card);
+}
+
+.media-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 128px;
+  min-width: 0;
+}
+
+.media-title,
+.media-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.media-artist {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.media-progress {
+  display: flex;
+  height: 2px;
+  margin-top: 3px;
+  border-radius: 1px;
+  background: var(--fill-track);
+  overflow: hidden;
+}
+
+.media-progress > span {
+  height: 100%;
+  border-radius: 1px;
+  background: var(--text);
+}
+
+.media-control {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-control);
+  display: grid;
+  place-items: center;
+  transition: background 0.15s ease;
+}
+
+.media-control:is(:hover, [data-hover]) {
+  background: var(--fill-active);
+}
+
+/* Compacta: o tocar/pausar aparece por cima da capa. */
+.media-overlay {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-control);
+  display: grid;
+  place-items: center;
+  background: var(--scrim);
+  color: var(--text-strong);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.media-tile:is(:hover, [data-hover]) .media-overlay,
+.media-overlay:focus-visible {
+  opacity: 1;
+}
+
+/* Contribuições */
+.contrib-tile {
+  height: 48px;
+  gap: 12px;
+}
+
+.contrib-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.contrib-total {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.contrib-caption {
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--text-secondary);
+}
+
+.mini-heatmap {
+  display: grid;
+  grid-template-rows: repeat(7, 4px);
+  grid-auto-flow: column;
+  grid-auto-columns: 4px;
+  gap: 1.5px;
+}
+
+.mini-heatmap .heat {
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+}
+
+/* Células do mapa de contribuições (dock e popover). */
+.heat {
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+}
+
+/* Mapa de contribuições (dock e painel). */
+.heatmap {
+  display: flex;
+  gap: 2px;
+}
+
+/* Colunas e células esticam para preencher a largura do painel. */
+.heat-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heat-col .heat {
+  flex: 1;
+  min-height: 0;
+}
+
+.heat {
+  display: block;
+  background: var(--heat-0);
+}
+
+/* Dias que faltam para completar a semana. */
+.heat.blank {
+  background: transparent !important;
+}
+
+.heat.l1 {
+  background: var(--heat-1);
+}
+
+.heat.l2 {
+  background: var(--heat-2);
+}
+
+.heat.l3 {
+  background: var(--heat-3);
+}
+
+.heat.l4 {
+  background: var(--heat-4);
+}

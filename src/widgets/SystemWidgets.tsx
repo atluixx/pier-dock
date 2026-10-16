@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ipc, type SystemStatus } from "../lib/ipc";
 import { useNow, useVolume } from "../hooks/useSystem";
+import { shortDate } from "../lib/format";
 import { Tile } from "./Tile";
 
 export function NetworkWidget({ status }: { status: SystemStatus | null }) {
@@ -26,7 +27,7 @@ export function NetworkWidget({ status }: { status: SystemStatus | null }) {
   const label = !net?.connected ? "Sem conexão" : `${net.name || "Conectado"}${net.internet ? "" : " (sem internet)"}`;
   return (
     <Tile kind="network" label={label} className="sys-tile" onClick={() => ipc.openShell("quick-settings")}>
-      <Icon size={18} />
+      <Icon size={17} />
     </Tile>
   );
 }
@@ -50,7 +51,7 @@ export function VolumeWidget() {
       }}
       onWheel={(e) => volume && setVolume({ level: Math.min(1, Math.max(0, level + (e.deltaY < 0 ? 0.04 : -0.04))) })}
     >
-      <Icon size={18} />
+      <Icon size={17} />
     </Tile>
   );
 }
@@ -69,10 +70,10 @@ export function BatteryWidget({ status }: { status: SystemStatus | null }) {
     <Tile
       kind="battery"
       label={`Bateria ${battery.percent}%${battery.charging ? " (carregando)" : ""}`}
-      className={`sys-tile ${battery.percent <= 15 && !battery.charging ? "low" : ""}`}
+      className={`battery-tile ${battery.percent <= 15 && !battery.charging ? "low" : ""}`}
       onClick={() => ipc.openShell("quick-settings")}
     >
-      <Icon size={18} />
+      <Icon size={20} />
       <span className="sys-text">{battery.percent}%</span>
     </Tile>
   );
@@ -81,12 +82,12 @@ export function BatteryWidget({ status }: { status: SystemStatus | null }) {
 export function ClockWidget() {
   const now = useNow(1000);
   const time = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  const date = now.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  const date = shortDate(now);
   const full = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   return (
     <Tile kind="clock" label={full} className="clock-tile" onClick={() => ipc.openShell("notifications")}>
-      <div className="clock-time">{time}</div>
-      <div className="clock-date">{date}</div>
+      <span className="clock-time">{time}</span>
+      <span className="clock-date">{date}</span>
     </Tile>
   );
 }

@@ -81,6 +81,30 @@ fn image_data_url(content_type: &str, bytes: &[u8]) -> String {
     format!("data:{};base64,{}", safe_image_mime(content_type), base64::engine::general_purpose::STANDARD.encode(bytes))
 }
 
+#[cfg(unix)]
+const MAX_ART_BYTES: usize = 5 * 1024 * 1024;
+
+/// Capa da faixa por HTTPS (o Spotify usa i.scdn.co), como data URL.
+#[cfg(unix)]
+fn fetch_image(url: &str) -> Option<String> {
+    if !url.starts_with("https://") {
+        return None;
+    }
+    let url = url.to_string();
+    tauri::async_runtime::block_on(async move {
+        let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(5)).build().ok()?;
+        let response = client.get(&url).send().await.ok()?.error_for_status().ok()?;
+        let content_type = response
+            .headers()
+            .get(reqwest::header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or_default()
+            .to_string();
+        let bytes = response.bytes().await.ok().filter(|b| b.len() <= MAX_ART_BYTES)?;
+        Some(image_data_url(&content_type, &bytes))
+    })
+}
+
 #[allow(dead_code)]
 fn now_ms() -> f64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as f64).unwrap_or(0.0)

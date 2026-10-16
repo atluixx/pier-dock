@@ -10,6 +10,11 @@ use crate::util::ErrStr;
 
 pub const SETTINGS_LABEL: &str = "settings";
 
+/// Margem transparente da janela em volta do painel e raio dos cantos, iguais a `--panel-inset` e
+/// a `--radius-window` no CSS.
+const PANEL_INSET: f64 = 18.0;
+const PANEL_RADIUS: f64 = 18.0;
+
 /// (label, kind) do painel aberto. Cada painel ganha um label novo porque fechar uma janela é
 /// assíncrono e reutilizar o label logo em seguida falharia.
 static OPEN_PANEL: Mutex<Option<(String, String)>> = Mutex::new(None);
@@ -18,12 +23,12 @@ static PANEL_COUNTER: AtomicU32 = AtomicU32::new(0);
 /// O frontend decide o que renderizar por esta variável global, injetada antes da página carregar.
 fn view_script(view: &str, kind: &str) -> String {
     format!(
-        "window.__WINDOCK_VIEW__ = {};",
+        "window.__PIER_VIEW__ = {};",
         serde_json::json!({ "view": view, "kind": kind })
     )
 }
 
-fn close_open_panel(app: &AppHandle) -> Option<String> {
+pub fn close_open_panel(app: &AppHandle) -> Option<String> {
     let (label, kind) = OPEN_PANEL.lock().unwrap().take()?;
     if let Some(window) = app.get_webview_window(&label) {
         let _ = window.destroy();
@@ -51,7 +56,7 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64,
     let label = format!("panel-{}", PANEL_COUNTER.fetch_add(1, Ordering::SeqCst));
     let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App("index.html".into()))
         .initialization_script(&view_script("panel", &kind))
-        .title("WinDock")
+        .title("Pier")
         .decorations(false)
         .transparent(true)
         .shadow(false)
@@ -70,13 +75,22 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64,
             let _ = window.set_focus();
         }
     });
+    #[cfg(target_os = "macos")]
+    let builder = builder.accept_first_mouse(true);
     let window = builder.build().err_str()?;
+    #[cfg(target_os = "macos")]
+    crate::platform::macos::pointer::forward(&window);
+    let rect = crate::backdrop::Rect { x: PANEL_INSET, y: PANEL_INSET, width: width - 2.0 * PANEL_INSET, height: height - 2.0 * PANEL_INSET };
+    crate::backdrop::set_frame(&window, rect, PANEL_RADIUS);
 
     // Fecha ao perder o foco, mas só depois de ter tido foco: no X11 a janela recém-criada recebe
     // um "sem foco" antes de ser focada, o que a fechava na hora.
     let handle = window.clone();
     let was_focused = AtomicBool::new(false);
     window.on_window_event(move |event| {
+        if let WindowEvent::Destroyed = event {
+            crate::backdrop::forget(handle.label());
+        }
         if let WindowEvent::Focused(focused) = event {
             if *focused {
                 was_focused.store(true, Ordering::SeqCst);
@@ -108,14 +122,42 @@ pub fn open_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
         let _ = window.set_focus();
         return Ok(window);
     }
-    WebviewWindowBuilder::new(app, SETTINGS_LABEL, WebviewUrl::App("index.html".into()))
+    let builder = WebviewWindowBuilder::new(app, SETTINGS_LABEL, WebviewUrl::App("index.html".into()))
         .initialization_script(&view_script("settings", ""))
-        .title("WinDock — Configurações")
-        .inner_size(920.0, 660.0)
-        .min_inner_size(720.0, 480.0)
+        .title("Pier — Configurações")
+        .inner_size(1040.0, 720.0)
+        .min_inner_size(880.0, 600.0)
+        .theme(Some(tauri::Theme::Dark))
         .center()
-        .focused(true)
-        .build()
+        .focused(true);
+    // O cabeçalho da página faz as vezes da barra de título, com os semáforos por cima.
+    #[cfg(target_os = "macos")]
+    let builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay).hidden_title(true);
+    // O material da janela inteira vem do sistema; no Linux não há, e a página pinta o sólido.
+    #[cfg(not(target_os = "linux"))]
+    let builder = builder.transparent(true).effects(settings_effects());
+    builder.build()
+}
+
+/// Vibrancy escura no macOS, Mica no Windows 11; sem efeito com o material sólido.
+#[cfg(not(target_os = "linux"))]
+fn settings_effects() -> tauri::utils::config::WindowEffectsConfig {
+    use tauri::window::{Effect, EffectState, EffectsBuilder};
+    if !crate::backdrop::active() {
+        return EffectsBuilder::new().build();
+    }
+    let effect = if cfg!(target_os = "macos") { Effect::HudWindow } else { Effect::MicaDark };
+    EffectsBuilder::new().effect(effect).state(EffectState::Active).build()
+}
+
+/// Troca o material da janela de configurações aberta (a dock e os painéis são do `backdrop`).
+pub fn apply_settings_material(app: &AppHandle) {
+    #[cfg(not(target_os = "linux"))]
+    if let Some(window) = app.get_webview_window(SETTINGS_LABEL) {
+        let _ = window.set_effects(settings_effects());
+    }
+    #[cfg(target_os = "linux")]
+    let _ = app;
 }
 
 #[tauri::command]

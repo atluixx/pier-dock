@@ -2,7 +2,7 @@
 //!
 //! A taskbar é colocada em "ocultar automaticamente" (para liberar a área de trabalho que ela
 //! reserva) e suas janelas são escondidas. O estado original fica salvo em disco, para que um
-//! crash ou `win-dock.exe --restore-taskbar` consigam devolvê-la exatamente como estava.
+//! crash ou `pier.exe --restore-taskbar` consigam devolvê-la exatamente como estava.
 
 use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
 use std::time::Duration;

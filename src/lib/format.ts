@@ -9,6 +9,12 @@ export function timeAgo(iso: string | number): string {
   return rtf.format(Math.round(diff / 86400), "day");
 }
 
+/** "qua, 15 out": dia da semana e mês abreviados, sem os pontos que o pt-BR põe. */
+export function shortDate(date: Date): string {
+  const part = (options: Intl.DateTimeFormatOptions) => date.toLocaleDateString("pt-BR", options).replace(".", "");
+  return `${part({ weekday: "short" })}, ${date.getDate()} ${part({ month: "short" })}`;
+}
+
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(total / 60);

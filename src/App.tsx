@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { ipc } from "./lib/ipc";
 import { currentView } from "./lib/view";
 import { useConfig } from "./store/config";
 import { Dock } from "./dock/Dock";
-import { Panel } from "./panels/Panel";
+import { Popover } from "./popovers/Popover";
 import { Settings } from "./settings/Settings";
 
 export function App() {
@@ -14,13 +15,21 @@ export function App() {
     document.documentElement.dataset.view = currentView.view;
   }, [load]);
 
+  const [glassSupported, setGlassSupported] = useState<boolean | null>(null);
   useEffect(() => {
-    // As configurações usam sempre a paleta padrão; o tema vale para a dock e os painéis.
-    if (config && currentView.view !== "settings") document.documentElement.dataset.theme = config.theme;
-  }, [config?.theme]);
+    ipc.platformInfo().then((p) => setGlassSupported(p.glass)).catch(() => setGlassSupported(false));
+  }, []);
+
+  useEffect(() => {
+    if (!config) return;
+    const root = document.documentElement;
+    root.dataset.accent = config.accent;
+    root.dataset.material = config.material === "glass" && glassSupported ? "glass" : "solid";
+    root.style.setProperty("--dock-opacity", String(config.glassOpacity));
+  }, [config?.accent, config?.material, config?.glassOpacity, glassSupported]);
 
   if (!config) return null;
-  if (currentView.view === "panel") return <Panel kind={currentView.kind} />;
+  if (currentView.view === "panel") return <Popover kind={currentView.kind} />;
   if (currentView.view === "settings") return <Settings />;
   return <Dock config={config} />;
 }

@@ -6,8 +6,8 @@ export interface ViewInfo {
 
 declare global {
   interface Window {
-    __WINDOCK_VIEW__?: ViewInfo;
+    __PIER_VIEW__?: ViewInfo;
   }
 }
 
-export const currentView: ViewInfo = window.__WINDOCK_VIEW__ ?? { view: "dock", kind: "" };
+export const currentView: ViewInfo = window.__PIER_VIEW__ ?? { view: "dock", kind: "" };
