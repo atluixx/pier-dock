@@ -146,6 +146,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   platform_info: () => ({ os: "macos", windowList: "needs-accessibility", hideNative: true, shortcuts: true, glass: true }),
   "plugin:autostart|is_enabled": () => true,
   "plugin:app|version": () => "0.1.0",
+  check_update: () => ({ version: "0.2.0", notes: null }),
 };
 
 if (!insideTauri) {

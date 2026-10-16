@@ -4,7 +4,17 @@ A dock para macOS, Windows e Linux (GNOME). Substitui a barra nativa do sistema:
 
 Feita com Tauri 2 (Rust) + React/TypeScript. Antes se chamava WinDock: na primeira execução o Pier leva a configuração, o token do GitHub e o início automático do WinDock. No GNOME, a extensão precisa ser reinstalada pelas Configurações (a antiga é removida).
 
-## Rodando
+## Instalando
+
+Baixe o instalador da sua plataforma na [página de Releases](https://github.com/pier-dock/pier-dock/releases/latest). Depois de instalado, o Pier procura versões novas sozinho (e em Configurações → Geral) e se atualiza com um clique.
+
+Os instaladores ainda não têm assinatura de código, então o sistema avisa na primeira abertura:
+
+- **Windows** (`Pier_x.y.z_x64-setup.exe`): no aviso do SmartScreen, clique em **Mais informações** → **Executar assim mesmo**. O Pier é instalado em `%LOCALAPPDATA%\Pier`, sem pedir administrador.
+- **macOS** (`Pier_x.y.z_universal.dmg`, Intel e Apple Silicon): arraste o Pier para Aplicativos e abra. Quando o macOS disser que não pôde verificar o app, vá em **Ajustes do Sistema → Privacidade e Segurança** e clique em **Abrir mesmo assim**. Ou, no Terminal: `xattr -dr com.apple.quarantine /Applications/Pier.app`. Sem assinatura da Apple, o macOS pede a permissão de Acessibilidade de novo a cada atualização.
+- **Linux** (GNOME): `sudo apt install ./Pier_x.y.z_amd64.deb`, ou o AppImage (`chmod +x Pier_x.y.z_amd64.AppImage` e execute). A atualização automática funciona no AppImage; no `.deb`, instale a versão nova pelo Releases.
+
+## Rodando a partir do código
 
 Pré-requisitos: Node 22+, Rust (toolchain `stable-x86_64-pc-windows-msvc`), Visual Studio Build Tools com C++ e o Windows SDK.
 
@@ -56,7 +66,7 @@ A configuração fica em `%APPDATA%\pier\config.json` (no macOS, `~/Library/Appl
 Ao sair, a dock restaura a barra de tarefas (ou o Dock do macOS). Se o processo for encerrado à força, rode:
 
 ```sh
-pier.exe --restore-taskbar                                  # Windows
+%LOCALAPPDATA%\Pier\pier.exe --restore-taskbar               # Windows
 /Applications/Pier.app/Contents/MacOS/pier --restore-taskbar   # macOS
 ```
 
@@ -80,3 +90,16 @@ cd src-tauri
 cargo test                       # testes unitários
 cargo test -- --ignored --nocapture   # smoke tests contra o sistema real (janelas, apps, mídia, GitHub)
 ```
+
+## Publicando uma versão
+
+```sh
+./scripts/release.sh 0.2.0     # atualiza as versões, faz o commit e cria a tag v0.2.0
+git push --follow-tags
+```
+
+O push da tag dispara `.github/workflows/release.yml`, que compila no macOS (binário universal), no Windows e no Linux e cria um Release **rascunho** com os instaladores e o `latest.json` do atualizador. Confira os arquivos e publique o rascunho: só então os apps instalados enxergam a versão nova. Para só testar o build, rode o workflow à mão (aba Actions → Release → Run workflow); os instaladores ficam como artefatos da execução.
+
+Os pacotes de atualização são assinados com a chave do atualizador (a pública está em `src-tauri/tauri.conf.json`). A privada e a senha ficam nos secrets `TAURI_SIGNING_PRIVATE_KEY` e `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` do repositório. Sem a mesma chave, os apps já instalados recusam as atualizações, então guarde uma cópia dela.
+
+Para assinar e notarizar o app do macOS no futuro (conta Apple Developer): adicione os secrets `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD` e `APPLE_TEAM_ID`, passe-os no `env` do passo `tauri-action` e remova o `"signingIdentity": "-"` de `src-tauri/tauri.macos.conf.json`.
