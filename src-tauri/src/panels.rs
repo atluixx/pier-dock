@@ -110,6 +110,20 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64,
     Ok(())
 }
 
+/// Fecha o painel aberto se o clique (em pixels físicos de tela) caiu fora dele. No Windows o
+/// painel quase nunca ganha foco: o clique na dock vai para o processo do WebView2, então o
+/// Windows recusa trazer a janela nova para a frente e o `Focused(false)` nunca chega.
+#[cfg(windows)]
+pub fn close_if_outside(app: &AppHandle, x: i32, y: i32) {
+    let Some(label) = OPEN_PANEL.lock().unwrap().as_ref().map(|(l, _)| l.clone()) else { return };
+    let Some(window) = app.get_webview_window(&label) else { return };
+    let (Ok(pos), Ok(size)) = (window.outer_position(), window.outer_size()) else { return };
+    let inside = x >= pos.x && x < pos.x + size.width as i32 && y >= pos.y && y < pos.y + size.height as i32;
+    if !inside {
+        close_open_panel(app);
+    }
+}
+
 #[tauri::command]
 pub fn close_panel(app: AppHandle) {
     close_open_panel(&app);

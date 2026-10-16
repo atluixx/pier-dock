@@ -8,6 +8,7 @@ use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT};
 use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON};
 use windows::Win32::UI::Shell::{SHAppBarMessage, ABE_BOTTOM, ABM_NEW, ABM_QUERYPOS, ABM_REMOVE, ABM_SETPOS, APPBARDATA};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetClassNameW, GetCursorPos, GetForegroundWindow, GetWindowLongPtrW, GetWindowRect, GetWindowThreadProcessId, IsZoomed,
@@ -135,6 +136,7 @@ fn start_pointer_thread(window: WebviewWindow) {
         let mut ignoring = true;
         let mut hover_until = Instant::now();
         let mut backdrop_checked = Instant::now();
+        let mut was_pressed = false;
         loop {
             std::thread::sleep(Duration::from_millis(if ignoring { 30 } else { 16 }));
             if backdrop_checked.elapsed() > Duration::from_secs(1) {
@@ -163,6 +165,12 @@ fn start_pointer_thread(window: WebviewWindow) {
             let top = win.top as f64 + (hit.y - headroom).max(0.0) * scale;
             let (cx, cy) = (cursor.x as f64, cursor.y as f64);
             let over_dock = super::dock_visible() && cx >= left && cx <= right && cy >= top && cy <= bottom;
+            let pressed = mouse_pressed();
+            // Na dock quem decide é o próprio clique (o widget alterna o painel dele).
+            if pressed && !was_pressed && !over_dock {
+                crate::panels::close_if_outside(window.app_handle(), cursor.x, cursor.y);
+            }
+            was_pressed = pressed;
             // Encostar o mouse na borda de baixo revela a dock escondida.
             let at_edge = cy >= win.bottom as f64 - 2.0 && cx >= win.left as f64 && cx < win.right as f64;
 
@@ -183,6 +191,10 @@ fn start_pointer_thread(window: WebviewWindow) {
             }
         }
     });
+}
+
+fn mouse_pressed() -> bool {
+    [VK_LBUTTON, VK_RBUTTON, VK_MBUTTON].iter().any(|vk| unsafe { GetAsyncKeyState(vk.0 as i32) } < 0)
 }
 
 fn is_shell_window(hwnd: HWND) -> bool {
