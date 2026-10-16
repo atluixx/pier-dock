@@ -54,7 +54,7 @@ function Divider({ id, onRemove }: { id: string; onRemove: () => void }) {
   );
 }
 
-/** Clique num app da dock (também usado pelos atalhos Ctrl+Alt+N). */
+/** Clique num app da dock (também usado pelos atalhos Ctrl+Alt+N, ⌃⌥N no macOS). */
 function clickApp(app: DockApp) {
   if (app.windows.length) ipc.toggleAppWindows(app.windows.map((w) => w.id));
   else ipc.launchApp(app.launchTarget).catch(console.error);

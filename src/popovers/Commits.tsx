@@ -2,6 +2,7 @@ import { GitCommitHorizontal } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useGithub } from "../hooks/useGithub";
 import { timeAgo } from "../lib/format";
+import { keys } from "../lib/platform";
 import { ActionFooter } from "../ui/ActionFooter";
 import { GithubError, refreshGithub } from "./PullRequests";
 
@@ -44,7 +45,7 @@ export function Commits() {
         context={data ? `Atualizado ${timeAgo(data.fetchedAt)}` : ""}
         actions={[
           { label: "Ver perfil", keys: "↵", onClick: () => openUrl(profile) },
-          { label: "Atualizar", keys: "Ctrl R", onClick: refreshGithub },
+          { label: "Atualizar", keys: `${keys.command} R`, onClick: refreshGithub },
         ]}
       />
     </>
