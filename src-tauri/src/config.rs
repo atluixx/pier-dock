@@ -34,6 +34,42 @@ impl Default for WidgetConfig {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WeatherLocation {
+    pub name: String,
+    /// Estado ou região, para diferenciar cidades homônimas.
+    pub admin: String,
+    pub latitude: f64,
+    pub longitude: f64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct PomodoroConfig {
+    /// "25-5", "50-10" ou "custom" (usa `focus_minutes` e `break_minutes`).
+    pub preset: String,
+    pub focus_minutes: u32,
+    pub break_minutes: u32,
+}
+
+impl Default for PomodoroConfig {
+    fn default() -> Self {
+        Self { preset: "25-5".into(), focus_minutes: 25, break_minutes: 5 }
+    }
+}
+
+impl PomodoroConfig {
+    /// Minutos de foco e de pausa curta do ciclo escolhido.
+    pub fn durations(&self) -> (u32, u32) {
+        match self.preset.as_str() {
+            "50-10" => (50, 10),
+            "custom" => (self.focus_minutes.clamp(1, 180), self.break_minutes.clamp(1, 60)),
+            _ => (25, 5),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Config {
@@ -56,14 +92,16 @@ pub struct Config {
     /// configs antigas; o frontend completa e limpa a lista.
     pub dock_order: Vec<String>,
     pub show_start_button: bool,
+    pub weather_location: Option<WeatherLocation>,
+    pub pomodoro: PomodoroConfig,
 }
 
 fn widget(kind: &str, size: &str) -> WidgetConfig {
     WidgetConfig { kind: kind.into(), enabled: true, size: size.into() }
 }
 
-fn disabled(kind: &str) -> WidgetConfig {
-    WidgetConfig { enabled: false, ..widget(kind, "small") }
+fn disabled(kind: &str, size: &str) -> WidgetConfig {
+    WidgetConfig { enabled: false, ..widget(kind, size) }
 }
 
 /// O gerenciador de arquivos do sistema, fixado na primeira execução.
@@ -102,12 +140,16 @@ impl Default for Config {
                 widget("media", "wide"),
                 widget("github-mine", "small"),
                 widget("github-review", "small"),
-                disabled("github-commits"),
+                disabled("github-commits", "small"),
                 widget("github-contrib", "wide"),
                 widget("network", "small"),
                 widget("volume", "small"),
                 widget("battery", "small"),
                 widget("clock", "small"),
+                disabled("weather", "wide"),
+                disabled("pomodoro", "wide"),
+                disabled("system-usage", "wide"),
+                disabled("calendar", "wide"),
             ],
             material: "glass".into(),
             glass_opacity: 0.4,
@@ -120,6 +162,8 @@ impl Default for Config {
             github_poll_minutes: 3,
             dock_order: Vec::new(),
             show_start_button: true,
+            weather_location: None,
+            pomodoro: PomodoroConfig::default(),
         }
     }
 }
@@ -136,7 +180,19 @@ pub fn load() -> Config {
         .and_then(|s| serde_json::from_str(&s).ok())
         .map(migrate)
         .and_then(|v| serde_json::from_value(v).ok())
+        .map(add_missing_widgets)
         .unwrap_or_default()
+}
+
+/// Widgets que surgiram depois que a config foi salva entram desligados, no fim da lista; sem
+/// isso eles nunca apareceriam nas configurações.
+fn add_missing_widgets(mut config: Config) -> Config {
+    for default in Config::default().widgets {
+        if !config.widgets.iter().any(|w| w.kind == default.kind) {
+            config.widgets.push(WidgetConfig { enabled: false, ..default });
+        }
+    }
+    config
 }
 
 /// Os temas antigos viram material + cor de destaque: "glass" continua vidro; os outros eram
@@ -179,6 +235,7 @@ pub fn save_config(app: AppHandle, state: State<ConfigState>, config: Config) ->
     };
     crate::dock_window::set_auto_hide(&app, &config.auto_hide);
     crate::backdrop::set_material(&app, &config.material);
+    crate::pomodoro::config_changed(&app);
     if old_hide != config.hide_taskbar {
         if config.hide_taskbar {
             crate::taskbar::hide();
@@ -223,6 +280,26 @@ mod tests {
         assert_eq!((midnight.material.as_str(), midnight.accent.as_str()), ("solid", "lilac"));
         let paper = migrated(r#"{"theme":"paper","accent":"green"}"#);
         assert_eq!((paper.material.as_str(), paper.accent.as_str()), ("solid", "green"));
+    }
+
+    #[test]
+    fn missing_widgets_are_appended_disabled() {
+        let config: Config = serde_json::from_str(r#"{"widgets":[{"kind":"clock","enabled":true,"size":"small"}]}"#).unwrap();
+        let config = add_missing_widgets(config);
+        assert_eq!(config.widgets[0].kind, "clock");
+        assert!(config.widgets[0].enabled);
+        let weather = config.widgets.iter().find(|w| w.kind == "weather").unwrap();
+        assert!(!weather.enabled);
+        assert_eq!(weather.size, "wide");
+        assert_eq!(config.widgets.len(), Config::default().widgets.len());
+    }
+
+    #[test]
+    fn pomodoro_presets() {
+        let custom = PomodoroConfig { preset: "custom".into(), focus_minutes: 0, break_minutes: 90 };
+        assert_eq!(custom.durations(), (1, 60));
+        assert_eq!(PomodoroConfig { preset: "50-10".into(), ..Default::default() }.durations(), (50, 10));
+        assert_eq!(PomodoroConfig::default().durations(), (25, 5));
     }
 
     #[test]

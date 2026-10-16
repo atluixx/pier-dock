@@ -50,3 +50,32 @@ export function mediaSourceName(id: string): string {
   if (lower.includes("zunemusic") || lower.includes("media player")) return "Media Player";
   return prettyExeName(id.split("!")[0].split("_")[0]);
 }
+
+/** Contagem regressiva do Pomodoro: "18:42", "03:10". Arredonda para cima, como um timer. */
+export function formatTimer(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/** Tempo de foco acumulado: "45min", "1h 15min". */
+export function formatFocus(ms: number): string {
+  const total = Math.floor(ms / 60_000);
+  const h = Math.floor(total / 60);
+  return h ? `${h}h ${total % 60}min` : `${total}min`;
+}
+
+const UNITS = ["B", "KB", "MB", "GB", "TB"];
+
+/** "10,9 GB", "180 KB": uma casa decimal só abaixo de 100. */
+export function formatBytes(bytes: number): string {
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1000 && unit < UNITS.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  const digits = value < 100 && unit > 0 ? 1 : 0;
+  return `${value.toLocaleString("pt-BR", { maximumFractionDigits: digits })} ${UNITS[unit]}`;
+}
+
+export const formatRate = (bytesPerSecond: number) => `${formatBytes(bytesPerSecond)}/s`;

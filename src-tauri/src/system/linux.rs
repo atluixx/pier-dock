@@ -92,13 +92,16 @@ pub fn set_volume(level: Option<f32>, muted: Option<bool>) -> Result<(), String>
 }
 
 /// Grade de apps, menu de configurações rápidas e calendário/notificações do GNOME. Sem a
-/// extensão, só as configurações têm equivalente (o app de Configurações).
+/// extensão, só as configurações têm equivalente (o app de Configurações). O Monitor do Sistema e
+/// o Agenda do GNOME são apps comuns.
 pub fn open_shell(kind: &str) {
     match (gnome_shell::shell(), kind) {
         (Some(shell), "start") => drop(shell.show_apps()),
         (Some(shell), "quick-settings") => drop(shell.open_quick_settings()),
         (Some(shell), "notifications") => drop(shell.open_calendar()),
         (None, "quick-settings") => drop(spawn_detached("gnome-control-center", &[])),
+        (_, "system-monitor") => drop(spawn_detached("gnome-system-monitor", &[])),
+        (_, "calendar") => drop(spawn_detached("gnome-calendar", &[])),
         _ => {}
     }
 }

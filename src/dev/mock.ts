@@ -7,7 +7,7 @@
  * chama `listen` ao ser carregado. Dentro do Tauri ele não faz nada.
  */
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
-import type { AppEntry, Config, GithubData, MediaState, WindowsSnapshot } from "../lib/ipc";
+import type { AppEntry, CalendarData, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
 import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
 
 const insideTauri = "__TAURI_INTERNALS__" in window;
@@ -41,6 +41,10 @@ const config: Config = {
     { kind: "volume", enabled: true, size: "small" },
     { kind: "battery", enabled: true, size: "small" },
     { kind: "clock", enabled: true, size: "small" },
+    { kind: "weather", enabled: params.has("new"), size: "wide" },
+    { kind: "pomodoro", enabled: params.has("new"), size: "wide" },
+    { kind: "system-usage", enabled: params.has("new"), size: "wide" },
+    { kind: "calendar", enabled: params.has("new"), size: "wide" },
   ],
   material: "glass",
   glassOpacity: 0.4,
@@ -53,6 +57,8 @@ const config: Config = {
   githubPollMinutes: 3,
   dockOrder: [],
   showStartButton: true,
+  weatherLocation: { name: "Campinas", admin: "São Paulo, Brasil", latitude: -22.9, longitude: -47.06 },
+  pomodoro: { preset: "25-5", focusMinutes: 25, breakMinutes: 5 },
 };
 
 const windows: WindowsSnapshot = {
@@ -123,6 +129,100 @@ const github: GithubData = {
   fetchedAt: Date.now() - 120_000,
 };
 
+const MINUTE = 60_000;
+const hourIso = (offset: number) => {
+  const d = new Date(Date.now() + offset * 3_600_000);
+  return `${d.toISOString().slice(0, 11)}${String(d.getHours()).padStart(2, "0")}:00`;
+};
+const dayIso = (offset: number) => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+
+const weather: WeatherData = {
+  location: "Campinas",
+  current: { temperature: 24.2, apparentTemperature: 25.1, humidity: 62, code: 2, isDay: true },
+  hourly: [
+    [2, 24, 10, true],
+    [61, 23, 70, true],
+    [61, 22, 80, true],
+    [3, 21, 20, true],
+    [0, 20, 0, false],
+    [0, 19, 0, false],
+  ].map(([code, temperature, precipitationProbability, isDay], i) => ({
+    time: hourIso(i),
+    code: code as number,
+    temperature: temperature as number,
+    precipitationProbability: precipitationProbability as number,
+    isDay: isDay as boolean,
+  })),
+  daily: [
+    [61, 18, 27],
+    [0, 17, 29],
+    [0, 19, 30],
+    [3, 16, 24],
+    [61, 15, 21],
+  ].map(([code, min, max], i) => ({ date: dayIso(i), code, min, max })),
+  fetchedAt: Date.now() - 3 * MINUTE,
+};
+
+let pomodoro: PomodoroState = {
+  phase: "focus",
+  running: params.get("pomodoro") !== "paused",
+  started: true,
+  endsAtMs: Date.now() + 18 * MINUTE + 42_000,
+  remainingMs: 18 * MINUTE + 42_000,
+  totalMs: 25 * MINUTE,
+  session: 2,
+  sessions: 4,
+  focusTodayMs: 75 * MINUTE,
+};
+
+/** Mesma série pseudoaleatória dos quadros do canvas. */
+function series(n: number, seed: number, base: number, amp: number): number[] {
+  const out: number[] = [];
+  let v = base;
+  for (let i = 0; i < n; i++) {
+    const r = Math.abs(Math.sin((i + 1) * seed) * 43758.5453) % 1;
+    v = Math.max(3, Math.min(97, v + (r - 0.5) * amp));
+    out.push(v);
+  }
+  return out;
+}
+const cpuHistory = series(60, 12.9898, 30, 18);
+cpuHistory[59] = params.get("cpu") === "hot" ? 92 : 34;
+const GB = 1024 ** 3;
+const usage: SystemUsage = {
+  cpu: cpuHistory[59],
+  mem: 68,
+  memUsed: 10.9 * GB,
+  memTotal: 16 * GB,
+  diskUsed: 412 * GB,
+  diskTotal: 512 * GB,
+  netRx: 2.4 * 1024 ** 2,
+  netTx: 180 * 1024,
+  cpuHistory,
+  memHistory: series(60, 3.17, 67, 3),
+};
+
+const calendarStart = params.get("calendar") === "now" ? -12 * MINUTE : 12 * MINUTE;
+const calendar: CalendarData = {
+  configured: true,
+  events: [
+    { title: "Daily do time", start: calendarStart, length: 30, meetingUrl: "https://meet.google.com/abc-defg-hij", attendees: 6, location: "" },
+    { title: "Revisão de design", start: 102 * MINUTE, length: 60, location: "Sala 2" },
+    { title: "[Evento pessoal]", start: 192 * MINUTE, length: 45, location: "" },
+    { title: "Planejamento da sprint", start: 24 * 60 * MINUTE, length: 60, location: "" },
+  ].map((e) => ({
+    id: e.title,
+    title: e.title,
+    startMs: Date.now() + e.start,
+    endMs: Date.now() + e.start + e.length * MINUTE,
+    allDay: false,
+    location: e.location,
+    meetingUrl: e.meetingUrl ?? null,
+    attendees: e.attendees ?? 0,
+  })),
+  fetchedAt: Date.now() - MINUTE,
+};
+
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   get_config: () => config,
   save_config: (args) => Object.assign(config, args.config),
@@ -143,6 +243,26 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   github_fetch: () => github,
   github_auth_status: () => ({ source: "gh" }),
   dock_visible: () => true,
+  weather_cached: () => weather,
+  weather_fetch: () => weather,
+  weather_search: () => [config.weatherLocation, { name: "Campinas", admin: "Mato Grosso do Sul, Brasil", latitude: -20.4, longitude: -54.6 }],
+  pomodoro_state: () => pomodoro,
+  pomodoro_control: (args) => {
+    if (args.action === "toggle") {
+      const remainingMs = pomodoro.running ? (pomodoro.endsAtMs ?? 0) - Date.now() : pomodoro.remainingMs;
+      pomodoro = { ...pomodoro, running: !pomodoro.running, remainingMs, endsAtMs: Date.now() + remainingMs };
+    }
+    return pomodoro;
+  },
+  system_usage: () => usage,
+  top_apps_usage: () => [
+    { name: "Brave Browser", cpu: 18 },
+    { name: "Spotify", cpu: 6 },
+    { name: "Terminal", cpu: 4 },
+    { name: "Pier", cpu: 1 },
+  ],
+  calendar_cached: () => calendar,
+  calendar_fetch: () => calendar,
   platform_info: () => ({ os: "macos", windowList: "needs-accessibility", hideNative: true, shortcuts: true, glass: true }),
   "plugin:autostart|is_enabled": () => true,
   "plugin:app|version": () => "0.1.0",

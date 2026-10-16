@@ -74,7 +74,8 @@ pub async fn set_volume(level: Option<f32>, muted: Option<bool>) -> Result<(), S
         .err_str()?
 }
 
-/// Abre os menus nativos: `start`, `quick-settings` e `notifications`.
+/// Abre os menus e apps nativos: `start`, `quick-settings`, `notifications`, `system-monitor` e
+/// `calendar`.
 #[tauri::command]
 pub fn open_shell(kind: String) {
     backend::open_shell(&kind);
