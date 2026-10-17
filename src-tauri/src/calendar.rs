@@ -11,6 +11,7 @@ use rrule::{RRule, RRuleSet, Tz, Unvalidated};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
+use crate::i18n::Lang;
 use crate::util::ErrStr;
 
 const KEYRING_SERVICE: &str = "pier";
@@ -300,27 +301,27 @@ fn stored_url() -> Option<String> {
 }
 
 /// `webcal://` é o mesmo endereço por HTTPS; outros esquemas são recusados.
-fn normalize_url(url: &str) -> Result<String, String> {
+fn normalize_url(url: &str, lang: Lang) -> Result<String, String> {
     let url = url.trim();
     let url = match url.strip_prefix("webcal://") {
         Some(rest) => format!("https://{rest}"),
         None => url.to_string(),
     };
     if !url.starts_with("https://") || url.len() <= "https://".len() {
-        return Err("o endereço do calendário precisa começar com https:// ou webcal://".into());
+        return Err(lang.t("o endereço do calendário precisa começar com https:// ou webcal://", "the calendar address must start with https:// or webcal://").into());
     }
     Ok(url)
 }
 
-async fn download(url: &str) -> Result<String, String> {
+async fn download(url: &str, lang: Lang) -> Result<String, String> {
     let client = reqwest::Client::builder().user_agent("pier").timeout(Duration::from_secs(20)).build().err_str()?;
     let bytes = client.get(url).send().await.err_str()?.error_for_status().err_str()?.bytes().await.err_str()?;
     if bytes.len() > MAX_ICS_BYTES {
-        return Err("o calendário é grande demais".into());
+        return Err(lang.t("o calendário é grande demais", "the calendar is too large").into());
     }
     let text = String::from_utf8_lossy(&bytes).into_owned();
     if !text.contains("BEGIN:VCALENDAR") {
-        return Err("o endereço não devolveu um calendário iCal".into());
+        return Err(lang.t("o endereço não devolveu um calendário iCal", "the address did not return an iCal calendar").into());
     }
     Ok(text)
 }
@@ -341,7 +342,7 @@ pub async fn calendar_fetch(app: AppHandle) -> Result<CalendarData, String> {
     let url = tauri::async_runtime::spawn_blocking(stored_url).await.err_str()?;
     let mut data = match url {
         None => CalendarData::default(),
-        Some(url) => match download(&url).await {
+        Some(url) => match download(&url, crate::i18n::current(&app)).await {
             Ok(ics) => {
                 let (from, to) = window();
                 let events = tauri::async_runtime::spawn_blocking(move || events_between(&ics, from, to)).await.err_str()?;
@@ -369,10 +370,10 @@ pub fn calendar_cached() -> Option<CalendarData> {
 
 /// Salva o endereço iCal no cofre de senhas; `None` ou vazio apaga.
 #[tauri::command]
-pub fn calendar_set_url(url: Option<String>) -> Result<(), String> {
+pub fn calendar_set_url(app: AppHandle, url: Option<String>) -> Result<(), String> {
     let entry = keyring::Entry::new(KEYRING_SERVICE, KEYRING_USER).err_str()?;
     match url.filter(|u| !u.trim().is_empty()) {
-        Some(url) => entry.set_password(&normalize_url(&url)?).err_str(),
+        Some(url) => entry.set_password(&normalize_url(&url, crate::i18n::current(&app))?).err_str(),
         None => {
             *CACHE.lock().unwrap() = None;
             match entry.delete_credential() {
@@ -479,9 +480,9 @@ END:VCALENDAR\r
 
     #[test]
     fn only_https_calendar_urls() {
-        assert_eq!(normalize_url("webcal://p01.icloud.com/x.ics").unwrap(), "https://p01.icloud.com/x.ics");
-        assert!(normalize_url("http://example.com/a.ics").is_err());
-        assert!(normalize_url("file:///etc/passwd").is_err());
+        assert_eq!(normalize_url("webcal://p01.icloud.com/x.ics", Lang::Pt).unwrap(), "https://p01.icloud.com/x.ics");
+        assert!(normalize_url("http://example.com/a.ics", Lang::Pt).is_err());
+        assert!(normalize_url("file:///etc/passwd", Lang::Pt).is_err());
     }
 
     #[test]

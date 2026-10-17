@@ -5,6 +5,7 @@ import { pickSession, usePlaybackPosition, useThumbnail } from "../hooks/useMedi
 import { mediaSourceName } from "../lib/format";
 import { Tooltip } from "../ui/Tooltip";
 import { Tile, togglePanel, useHover } from "./Tile";
+import { useT } from "../i18n";
 
 export function MediaWidget({ media, wide }: { media: MediaState; wide: boolean }) {
   const session = pickSession(media);
@@ -12,10 +13,11 @@ export function MediaWidget({ media, wide }: { media: MediaState; wide: boolean 
   const position = usePlaybackPosition(session);
   const ref = useRef<HTMLDivElement>(null);
   const { hover, bind } = useHover();
+  const { media: t, common } = useT();
 
   if (!session) {
     return (
-      <Tile kind="media" label="Nada tocando" className="media-idle" panel={false}>
+      <Tile kind="media" label={common.nothingPlaying} className="media-idle" panel={false}>
         <span className="media-cover">
           <Music size={16} />
         </span>
@@ -25,7 +27,7 @@ export function MediaWidget({ media, wide }: { media: MediaState; wide: boolean 
 
   const control = (action: "toggle" | "next") => () => ipc.mediaControl(session.id, action);
   const label = `${session.title}${session.artist ? ` — ${session.artist}` : ""} (${mediaSourceName(session.id)})`;
-  const playLabel = session.playing ? "Pausar" : "Tocar";
+  const playLabel = session.playing ? common.pause : common.play;
   const PlayIcon = session.playing ? Pause : Play;
   const progress = session.durationMs ? Math.min(100, (position / session.durationMs) * 100) : 0;
   const coverStyle = cover ? { backgroundImage: `url(${cover})` } : undefined;
@@ -36,7 +38,7 @@ export function MediaWidget({ media, wide }: { media: MediaState; wide: boolean 
       {hover && <Tooltip label={label} />}
       {wide ? (
         <>
-          <button className="media-open" aria-label={`Tocando agora: ${label}`} onClick={open}>
+          <button className="media-open" aria-label={t.nowPlayingTile(label)} onClick={open}>
             <span className="media-cover" style={coverStyle}>
               {!cover && <Music size={16} />}
             </span>
@@ -54,14 +56,14 @@ export function MediaWidget({ media, wide }: { media: MediaState; wide: boolean 
             <PlayIcon size={16} fill="currentColor" />
           </button>
           {session.canNext && (
-            <button className="media-control" aria-label="Próxima faixa" onClick={control("next")}>
+            <button className="media-control" aria-label={common.nextTrack} onClick={control("next")}>
               <SkipForward size={16} />
             </button>
           )}
         </>
       ) : (
         <>
-          <button className="media-open" aria-label={`Tocando agora: ${label}`} onClick={open}>
+          <button className="media-open" aria-label={t.nowPlayingTile(label)} onClick={open}>
             <span className="media-cover" style={coverStyle}>
               {!cover && <Music size={16} />}
             </span>

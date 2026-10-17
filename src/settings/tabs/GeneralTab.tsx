@@ -6,22 +6,15 @@ import { ipc, type UpdateInfo } from "../../lib/ipc";
 import { labels, os } from "../../lib/platform";
 import { Card, Row, SectionLabel } from "../../ui/Card";
 import { Logo } from "../../ui/Logo";
+import { Segmented } from "../../ui/Segmented";
 import { Switch } from "../../ui/Switch";
 import type { TabProps } from "../shared";
+import { useT, type Dict, type LanguageSetting } from "../../i18n";
 
-const RESTORE_HINT = {
-  windows: "Se a dock travar e a barra de tarefas não voltar, rode pier.exe --restore-taskbar (ou reinicie o explorer.exe e rode o comando).",
-  macos: "Se a dock travar e o Dock do macOS não voltar, rode /Applications/Pier.app/Contents/MacOS/pier --restore-taskbar.",
-  linux: "O Dash volta sozinho se a dock for encerrada, mesmo num travamento.",
-}[os];
-
-const PERMISSION = {
-  ok: "Concedida",
-  "needs-accessibility": "Acessibilidade pendente",
-  "needs-extension": "Extensão do GNOME não instalada",
-  "needs-relogin": "Extensão instalada; entre de novo na sessão",
-  unsupported: "Este ambiente não permite ver as janelas",
-};
+const LANGUAGES: { value: LanguageSetting; label: string }[] = [
+  { value: "pt", label: "Português" },
+  { value: "en", label: "English" },
+];
 
 type UpdateStatus =
   | { kind: "checking" }
@@ -30,16 +23,16 @@ type UpdateStatus =
   | { kind: "installing"; version: string }
   | { kind: "error"; message: string };
 
-function updateText(status: UpdateStatus) {
+function updateText(status: UpdateStatus, t: Dict["general"]) {
   switch (status.kind) {
     case "checking":
-      return "Procurando atualizações…";
+      return t.checking;
     case "latest":
-      return "Você está na versão mais recente";
+      return t.latest;
     case "available":
-      return `Versão ${status.version} disponível`;
+      return t.available(status.version);
     case "installing":
-      return `Instalando a versão ${status.version}…`;
+      return t.installing(status.version);
     case "error":
       return status.message;
   }
@@ -49,18 +42,20 @@ export function GeneralTab({ config, update, platform }: TabProps) {
   const [autostart, setAutostart] = useState<boolean | null>(null);
   const [version, setVersion] = useState("");
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ kind: "checking" });
+  const t = useT().general;
+  const platformLabels = labels();
 
   const checkUpdate = () => {
     setUpdateStatus({ kind: "checking" });
     ipc
       .checkUpdate()
       .then((info) => setUpdateStatus(info ? { kind: "available", version: info.version } : { kind: "latest" }))
-      .catch(() => setUpdateStatus({ kind: "error", message: "Não foi possível procurar atualizações" }));
+      .catch(() => setUpdateStatus({ kind: "error", message: t.checkFailed }));
   };
 
   const installUpdate = (version: string) => {
     setUpdateStatus({ kind: "installing", version });
-    ipc.installUpdate().catch(() => setUpdateStatus({ kind: "error", message: "A atualização falhou. Tente de novo." }));
+    ipc.installUpdate().catch(() => setUpdateStatus({ kind: "error", message: t.updateFailed }));
   };
 
   useEffect(() => {
@@ -83,14 +78,22 @@ export function GeneralTab({ config, update, platform }: TabProps) {
   return (
     <div className="column">
       <div className="field">
-        <SectionLabel>Comportamento</SectionLabel>
+        <SectionLabel>{t.behavior}</SectionLabel>
         <Card>
-          <Row label={labels.autostart}>
-            <Switch checked={!!autostart} disabled={autostart === null} label={labels.autostart} onChange={toggleAutostart} />
+          <Row label={t.language}>
+            <Segmented
+              label={t.language}
+              value={config.language}
+              onChange={(language) => update({ language })}
+              options={[{ value: "system", label: t.languageSystem }, ...LANGUAGES]}
+            />
+          </Row>
+          <Row label={platformLabels.autostart}>
+            <Switch checked={!!autostart} disabled={autostart === null} label={platformLabels.autostart} onChange={toggleAutostart} />
           </Row>
           {platform?.hideNative && (
-            <Row label="Substituir a barra do sistema" description={labels.nativeBar}>
-              <Switch checked={config.hideTaskbar} label="Substituir a barra do sistema" onChange={(hideTaskbar) => update({ hideTaskbar })} />
+            <Row label={t.replaceBar} description={platformLabels.nativeBar}>
+              <Switch checked={config.hideTaskbar} label={t.replaceBar} onChange={(hideTaskbar) => update({ hideTaskbar })} />
             </Row>
           )}
         </Card>
@@ -98,9 +101,9 @@ export function GeneralTab({ config, update, platform }: TabProps) {
 
       {platform && os !== "windows" && (
         <div className="field">
-          <SectionLabel>Sistema</SectionLabel>
+          <SectionLabel>{t.system}</SectionLabel>
           <Card>
-            <Row label="Janelas abertas" description={PERMISSION[platform.windowList]} />
+            <Row label={t.openWindows} description={t.permission[platform.windowList]} />
           </Card>
         </div>
       )}
@@ -111,20 +114,20 @@ export function GeneralTab({ config, update, platform }: TabProps) {
         </span>
         <div className="account-text">
           <span className="version-name">Pier {version}</span>
-          <span className="account-sub">{updateText(updateStatus)}</span>
+          <span className="account-sub">{updateText(updateStatus, t)}</span>
         </div>
         {updateStatus.kind === "available" ? (
           <button className="btn btn-primary" onClick={() => installUpdate(updateStatus.version)}>
-            Instalar e reiniciar
+            {t.installRestart}
           </button>
         ) : (
           <button className="btn" disabled={updateStatus.kind === "checking" || updateStatus.kind === "installing"} onClick={checkUpdate}>
-            Procurar atualizações
+            {t.checkUpdates}
           </button>
         )}
       </div>
 
-      <p className="field-hint">{RESTORE_HINT}</p>
+      <p className="field-hint">{t.restoreHint[os]}</p>
     </div>
   );
 }

@@ -40,35 +40,26 @@ import { Card, Row, SectionLabel } from "../../ui/Card";
 import { Segmented } from "../../ui/Segmented";
 import { Switch } from "../../ui/Switch";
 import type { TabProps } from "../shared";
+import { useT, type Dict } from "../../i18n";
 
-interface WidgetInfo {
-  name: string;
-  group: string;
-  description: string;
-  Icon: LucideIcon;
-}
+type Group = keyof Dict["widgets"]["groups"];
 
-const MEDIA_SOURCE = {
-  macos: "Spotify e Música, pelo AppleScript",
-  windows: "Controles de mídia do Windows (SMTC)",
-  linux: "Players compatíveis com MPRIS",
-}[os];
-
-export const WIDGETS: Record<WidgetKind, WidgetInfo> = {
-  media: { name: "Mídia", group: "Tocando agora", description: "Mostra e controla o que está tocando no Spotify, YouTube Music e outros players.", Icon: Music },
-  "github-mine": { name: "Pull requests", group: "GitHub", description: "Seus pull requests abertos, com o estado dos checks.", Icon: GitPullRequest },
-  "github-review": { name: "Revisões", group: "GitHub", description: "Pull requests aguardando a sua revisão, com contador.", Icon: GitCompare },
-  "github-commits": { name: "Commits", group: "GitHub", description: "Seus commits recentes e quantos foram feitos hoje.", Icon: GitCommitHorizontal },
-  "github-contrib": { name: "Contribuições", group: "GitHub", description: "Total do ano e o mapa das últimas 20 semanas.", Icon: LayoutGrid },
-  network: { name: "Wi-Fi", group: "Sistema", description: "Rede atual. O clique abre as configurações rápidas do sistema.", Icon: Wifi },
-  volume: { name: "Volume", group: "Sistema", description: "Role sobre o ícone para ajustar; o botão direito silencia.", Icon: Volume2 },
-  battery: { name: "Bateria", group: "Sistema", description: "Carga e se está carregando. Some em computadores sem bateria.", Icon: BatteryMedium },
-  clock: { name: "Relógio", group: "Sistema", description: "Hora e data. O clique abre a central de notificações.", Icon: Clock },
-  weather: { name: "Clima", group: "Produtividade", description: "Temperatura e condição agora. O clique abre a previsão por hora e para os próximos 5 dias.", Icon: CloudSun },
-  pomodoro: { name: "Pomodoro", group: "Produtividade", description: "O anel mostra o tempo que falta. Clique no anel para pausar ou retomar; no resto do widget, para abrir os controles.", Icon: Timer },
-  "system-usage": { name: "Uso do sistema", group: "Sistema", description: "CPU e memória com o histórico do último minuto. Acima de 85% o valor fica em âmbar.", Icon: Cpu },
-  calendar: { name: "Agenda", group: "Produtividade", description: "O próximo compromisso com contagem regressiva. Faltando 5 minutos, ou com a reunião em andamento, aparece o botão Entrar.", Icon: CalendarDays },
-  "claude-usage": { name: "Uso do Claude", group: "Produtividade", description: "Quanto do limite do Claude Code já foi usado na sessão de 5h e na semana, mais os tokens do dia. Lê os arquivos locais do Claude Code; nada vai para a rede.", Icon: Asterisk },
+/** Grupo e ícone de cada widget; nome e descrição vêm do dicionário (`widgets.info`). */
+const WIDGETS: Record<WidgetKind, { group: Group; Icon: LucideIcon }> = {
+  media: { group: "nowPlaying", Icon: Music },
+  "github-mine": { group: "github", Icon: GitPullRequest },
+  "github-review": { group: "github", Icon: GitCompare },
+  "github-commits": { group: "github", Icon: GitCommitHorizontal },
+  "github-contrib": { group: "github", Icon: LayoutGrid },
+  network: { group: "system", Icon: Wifi },
+  volume: { group: "system", Icon: Volume2 },
+  battery: { group: "system", Icon: BatteryMedium },
+  clock: { group: "system", Icon: Clock },
+  weather: { group: "productivity", Icon: CloudSun },
+  pomodoro: { group: "productivity", Icon: Timer },
+  "system-usage": { group: "system", Icon: Cpu },
+  calendar: { group: "productivity", Icon: CalendarDays },
+  "claude-usage": { group: "productivity", Icon: Asterisk },
 };
 
 const RESIZABLE = new Set<WidgetKind>(["media", "github-contrib", "weather", "pomodoro", "system-usage", "calendar", "claude-usage"]);
@@ -83,6 +74,7 @@ function Preview({ widget, configured }: { widget: WidgetConfig; configured: boo
   const calendar = useCalendar();
   const claude = useClaudeUsage();
   const wide = widget.size === "wide";
+  const t = useT();
   const content = {
     media: <MediaWidget media={media} wide={wide} />,
     "github-mine": <GithubMineWidget data={github} />,
@@ -101,7 +93,7 @@ function Preview({ widget, configured }: { widget: WidgetConfig; configured: boo
   }[widget.kind];
   return (
     <div className="preview-stage small" aria-hidden>
-      <span className="preview-label">Pré-visualização</span>
+      <span className="preview-label">{t.widgets.preview}</span>
       <div className="preview-bar" data-glass>
         {content}
       </div>
@@ -121,7 +113,8 @@ export function WidgetsTab({ config, update }: TabProps) {
     if (patch) update(patch);
   };
   const position = enabled.findIndex((w) => w.kind === widget.kind) + 1;
-  const info = WIDGETS[widget.kind];
+  const { widgets: t, common } = useT();
+  const info = t.info[widget.kind];
 
   return (
     <div className="split">
@@ -129,7 +122,8 @@ export function WidgetsTab({ config, update }: TabProps) {
         <div className="list-scroll">
           <SectionLabel>Widgets</SectionLabel>
           {config.widgets.map((w) => {
-            const { name, group, Icon } = WIDGETS[w.kind];
+            const { group, Icon } = WIDGETS[w.kind];
+            const { name } = t.info[w.kind];
             return (
               <div key={w.kind} className="list-item tall" aria-current={w.kind === widget.kind}>
                 <button className="list-item-select" onClick={() => setSelected(w.kind)}>
@@ -138,10 +132,10 @@ export function WidgetsTab({ config, update }: TabProps) {
                   </span>
                   <span className="list-item-text">
                     <span className="list-item-name">{name}</span>
-                    <span className="list-item-sub">{group}</span>
+                    <span className="list-item-sub">{t.groups[group]}</span>
                   </span>
                 </button>
-                <Switch checked={w.enabled} label={`Mostrar ${name}`} onChange={(on) => set(w.kind, { enabled: on })} />
+                <Switch checked={w.enabled} label={t.show(name)} onChange={(on) => set(w.kind, { enabled: on })} />
               </div>
             );
           })}
@@ -154,39 +148,37 @@ export function WidgetsTab({ config, update }: TabProps) {
         </div>
         <Preview widget={widget} configured={!!config.weatherLocation} />
         <Card>
-          <Row label="Mostrar na dock">
-            <Switch checked={widget.enabled} label={`Mostrar ${info.name}`} onChange={(on) => set(widget.kind, { enabled: on })} />
+          <Row label={t.showInDock}>
+            <Switch checked={widget.enabled} label={t.show(info.name)} onChange={(on) => set(widget.kind, { enabled: on })} />
           </Row>
           {widget.kind === "media" && (
-            <Row label="Fonte" description={MEDIA_SOURCE}>
-              <span className="row-value">Automático</span>
+            <Row label={t.source} description={t.mediaSource[os]}>
+              <span className="row-value">{t.automatic}</span>
             </Row>
           )}
           {widget.kind === "weather" && <WeatherOptions config={config} update={update} />}
           {widget.kind === "pomodoro" && <PomodoroOptions config={config} update={update} />}
           {widget.kind === "calendar" && <CalendarOptions />}
           {RESIZABLE.has(widget.kind) && (
-            <Row label="Largura">
+            <Row label={t.width}>
               <Segmented
-                label="Largura"
+                label={t.width}
                 value={widget.size}
                 onChange={(size) => set(widget.kind, { size })}
                 options={[
-                  { value: "small", label: "Compacta" },
-                  { value: "wide", label: "Larga" },
+                  { value: "small", label: t.compact },
+                  { value: "wide", label: t.wide },
                 ]}
               />
             </Row>
           )}
           {widget.enabled && (
-            <Row label="Posição entre os widgets" description="Ou arraste na própria dock">
-              <span className="row-value">
-                {position} de {enabled.length}
-              </span>
-              <button className="icon-button bordered" aria-label="Mover para cima" disabled={position <= 1} onClick={() => move(-1)}>
+            <Row label={t.position} description={common.dragInDock}>
+              <span className="row-value">{common.positionOf(position, enabled.length)}</span>
+              <button className="icon-button bordered" aria-label={common.moveUp} disabled={position <= 1} onClick={() => move(-1)}>
                 <ArrowUp size={16} />
               </button>
-              <button className="icon-button bordered" aria-label="Mover para baixo" disabled={position >= enabled.length} onClick={() => move(1)}>
+              <button className="icon-button bordered" aria-label={common.moveDown} disabled={position >= enabled.length} onClick={() => move(1)}>
                 <ArrowDown size={16} />
               </button>
             </Row>

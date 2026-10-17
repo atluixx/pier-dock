@@ -9,6 +9,7 @@ import { Card, Row, SectionLabel } from "../../ui/Card";
 import { Segmented } from "../../ui/Segmented";
 import { Switch } from "../../ui/Switch";
 import type { TabProps } from "../shared";
+import { locale, useT } from "../../i18n";
 
 /** Magnificação quando o usuário liga "ampliar" sem ter escolhido um valor. */
 const DEFAULT_MAGNIFICATION = 1.6;
@@ -70,7 +71,7 @@ function LivePreview({ config }: { config: Config }) {
         ))}
         <span className="divider" />
         <span className="preview-clock">
-          <span className="clock-time">{now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+          <span className="clock-time">{now.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" })}</span>
           <span className="clock-date">{shortDate(now)}</span>
         </span>
       </div>
@@ -82,24 +83,25 @@ export function AppearanceTab({ config, update, platform }: TabProps) {
   const glassAvailable = platform?.glass !== false;
   const glass = config.material === "glass" && glassAvailable;
   const magnify = config.magnification > 1;
+  const t = useT().appearance;
 
   return (
     <div className="split">
       <div className="split-list form">
         <div className="field">
-          <SectionLabel>Material</SectionLabel>
+          <SectionLabel>{t.material}</SectionLabel>
           <Segmented
-            label="Material"
+            label={t.material}
             value={glass ? "glass" : "solid"}
             onChange={(material) => update({ material })}
-            options={glassAvailable ? [{ value: "glass", label: "Vidro líquido" }, { value: "solid", label: "Sólido" }] : [{ value: "solid", label: "Sólido" }]}
+            options={glassAvailable ? [{ value: "glass", label: t.glass }, { value: "solid", label: t.solid }] : [{ value: "solid", label: t.solid }]}
           />
-          {!glassAvailable && <p className="field-hint">Este sistema não desenha vidro atrás das janelas; a dock usa o material sólido.</p>}
+          {!glassAvailable && <p className="field-hint">{t.noGlass}</p>}
         </div>
         {glass && (
           <Slider
             id="opacity"
-            label="Opacidade do vidro"
+            label={t.opacity}
             value={Math.round(config.glassOpacity * 100)}
             display={`${Math.round(config.glassOpacity * 100)}%`}
             min={15}
@@ -108,10 +110,10 @@ export function AppearanceTab({ config, update, platform }: TabProps) {
             onChange={(v) => update({ glassOpacity: v / 100 })}
           />
         )}
-        <Slider id="icon-size" label="Tamanho dos ícones" value={config.iconSize} display={`${config.iconSize} px`} min={32} max={72} step={2} onChange={(iconSize) => update({ iconSize })} />
+        <Slider id="icon-size" label={t.iconSize} value={config.iconSize} display={`${config.iconSize} px`} min={32} max={72} step={2} onChange={(iconSize) => update({ iconSize })} />
         <div className="field">
           <span className="field-label" id="accent-label">
-            Cor de destaque
+            {t.accent}
           </span>
           <div className="swatches" role="radiogroup" aria-labelledby="accent-label">
             {ACCENTS.map((a) => (
@@ -119,8 +121,8 @@ export function AppearanceTab({ config, update, platform }: TabProps) {
                 key={a.key}
                 role="radio"
                 aria-checked={config.accent === a.key}
-                aria-label={a.name}
-                title={a.name}
+                aria-label={t.accents[a.key]}
+                title={t.accents[a.key]}
                 className="swatch"
                 style={{ background: `var(--${a.key})` }}
                 onClick={() => update({ accent: a.key })}
@@ -129,30 +131,30 @@ export function AppearanceTab({ config, update, platform }: TabProps) {
           </div>
         </div>
         <div className="field">
-          <span className="field-label">Ocultar automaticamente</span>
+          <span className="field-label">{t.autoHide}</span>
           <Segmented
-            label="Ocultar automaticamente"
+            label={t.autoHide}
             value={config.autoHide}
             onChange={(autoHide) => update({ autoHide })}
             options={[
-              { value: "smart", label: "Com app em uso" },
-              { value: "always", label: "Sempre" },
-              { value: "never", label: "Nunca" },
+              { value: "smart", label: t.autoHideSmart },
+              { value: "always", label: t.autoHideAlways },
+              { value: "never", label: t.autoHideNever },
             ]}
           />
           <p className="field-hint">
-            {config.autoHide === "never" ? labels.autoHideNever : "Encoste o mouse na borda de baixo da tela para a dock aparecer."}
+            {config.autoHide === "never" ? labels().autoHideNever : t.autoHideHint}
           </p>
         </div>
         <Card>
-          <Row label="Ampliar ícones ao passar o mouse">
-            <Switch checked={magnify} label="Ampliar ícones ao passar o mouse" onChange={(on) => update({ magnification: on ? DEFAULT_MAGNIFICATION : 1 })} />
+          <Row label={t.magnify}>
+            <Switch checked={magnify} label={t.magnify} onChange={(on) => update({ magnification: on ? DEFAULT_MAGNIFICATION : 1 })} />
           </Row>
           {magnify && (
             <div className="row">
               <Slider
                 id="magnification"
-                label="Ampliação"
+                label={t.magnification}
                 value={config.magnification}
                 display={`${config.magnification.toFixed(1)}×`}
                 min={1.1}
@@ -162,18 +164,15 @@ export function AppearanceTab({ config, update, platform }: TabProps) {
               />
             </div>
           )}
-          <Row label="Mostrar apps abertos que não estão fixados">
-            <Switch checked={config.showRunningUnpinned} label="Mostrar apps abertos que não estão fixados" onChange={(showRunningUnpinned) => update({ showRunningUnpinned })} />
+          <Row label={t.showRunning}>
+            <Switch checked={config.showRunningUnpinned} label={t.showRunning} onChange={(showRunningUnpinned) => update({ showRunningUnpinned })} />
           </Row>
         </Card>
       </div>
       <div className="split-detail">
-        <SectionLabel>Pré-visualização ao vivo</SectionLabel>
+        <SectionLabel>{t.preview}</SectionLabel>
         <LivePreview config={config} />
-        <p className="field-hint">
-          O desfoque vem do sistema: vibrancy no macOS, Acrylic no Windows 11 e o blur do KWin no Linux. No Windows 10 e no GNOME a dock
-          usa o material sólido.
-        </p>
+        <p className="field-hint">{t.blurHint}</p>
       </div>
     </div>
   );

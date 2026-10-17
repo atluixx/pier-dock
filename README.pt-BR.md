@@ -29,6 +29,7 @@ O Pier substitui a barra de tarefas ou a dock do sistema por uma barra única co
 - **Widgets de produtividade:** clima, timer Pomodoro e o próximo compromisso da agenda, com botão para entrar na videochamada.
 - **Atalhos de teclado:** abra ou foque o app da posição 1 a 9 de qualquer lugar.
 - **Atualização automática:** o Pier procura versões novas e as instala com um clique.
+- **Português e inglês:** a interface segue o idioma do sistema. Para trocar, vá em **Configurações** > **Geral** > **Idioma**.
 
 ## Instalação
 

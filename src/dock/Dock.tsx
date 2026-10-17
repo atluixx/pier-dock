@@ -8,6 +8,7 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { Menu } from "@tauri-apps/api/menu";
 import { ipc, type AppEntry, type Config, type WidgetConfig } from "../lib/ipc";
 import { labels, os } from "../lib/platform";
+import { dict } from "../i18n";
 import { useConfig } from "../store/config";
 import { useWindows } from "../hooks/useWindows";
 import { useMedia } from "../hooks/useMedia";
@@ -36,12 +37,12 @@ function StartButton({ onRemove }: { onRemove: () => void }) {
   const onContextMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const menu = await Menu.new({ items: [{ id: "remove", text: "Remover da dock", action: onRemove }] });
+    const menu = await Menu.new({ items: [{ id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
     await menu.popup();
   };
   return (
     <SortableItem id={START_KEY} className="widget-slot" onContextMenu={onContextMenu}>
-      <button className="launcher-button" aria-label={labels.startButton} title={labels.startButton} onClick={() => ipc.openShell("start")}>
+      <button className="launcher-button" aria-label={labels().startButton} title={labels().startButton} onClick={() => ipc.openShell("start")}>
         <Search size={18} strokeWidth={2} aria-hidden />
       </button>
     </SortableItem>
@@ -52,7 +53,7 @@ function Divider({ id, onRemove }: { id: string; onRemove: () => void }) {
   const onContextMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const menu = await Menu.new({ items: [{ id: "remove", text: "Remover separador", action: onRemove }] });
+    const menu = await Menu.new({ items: [{ id: "remove", text: dict().dock.removeDivider, action: onRemove }] });
     await menu.popup();
   };
   return (
@@ -197,16 +198,17 @@ export function Dock({ config }: { config: Config }) {
 
   const onBackgroundMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
+    const t = dict().dock;
     const menu = await Menu.new({
       items: [
-        { id: "settings", text: "Configurações da dock", action: () => ipc.openSettings() },
-        { id: "divider", text: "Adicionar separador", action: () => update((c) => addDivider(c)) },
+        { id: "settings", text: t.dockSettings, action: () => ipc.openSettings() },
+        { id: "divider", text: t.addDivider, action: () => update((c) => addDivider(c)) },
         ...(config.showStartButton
           ? []
-          : [{ id: "start", text: `Mostrar botão ${labels.startButton}`, action: () => update({ showStartButton: true }) }]),
-        { id: "reload", text: "Recarregar", action: () => location.reload() },
+          : [{ id: "start", text: t.showStartButton(labels().startButton), action: () => update({ showStartButton: true }) }]),
+        { id: "reload", text: t.reload, action: () => location.reload() },
         { item: "Separator" },
-        { id: "quit", text: labels.quit, action: () => ipc.quit() },
+        { id: "quit", text: labels().quit, action: () => ipc.quit() },
       ],
     });
     await menu.popup();

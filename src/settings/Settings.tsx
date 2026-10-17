@@ -14,13 +14,14 @@ import { GithubTab } from "./tabs/GithubTab";
 import { GeneralTab } from "./tabs/GeneralTab";
 import { refreshGithub } from "../popovers/PullRequests";
 import { addDivider } from "../dock/order";
+import { useT } from "../i18n";
 
 const TABS = [
-  { id: "apps", label: "Apps", Icon: LayoutGrid, Content: AppsTab },
-  { id: "widgets", label: "Widgets", Icon: Activity, Content: WidgetsTab },
-  { id: "appearance", label: "Aparência", Icon: Palette, Content: AppearanceTab },
-  { id: "github", label: "GitHub", Icon: GitBranch, Content: GithubTab },
-  { id: "general", label: "Geral", Icon: Menu, Content: GeneralTab },
+  { id: "apps", Icon: LayoutGrid, Content: AppsTab },
+  { id: "widgets", Icon: Activity, Content: WidgetsTab },
+  { id: "appearance", Icon: Palette, Content: AppearanceTab },
+  { id: "github", Icon: GitBranch, Content: GithubTab },
+  { id: "general", Icon: Menu, Content: GeneralTab },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
@@ -29,6 +30,7 @@ const OS_NAMES = { windows: "Windows", linux: "Linux", macos: "macOS" };
 export function Settings() {
   const config = useConfig((s) => s.config)!;
   const update = useConfig((s) => s.update);
+  const t = useT();
   const [tab, setTab] = useState<TabId>("apps");
   const [platform, setPlatform] = useState<PlatformInfo | null>(null);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -49,11 +51,11 @@ export function Settings() {
   const props: TabProps = { config, update: (p) => void update(p), platform };
   const { Content } = TABS.find((t) => t.id === tab)!;
   const actions: Record<TabId, Action[]> = {
-    apps: [{ label: "Adicionar separador", onClick: () => update((c) => addDivider(c)) }],
+    apps: [{ label: t.dock.addDivider, onClick: () => update((c) => addDivider(c)) }],
     widgets: [],
     appearance: [],
-    github: [{ label: "Sincronizar agora", keys: `${keys.command} R`, onClick: refreshGithub }],
-    general: [{ label: labels.quit, onClick: () => ipc.quit() }],
+    github: [{ label: t.settings.syncNow, keys: `${keys.command} R`, onClick: refreshGithub }],
+    general: [{ label: labels().quit, onClick: () => ipc.quit() }],
   };
 
   return (
@@ -63,11 +65,11 @@ export function Settings() {
         {os === "macos" && (
           <span className="settings-title" data-tauri-drag-region>
             <Logo size={16} />
-            Pier — Configurações
+            {t.settings.title}
           </span>
         )}
-        <div className="settings-tabs" role="tablist" aria-label="Seções" onKeyDown={onTabKey}>
-          {TABS.map(({ id, label, Icon }) => (
+        <div className="settings-tabs" role="tablist" aria-label={t.settings.sections} onKeyDown={onTabKey}>
+          {TABS.map(({ id, Icon }) => (
             <button
               key={id}
               ref={(el) => (tabRefs.current[id] = el)}
@@ -80,7 +82,7 @@ export function Settings() {
               onClick={() => setTab(id)}
             >
               <Icon size={18} strokeWidth={1.8} aria-hidden />
-              {label}
+              {t.settings.tabs[id]}
             </button>
           ))}
         </div>

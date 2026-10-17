@@ -9,8 +9,10 @@ import { Pomodoro } from "./Pomodoro";
 import { PullRequests } from "./PullRequests";
 import { SystemUsage } from "./SystemUsage";
 import { Weather } from "./Weather";
+import { useT } from "../i18n";
 
 function Content({ kind }: { kind: string }) {
+  const t = useT();
   switch (kind) {
     case "media":
       return <NowPlaying />;
@@ -33,32 +35,20 @@ function Content({ kind }: { kind: string }) {
     case "claude-usage":
       return <ClaudeUsage />;
     default:
-      return <div className="popover-empty">Painel desconhecido.</div>;
+      return <div className="popover-empty">{t.popover.unknown}</div>;
   }
 }
 
-const LABELS: Record<string, string> = {
-  media: "Tocando agora",
-  "github-mine": "Seus pull requests",
-  "github-review": "Revisões pendentes",
-  "github-commits": "Commits recentes",
-  "github-contrib": "Contribuições",
-  weather: "Clima",
-  pomodoro: "Pomodoro",
-  "system-usage": "Uso do sistema",
-  calendar: "Agenda",
-  "claude-usage": "Uso do Claude",
-};
-
 /** Popover de um widget: janela própria, ancorada acima da dock (ver `panels.rs`). */
 export function Popover({ kind }: { kind: string }) {
+  const t = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && ipc.closePanel();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   return (
-    <section className={`popover popover-${kind}`} aria-label={LABELS[kind]} data-glass>
+    <section className={`popover popover-${kind}`} aria-label={t.popover.labels[kind]} data-glass>
       <Content kind={kind} />
     </section>
   );

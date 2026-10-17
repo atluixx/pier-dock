@@ -5,8 +5,7 @@ import { keys } from "../lib/platform";
 import { ActionFooter } from "../ui/ActionFooter";
 import { contributionLevel, contributionsThisYear } from "../widgets/GithubWidgets";
 import { GithubError, refreshGithub } from "./PullRequests";
-
-const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+import { locale, useT } from "../i18n";
 
 type Cell = { date: string; level: number } | "future" | null;
 
@@ -36,6 +35,7 @@ function yearCells(counts: Map<string, number>, max: number, year: number): { ce
 
 export function Contributions() {
   const data = useGithub();
+  const { github: t, common } = useT();
   const all = data?.weeks ?? [];
   const counts = new Map(all.flat().map((d) => [d.date, d.count]));
   const max = Math.max(1, ...counts.values());
@@ -48,20 +48,20 @@ export function Contributions() {
     <>
       <header className="contrib-header">
         <span className="contrib-heading">
-          <span className="eyebrow">Contribuições em {year}</span>
-          <span className="contrib-big">{contributionsThisYear(all).toLocaleString("pt-BR")}</span>
+          <span className="eyebrow">{t.contributionsIn(year)}</span>
+          <span className="contrib-big">{contributionsThisYear(all).toLocaleString(locale())}</span>
         </span>
         <span className="heat-legend" aria-hidden>
-          Menos
+          {t.less}
           {[0, 1, 2, 3, 4].map((l) => (
             <span key={l} className={`heat l${l}`} />
           ))}
-          Mais
+          {t.more}
         </span>
       </header>
       <GithubError data={data} />
       <div className="year-map">
-        <div className="year-grid" style={columns} role="img" aria-label={`Mapa de contribuições de ${year}`}>
+        <div className="year-grid" style={columns} role="img" aria-label={t.contributionsMap(year)}>
           {cells.map((cell, i) =>
             cell === null ? (
               <span key={i} className="heat blank" />
@@ -71,7 +71,7 @@ export function Contributions() {
               <span
                 key={i}
                 className={`heat l${cell.level}`}
-                title={`${counts.get(cell.date) ?? 0} contribuição(ões) em ${new Date(cell.date + "T12:00").toLocaleDateString("pt-BR")}`}
+                title={t.contributionsOn(counts.get(cell.date) ?? 0, new Date(cell.date + "T12:00").toLocaleDateString(locale()))}
               />
             ),
           )}
@@ -79,16 +79,16 @@ export function Contributions() {
         <div className="year-months" style={columns} aria-hidden>
           {monthCols.map((col, m) => (
             <span key={m} style={{ gridColumn: `${col + 1} / span 4` }}>
-              {MONTHS[m]}
+              {t.months[m]}
             </span>
           ))}
         </div>
       </div>
       <ActionFooter
-        context={data ? `Atualizado ${timeAgo(data.fetchedAt)}` : ""}
+        context={data ? common.updatedAgo(timeAgo(data.fetchedAt)) : ""}
         actions={[
-          { label: "Ver perfil", keys: "↵", onClick: () => openUrl(profile) },
-          { label: "Atualizar", keys: `${keys.command} R`, onClick: refreshGithub },
+          { label: common.viewProfile, keys: "↵", onClick: () => openUrl(profile) },
+          { label: common.refresh, keys: `${keys.command} R`, onClick: refreshGithub },
         ]}
       />
     </>

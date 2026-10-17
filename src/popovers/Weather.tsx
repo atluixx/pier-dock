@@ -5,14 +5,14 @@ import { degrees, describe, hourLabel } from "../lib/weather";
 import { useWeather } from "../hooks/useWeather";
 import { ActionFooter } from "../ui/ActionFooter";
 import { WeatherGlyph } from "../widgets/WeatherGlyph";
+import { dict, locale, useT } from "../i18n";
 
-const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-
-const dayName = (date: string, i: number) => (i === 0 ? "Hoje" : WEEKDAYS[new Date(`${date}T12:00`).getDay()]);
+const dayName = (date: string, i: number) => (i === 0 ? dict().common.today : dict().weather.weekdays[new Date(`${date}T12:00`).getDay()]);
 
 export function Weather() {
   const data = useWeather();
   const current = data?.current;
+  const { weather: t, common } = useT();
 
   if (!data || !current) {
     return (
@@ -20,9 +20,9 @@ export function Weather() {
         <span className="empty-icon">
           <CloudSun size={22} strokeWidth={1.8} />
         </span>
-        <span className="empty-title">{data?.error ?? "Carregando a previsão…"}</span>
+        <span className="empty-title">{data?.error ?? t.loading}</span>
         <button className="action primary" onClick={() => ipc.openSettings()}>
-          Abrir configurações
+          {common.openSettings}
         </button>
       </div>
     );
@@ -33,14 +33,14 @@ export function Weather() {
   const low = Math.min(...data.daily.map((d) => d.min));
   const high = Math.max(...data.daily.map((d) => d.max));
   const pct = (v: number) => ((v - low) / Math.max(1, high - low)) * 100;
-  const updated = new Date(data.fetchedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  const fullForecast = () => openUrl(`https://www.google.com/search?q=${encodeURIComponent(`previsão do tempo ${data.location}`)}`);
+  const updated = new Date(data.fetchedAt).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
+  const fullForecast = () => openUrl(`https://www.google.com/search?q=${encodeURIComponent(t.forecastQuery(data.location))}`);
 
   return (
     <>
       <div className="wx-header">
         <span className="wx-city">{data.location}</span>
-        <span className="popover-meta">Atualizado às {updated}</span>
+        <span className="popover-meta">{t.updatedAt(updated)}</span>
       </div>
       <div className="wx-now">
         <WeatherGlyph icon={condition.icon} size={44} strokeWidth={1.5} />
@@ -48,34 +48,34 @@ export function Weather() {
         <span className="wx-now-text">
           <span>{condition.label}</span>
           <span className="popover-meta">
-            Sensação {degrees(current.apparentTemperature)} · Umidade {Math.round(current.humidity)}%
+            {t.feelsLike(degrees(current.apparentTemperature), Math.round(current.humidity))}
           </span>
         </span>
       </div>
       {data.error && <div className="error-box">{data.error}</div>}
-      <ul className="wx-hours" aria-label="Próximas horas">
+      <ul className="wx-hours" aria-label={t.nextHours}>
         {data.hourly.map((h, i) => (
           <li key={h.time}>
-            <span className="popover-meta">{i === 0 ? "Agora" : hourLabel(h.time)}</span>
+            <span className="popover-meta">{i === 0 ? common.now : hourLabel(h.time)}</span>
             <WeatherGlyph icon={describe(h.code, h.isDay).icon} size={18} />
             <span className="wx-hour-temp">{degrees(h.temperature)}</span>
           </li>
         ))}
       </ul>
-      <ul className="wx-days" aria-label="Próximos dias">
+      <ul className="wx-days" aria-label={t.nextDays}>
         {data.daily.map((d, i) => (
           <li key={d.date}>
             <span className="wx-day">{dayName(d.date, i)}</span>
             <WeatherGlyph icon={describe(d.code).icon} size={16} />
             <span className="wx-low">{degrees(d.min)}</span>
-            <span className="wx-bar" aria-label={`Mínima ${degrees(d.min)}, máxima ${degrees(d.max)}`}>
+            <span className="wx-bar" aria-label={t.range(degrees(d.min), degrees(d.max))}>
               <span style={{ left: `${pct(d.min)}%`, width: `${pct(d.max) - pct(d.min)}%` }} />
             </span>
             <span className="wx-high">{degrees(d.max)}</span>
           </li>
         ))}
       </ul>
-      <ActionFooter context="Clima" actions={[{ label: "Previsão completa", keys: "↵", onClick: fullForecast }]} />
+      <ActionFooter context={t.title} actions={[{ label: t.fullForecast, keys: "↵", onClick: fullForecast }]} />
     </>
   );
 }

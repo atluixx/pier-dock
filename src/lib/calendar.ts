@@ -1,10 +1,11 @@
+import { dict, locale } from "../i18n/index.ts";
 import type { CalendarEvent } from "./ipc";
 
 const MINUTE = 60_000;
 /** A partir de quanto tempo antes o botão Entrar aparece. */
 export const JOIN_BEFORE_MS = 5 * MINUTE;
 
-export const clock = (ms: number) => new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+export const clock = (ms: number) => new Date(ms).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
 
 function endOfDay(now: number): number {
   const d = new Date(now);
@@ -44,9 +45,10 @@ export function span(totalMinutes: number): string {
 
 /** "em 12 min · 16:00", "às 16:00" (falta mais de uma hora) ou "agora · termina em 7 h 17 min". */
 export function countdown(e: CalendarEvent, now: number): string {
-  if (isOngoing(e, now)) return `agora · termina em ${span(minutes(e.endMs - now))}`;
+  const t = dict().calendar;
+  if (isOngoing(e, now)) return t.nowEndsIn(span(minutes(e.endMs - now)));
   const until = e.startMs - now;
-  return until < 60 * MINUTE ? `em ${minutes(until)} min · ${clock(e.startMs)}` : `às ${clock(e.startMs)}`;
+  return until < 60 * MINUTE ? t.inMinutes(minutes(until), clock(e.startMs)) : t.at(clock(e.startMs));
 }
 
 /** Duração para a lista: "45 min", "1 h", "1 h 30 min". */

@@ -138,7 +138,7 @@ pub fn open_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     }
     let builder = WebviewWindowBuilder::new(app, SETTINGS_LABEL, WebviewUrl::App("index.html".into()))
         .initialization_script(&view_script("settings", ""))
-        .title("Pier — Configurações")
+        .title(crate::i18n::settings_title(crate::i18n::current(app)))
         .inner_size(1040.0, 720.0)
         .min_inner_size(880.0, 600.0)
         .theme(Some(tauri::Theme::Dark))

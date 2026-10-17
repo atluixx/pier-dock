@@ -27,6 +27,7 @@ chrono = { version = "0.4.45", default-features = false, features = ["clock", "s
 chrono-tz = "0.10.4"
 rrule = "0.14.0"
 tauri-plugin-notification = "2"
+sys-locale = "0.3"
 
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.3"

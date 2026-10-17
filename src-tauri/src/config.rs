@@ -96,6 +96,8 @@ pub struct Config {
     pub show_start_button: bool,
     pub weather_location: Option<WeatherLocation>,
     pub pomodoro: PomodoroConfig,
+    /// Idioma da interface: "system", "pt" ou "en".
+    pub language: String,
 }
 
 fn widget(kind: &str, size: &str) -> WidgetConfig {
@@ -111,7 +113,7 @@ fn file_manager() -> AppEntry {
     #[cfg(windows)]
     return AppEntry {
         id: "explorer".into(),
-        name: "Explorador de Arquivos".into(),
+        name: crate::i18n::system().t("Explorador de Arquivos", "File Explorer").into(),
         target: r"C:\Windows\explorer.exe".into(),
         exe: Some(r"C:\Windows\explorer.exe".into()),
         aumid: Some("Microsoft.Windows.Explorer".into()),
@@ -119,7 +121,7 @@ fn file_manager() -> AppEntry {
     #[cfg(target_os = "linux")]
     return AppEntry {
         id: "files".into(),
-        name: "Arquivos".into(),
+        name: crate::i18n::system().t("Arquivos", "Files").into(),
         target: "/usr/share/applications/org.gnome.Nautilus.desktop".into(),
         exe: Some("/usr/bin/nautilus".into()),
         aumid: Some("org.gnome.Nautilus.desktop".into()),
@@ -168,6 +170,7 @@ impl Default for Config {
             show_start_button: true,
             weather_location: None,
             pomodoro: PomodoroConfig::default(),
+            language: "system".into(),
         }
     }
 }
@@ -231,12 +234,15 @@ pub fn get_config(state: State<ConfigState>) -> Config {
 #[tauri::command]
 pub fn save_config(app: AppHandle, state: State<ConfigState>, config: Config) -> Result<(), String> {
     persist(&config)?;
-    let old_hide = {
+    let (old_hide, old_language) = {
         let mut guard = state.0.lock().unwrap();
-        let old = guard.hide_taskbar;
+        let old = (guard.hide_taskbar, guard.language.clone());
         *guard = config.clone();
         old
     };
+    if old_language != config.language {
+        crate::i18n::apply(&app);
+    }
     crate::dock_window::set_auto_hide(&app, &config.auto_hide);
     crate::backdrop::set_material(&app, &config.material);
     crate::pomodoro::config_changed(&app);

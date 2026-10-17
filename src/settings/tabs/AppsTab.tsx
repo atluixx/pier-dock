@@ -8,6 +8,7 @@ import { appKey, isDivider, moveAmong, removeItem, resolveOrder, START_KEY } fro
 import { Card, Row, SectionLabel } from "../../ui/Card";
 import { Kbd } from "../../ui/Kbd";
 import type { TabProps } from "../shared";
+import { useT } from "../../i18n";
 
 function AppIconImg({ entry, size }: { entry: AppEntry; size: number }) {
   const src = useIcon(iconKeyForEntry(entry));
@@ -25,6 +26,8 @@ export function AppsTab({ config, update }: TabProps) {
   const [installed, setInstalled] = useState<AppEntry[] | null>(null);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const t = useT().apps;
+  const platformLabels = labels();
   useEffect(() => {
     ipc.listInstalledApps().then(setInstalled).catch(() => setInstalled([]));
   }, []);
@@ -33,7 +36,7 @@ export function AppsTab({ config, update }: TabProps) {
   const among = isAppsItem(config);
   const items = resolveOrder(config).filter(among);
   const current = selected && items.includes(selected) ? selected : (items.find((k) => appsByKey.has(k)) ?? items[0]);
-  const nameOf = (key: string) => appsByKey.get(key)?.name ?? (key === START_KEY ? `Botão ${labels.startButton}` : "Separador");
+  const nameOf = (key: string) => appsByKey.get(key)?.name ?? (key === START_KEY ? t.startButton(platformLabels.startButton) : t.divider);
   const shortcutOf = (key: string) => {
     const n = config.pinnedApps.findIndex((p) => appKey(p.id) === key) + 1;
     return n >= 1 && n <= 9 ? `${keys.appShortcut} ${n}` : null;
@@ -62,11 +65,11 @@ export function AppsTab({ config, update }: TabProps) {
       <div className="split-list">
         <label className="search-field">
           <Search size={16} aria-hidden />
-          <span className="visually-hidden">Buscar apps</span>
-          <input placeholder="Buscar apps fixados e instalados…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <span className="visually-hidden">{t.search}</span>
+          <input placeholder={t.searchPlaceholder} value={query} onChange={(e) => setQuery(e.target.value)} />
         </label>
         <div className="list-scroll">
-          <SectionLabel aside={items.length}>Fixados na dock</SectionLabel>
+          <SectionLabel aside={items.length}>{t.pinned}</SectionLabel>
           {visibleItems.map((key) => {
             const app = appsByKey.get(key);
             const shortcut = shortcutOf(key);
@@ -78,19 +81,19 @@ export function AppsTab({ config, update }: TabProps) {
               </button>
             );
           })}
-          <p className="list-hint">Arraste os itens na própria dock para reordenar, ou {labels.dropHint}.</p>
+          <p className="list-hint">{t.reorderHint(platformLabels.dropHint)}</p>
           {!config.showStartButton && (
             <button className="btn-text" onClick={() => update({ showStartButton: true })}>
-              <Plus size={14} aria-hidden /> Mostrar o botão {labels.startButton}
+              <Plus size={14} aria-hidden /> {t.showStartButton(platformLabels.startButton)}
             </button>
           )}
-          <SectionLabel aside={installed ? results.length : undefined}>Instalados</SectionLabel>
-          {installed === null && <p className="list-hint">Carregando apps…</p>}
+          <SectionLabel aside={installed ? results.length : undefined}>{t.installed}</SectionLabel>
+          {installed === null && <p className="list-hint">{t.loadingApps}</p>}
           {results.map((app) => (
             <div key={app.id} className="list-item static">
               <AppIconImg entry={app} size={24} />
               <span className="list-item-name muted">{app.name}</span>
-              <button className="icon-button" aria-label={`Fixar ${app.name} na dock`} title="Fixar na dock" onClick={() => pin(app)}>
+              <button className="icon-button" aria-label={t.pinApp(app.name)} title={t.pin} onClick={() => pin(app)}>
                 <Plus size={16} />
               </button>
             </div>
@@ -132,6 +135,7 @@ function ItemDetail({
   onMove: (delta: -1 | 1) => void;
   onRemove: () => void;
 }) {
+  const t = useT();
   return (
     <div className="split-detail">
       <div className="detail-head">
@@ -143,18 +147,16 @@ function ItemDetail({
       </div>
       <Card>
         {app && (
-          <Row label="Atalho de teclado" description={shortcut ? "Abre ou foca o app de qualquer lugar" : "Só os 9 primeiros apps da dock têm atalho"}>
+          <Row label={t.apps.shortcut} description={shortcut ? t.apps.shortcutHint : t.apps.noShortcut}>
             {shortcut ? <Kbd keys={shortcut} /> : <span className="row-value">—</span>}
           </Row>
         )}
-        <Row label="Posição na dock" description="Ou arraste na própria dock">
-          <span className="row-value">
-            {position} de {total}
-          </span>
-          <button className="icon-button bordered" aria-label="Mover para cima" disabled={position <= 1} onClick={() => onMove(-1)}>
+        <Row label={t.apps.position} description={t.common.dragInDock}>
+          <span className="row-value">{t.common.positionOf(position, total)}</span>
+          <button className="icon-button bordered" aria-label={t.common.moveUp} disabled={position <= 1} onClick={() => onMove(-1)}>
             <ArrowUp size={16} />
           </button>
-          <button className="icon-button bordered" aria-label="Mover para baixo" disabled={position >= total} onClick={() => onMove(1)}>
+          <button className="icon-button bordered" aria-label={t.common.moveDown} disabled={position >= total} onClick={() => onMove(1)}>
             <ArrowDown size={16} />
           </button>
         </Row>
@@ -162,7 +164,7 @@ function ItemDetail({
       <div className="detail-actions">
         <button className="btn btn-danger" onClick={onRemove}>
           <Trash2 size={15} aria-hidden />
-          Remover da dock
+          {t.apps.remove}
         </button>
       </div>
     </div>

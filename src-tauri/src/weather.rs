@@ -143,7 +143,10 @@ fn now_ms() -> f64 {
 pub async fn weather_fetch(app: AppHandle, state: State<'_, ConfigState>) -> Result<WeatherData, String> {
     let location = state.0.lock().unwrap().weather_location.clone();
     let mut data = match location {
-        None => WeatherData { error: Some("Escolha uma cidade nas configurações.".into()), ..Default::default() },
+        None => {
+            let error = crate::i18n::current(&app).t("Escolha uma cidade nas configurações.", "Choose a city in settings.");
+            WeatherData { error: Some(error.into()), ..Default::default() }
+        }
         Some(location) => match fetch(&location).await {
             Ok(data) => WeatherData { location: location.name, ..data },
             // Mantém a última previsão na tela, se for da mesma cidade, e só anexa o erro.
@@ -186,14 +189,14 @@ pub fn parse_geocoding(json: &Value) -> Vec<WeatherLocation> {
 }
 
 #[tauri::command]
-pub async fn weather_search(query: String) -> Result<Vec<WeatherLocation>, String> {
+pub async fn weather_search(app: AppHandle, query: String) -> Result<Vec<WeatherLocation>, String> {
     let query = query.trim();
     if query.chars().count() < 2 {
         return Ok(vec![]);
     }
     let json: Value = client()?
         .get("https://geocoding-api.open-meteo.com/v1/search")
-        .query(&[("name", query), ("count", "6"), ("language", "pt"), ("format", "json")])
+        .query(&[("name", query), ("count", "6"), ("language", crate::i18n::current(&app).code()), ("format", "json")])
         .send()
         .await
         .err_str()?

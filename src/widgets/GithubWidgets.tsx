@@ -1,6 +1,7 @@
 import { GitCommitHorizontal, GitCompare, GitPullRequest } from "lucide-react";
 import type { GithubData, PullRequest } from "../lib/ipc";
 import { Tile } from "./Tile";
+import { locale, useT } from "../i18n";
 
 export function checksState(prs: PullRequest[]): "failure" | "pending" | "success" | "none" {
   if (prs.some((p) => p.checks === "FAILURE" || p.checks === "ERROR")) return "failure";
@@ -17,8 +18,9 @@ function Count({ value, highlight = false }: { value: number; highlight?: boolea
 
 export function GithubReviewWidget({ data }: { data: GithubData | null }) {
   const count = data?.reviewCount ?? 0;
+  const t = useT().github;
   return (
-    <Tile kind="github-review" label={data?.error ?? `Revisões pendentes: ${count}`}>
+    <Tile kind="github-review" label={data?.error ?? t.reviewsTile(count)}>
       <GitCompare size={18} strokeWidth={1.8} />
       <Count value={count} highlight />
       {data?.error && <span className="status-dot failure" />}
@@ -29,8 +31,9 @@ export function GithubReviewWidget({ data }: { data: GithubData | null }) {
 export function GithubMineWidget({ data }: { data: GithubData | null }) {
   const count = data?.myPrCount ?? 0;
   const state = checksState(data?.myPrs ?? []);
+  const t = useT().github;
   return (
-    <Tile kind="github-mine" label={`Seus pull requests abertos: ${count}`}>
+    <Tile kind="github-mine" label={t.mineTile(count)}>
       <GitPullRequest size={18} strokeWidth={1.8} />
       <Count value={count} />
       {state !== "none" && <span className={`status-dot ${state}`} />}
@@ -44,8 +47,9 @@ function isToday(iso: string): boolean {
 
 export function GithubCommitsWidget({ data }: { data: GithubData | null }) {
   const todayCount = data?.commits.filter((c) => isToday(c.date)).length ?? 0;
+  const t = useT().github;
   return (
-    <Tile kind="github-commits" label={`Commits recentes: ${todayCount} hoje`}>
+    <Tile kind="github-commits" label={t.commitsTile(todayCount)}>
       <GitCommitHorizontal size={18} strokeWidth={1.8} />
       <Count value={todayCount} />
     </Tile>
@@ -95,13 +99,14 @@ const DOCK_WEEKS = 20;
 
 export function ContributionsWidget({ data, wide }: { data: GithubData | null; wide: boolean }) {
   const all = data?.weeks ?? [];
-  const year = contributionsThisYear(all).toLocaleString("pt-BR");
+  const year = contributionsThisYear(all).toLocaleString(locale());
+  const t = useT().github;
   return (
-    <Tile kind="github-contrib" label={`Contribuições: ${year} neste ano`} className="contrib-tile">
+    <Tile kind="github-contrib" label={t.contribTile(year)} className="contrib-tile">
       {wide && (
         <span className="contrib-summary">
           <span className="contrib-total">{year}</span>
-          <span className="contrib-caption">neste ano</span>
+          <span className="contrib-caption">{t.thisYear}</span>
         </span>
       )}
       <MiniHeatmap weeks={all.slice(-DOCK_WEEKS)} />

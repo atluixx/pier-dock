@@ -29,6 +29,7 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 - **Productivity widgets:** Weather, a Pomodoro timer, your next calendar event with a join button for video calls, and your Claude Code usage.
 - **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
 - **Automatic updates:** Pier checks for new versions and installs them in one click.
+- **English and Portuguese:** The interface follows your system language. To change it, go to **Settings** > **General** > **Language**.
 
 > [!NOTE]
 > Pier's interface is currently available in Portuguese only. This README shows each label as it appears on screen, followed by its English translation.
@@ -49,11 +50,11 @@ The installers aren't code-signed yet, so your system warns you the first time y
 
 - **Windows:** When SmartScreen appears, select **More info**, and then select **Run anyway**.
 - **macOS:** Drag Pier to **Applications** and open it. When macOS says it can't verify the app, go to **System Settings** > **Privacy & Security** and select **Open Anyway**. Alternatively, run `xattr -dr com.apple.quarantine /Applications/Pier.app` in Terminal.
-- **Linux:** On GNOME, open Pier's settings and select **Instalar extensão** (Install extension), and then log out and log back in. The extension lets Pier see and focus windows, reserve screen space, hide the Dash, and register shortcuts.
+- **Linux:** On GNOME, open Pier's settings and select **Install extension**, and then log out and log back in. The extension lets Pier see and focus windows, reserve screen space, hide the Dash, and register shortcuts.
 
 ### Updates
 
-Pier checks for updates shortly after it starts and every 12 hours. When a new version is available, select **Atualizar para x.y.z** (Update to x.y.z) in the tray menu, or select **Instalar e reiniciar** (Install and restart) in **Configurações** > **Geral** (Settings > General).
+Pier checks for updates shortly after it starts and every 12 hours. When a new version is available, select **Update to x.y.z** in the tray menu, or select **Install and restart** in **Settings** > **General**.
 
 Automatic updates work with the Windows installer, the macOS app, and the AppImage. If you installed the `.deb` package, download and install each new version from the releases page.
 
@@ -63,7 +64,7 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 - **Shift+click** an app to open a new instance.
 - **Right-click** an app to see its windows, pin or unpin it, or close it.
 - **Right-click** the dock background to open settings or quit.
-- **Drag** pinned apps to reorder them. To pin an app, drop it on the dock (an `.exe` or shortcut on Windows, an `.app` on macOS, or a `.desktop` file on Linux), or add it in **Configurações** > **Apps** (Settings > Apps).
+- **Drag** pinned apps to reorder them. To pin an app, drop it on the dock (an `.exe` or shortcut on Windows, an `.app` on macOS, or a `.desktop` file on Linux), or add it in **Settings** > **Apps**.
 - **Click** a widget to open its panel. On the volume widget, scroll to adjust the volume and right-click to mute.
 
 | Shortcut | Windows and Linux | macOS |
@@ -72,12 +73,12 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 
 ### GitHub widgets
 
-Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) automatically. To use a different account, paste a personal access token with the `repo` and `read:user` scopes in **Configurações** > **GitHub** (Settings > GitHub). The token takes priority over the GitHub CLI and is stored in your system's keychain.
+Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) automatically. To use a different account, paste a personal access token with the `repo` and `read:user` scopes in **Settings** > **GitHub**. The token takes priority over the GitHub CLI and is stored in your system's keychain.
 
 ### Weather and calendar widgets
 
-- **Weather:** Choose your city in **Configurações** > **Widgets** > **Clima**. Forecasts come from [Open-Meteo](https://open-meteo.com) and don't need an API key.
-- **Calendar:** Paste your calendar's secret iCal address in **Configurações** > **Widgets** > **Agenda**. Google Calendar, Outlook, and iCloud all publish one. Pier stores the address in your system's keychain.
+- **Weather:** Choose your city in **Settings** > **Widgets** > **Weather**. Forecasts come from [Open-Meteo](https://open-meteo.com) and don't need an API key.
+- **Calendar:** Paste your calendar's secret iCal address in **Settings** > **Widgets** > **Calendar**. Google Calendar, Outlook, and iCloud all publish one. Pier stores the address in your system's keychain.
 
 ### Claude Code usage widget
 
@@ -94,14 +95,14 @@ Nothing is configured and nothing is sent anywhere. Pier reads two files the Cla
 
 Pier asks for two permissions:
 
-- **Accessibility** (**System Settings** > **Privacy & Security** > **Accessibility**) to list, focus, minimize, and close windows. Without it, Pier still shows running apps and can focus, hide, and quit them. Pier's settings show a **Conceder permissão** (Grant permission) button that requests it.
+- **Accessibility** (**System Settings** > **Privacy & Security** > **Accessibility**) to list, focus, minimize, and close windows. Without it, Pier still shows running apps and can focus, hide, and quit them. Pier's settings show a **Grant permission** button that requests it.
 - **Automation**, the first time Spotify or Music plays something, so the media widget can read and control them through AppleScript.
 
 Because the app isn't signed with an Apple Developer ID yet, macOS asks for the Accessibility permission again after each update.
 
 macOS has some limitations compared to Windows:
 
-- Apps can't reserve screen space, so maximized windows extend under the dock. To avoid this, turn on **Ocultar automaticamente** (Auto-hide) in **Configurações** > **Aparência** (Settings > Appearance).
+- Apps can't reserve screen space, so maximized windows extend under the dock. To avoid this, set **Hide automatically** in **Settings** > **Appearance**.
 - The native Dock can't be removed. Pier sets it to auto-hide with a very long reveal delay and restores your original preferences when it quits.
 - The media widget supports only Spotify and Music.
 - The Wi-Fi widget shows the network name only if Pier has Location permission.

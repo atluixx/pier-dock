@@ -1,3 +1,4 @@
+import { dict } from "../i18n/index.ts";
 import type { ClaudeUsage } from "./ipc";
 
 /** A partir destes percentuais o anel troca de cor. */
@@ -20,9 +21,10 @@ export interface LimitWindow {
 }
 
 export function windows(usage: ClaudeUsage | null): [LimitWindow, LimitWindow] {
+  const t = dict().claude;
   return [
-    { name: "Sessão 5h", percent: usage?.sessionPercent ?? null, resetsIn: usage?.sessionResetsIn ?? null },
-    { name: "Semana", percent: usage?.weeklyPercent ?? null, resetsIn: usage?.weeklyResetsIn ?? null },
+    { name: t.session, percent: usage?.sessionPercent ?? null, resetsIn: usage?.sessionResetsIn ?? null },
+    { name: t.week, percent: usage?.weeklyPercent ?? null, resetsIn: usage?.weeklyResetsIn ?? null },
   ];
 }
 

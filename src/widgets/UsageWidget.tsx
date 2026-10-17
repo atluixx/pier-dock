@@ -1,6 +1,7 @@
 import { useSystemUsage } from "../hooks/useUsage";
 import { Sparkline } from "../ui/Sparkline";
 import { Tile } from "./Tile";
+import { useT } from "../i18n";
 
 /** Acima disso o valor fica em âmbar. */
 export const HOT = 85;
@@ -23,7 +24,7 @@ export function UsageWidget({ wide }: { wide: boolean }) {
   const usage = useSystemUsage();
   const cpu = usage?.cpu ?? 0;
   const mem = usage?.mem ?? 0;
-  const label = `CPU ${percent(cpu)}${cpu >= HOT ? ", uso alto" : ""}; memória ${percent(mem)}${mem >= HOT ? ", uso alto" : ""}`;
+  const label = useT().system.usageTile(percent(cpu), cpu >= HOT, percent(mem), mem >= HOT);
 
   if (!wide) {
     // O quadrado mostra o recurso mais usado.

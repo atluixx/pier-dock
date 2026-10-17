@@ -10,6 +10,7 @@ import { useConfig } from "../store/config";
 import { Tooltip } from "../ui/Tooltip";
 import { Magnify } from "./Magnify";
 import { toPinned, type DockApp } from "./apps";
+import { useT } from "../i18n";
 
 interface Props {
   app: DockApp;
@@ -24,6 +25,7 @@ export function AppIcon({ app, active, sortable, shortcut }: Props) {
   const bounce = useAnimationControls();
   const [hover, setHover] = useState(false);
   const update = useConfig((s) => s.update);
+  const t = useT().dock;
   const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: app.key,
     disabled: !sortable,
@@ -50,21 +52,21 @@ export function AppIcon({ app, active, sortable, shortcut }: Props) {
     const pinItem = app.pinned
       ? {
           id: "unpin",
-          text: "Desafixar da dock",
+          text: t.unpin,
           action: () => update((c) => ({ pinnedApps: c.pinnedApps.filter((p) => p.id !== app.pinned!.id) })),
         }
-      : { id: "pin", text: "Fixar na dock", action: () => update((c) => ({ pinnedApps: [...c.pinnedApps, toPinned(app)] })) };
+      : { id: "pin", text: t.pin, action: () => update((c) => ({ pinnedApps: [...c.pinnedApps, toPinned(app)] })) };
     const menu = await Menu.new({
       items: [
         ...windowItems,
         ...(windowItems.length ? [{ item: "Separator" as const }] : []),
-        { id: "new", text: app.windows.length ? "Abrir nova janela" : `Abrir ${app.name}`, action: launch },
+        { id: "new", text: app.windows.length ? t.newWindow : t.open(app.name), action: launch },
         pinItem,
         ...(app.windows.length
           ? [
               {
                 id: "close",
-                text: app.windows.length > 1 ? `Fechar ${app.windows.length} janelas` : "Fechar janela",
+                text: app.windows.length > 1 ? t.closeWindows(app.windows.length) : t.closeWindow,
                 action: () => ipc.closeWindows(app.windows.map((w) => w.id)),
               },
             ]
@@ -75,7 +77,7 @@ export function AppIcon({ app, active, sortable, shortcut }: Props) {
   };
 
   const windows = app.windows.length;
-  const state = active ? "em foco" : windows > 1 ? `${windows} janelas` : windows ? "aberto" : "";
+  const state = active ? t.focused : windows > 1 ? t.windows(windows) : windows ? t.running : "";
   return (
     <div
       ref={setNodeRef}

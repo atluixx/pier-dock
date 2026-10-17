@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ipc } from "./lib/ipc";
+import { locale, useLang } from "./i18n";
 import { currentView } from "./lib/view";
 import { useConfig } from "./store/config";
 import { Dock } from "./dock/Dock";
@@ -9,11 +10,17 @@ import { Settings } from "./settings/Settings";
 export function App() {
   const config = useConfig((s) => s.config);
   const load = useConfig((s) => s.load);
+  // Assinar o idioma aqui re-renderiza a árvore toda, inclusive o que formata fora de hooks.
+  const lang = useLang((s) => s.lang);
 
   useEffect(() => {
     load();
     document.documentElement.dataset.view = currentView.view;
   }, [load]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale();
+  }, [lang]);
 
   const [glassSupported, setGlassSupported] = useState<boolean | null>(null);
   useEffect(() => {
