@@ -6,19 +6,21 @@ import { canJoin, clock, countdown, isOngoing, remainingToday } from "../lib/cal
 import { useNow } from "../hooks/useSystem";
 import { Tooltip } from "../ui/Tooltip";
 import { Tile, togglePanel, useHover } from "./Tile";
+import { locale, useT } from "../i18n";
 
 function shortWeekday(date: Date): string {
-  return date.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "").toUpperCase();
+  return date.toLocaleDateString(locale(), { weekday: "short" }).replace(".", "").toUpperCase();
 }
 
 export function CalendarWidget({ data, wide }: { data: CalendarData | null; wide: boolean }) {
   const now = useNow(15_000).getTime();
   const ref = useRef<HTMLDivElement>(null);
   const { hover, bind } = useHover();
+  const { calendar: t, common } = useT();
 
   if (data && !data.configured) {
     return (
-      <Tile kind="calendar" label="Agenda: cole o link do calendário nas configurações" className="cal-tile idle" panel={false} onClick={() => ipc.openSettings()}>
+      <Tile kind="calendar" label={t.tileIdle} className="cal-tile idle" panel={false} onClick={() => ipc.openSettings()}>
         <CalendarDays size={wide ? 20 : 18} strokeWidth={1.8} aria-hidden />
       </Tile>
     );
@@ -26,18 +28,18 @@ export function CalendarWidget({ data, wide }: { data: CalendarData | null; wide
 
   const next = remainingToday(data?.events ?? [], now)[0];
   const ongoing = next ? isOngoing(next, now) : false;
-  const label = next ? `${next.title}, ${countdown(next, now)}` : "Sem mais eventos hoje";
+  const label = next ? `${next.title}, ${countdown(next, now)}` : t.noMoreToday;
 
   if (!wide) {
     const until = next ? Math.max(1, Math.ceil(((ongoing ? next.endMs : next.startMs) - now) / 60_000)) : 0;
     const today = new Date(now);
     return (
-      <Tile kind="calendar" label={`Agenda: ${label}`} className="cal-tile small">
+      <Tile kind="calendar" label={t.tile(label)} className="cal-tile small">
         {next && until < 60 ? (
           <>
             <span className="cal-eyebrow">
               <span className="cal-dot next" />
-              {ongoing ? "AGORA" : "EM"}
+              {ongoing ? t.eyebrowNow : t.eyebrowIn}
             </span>
             <span className="cal-big">{until}</span>
             <span className="cal-unit">min</span>
@@ -46,7 +48,7 @@ export function CalendarWidget({ data, wide }: { data: CalendarData | null; wide
           <>
             <span className="cal-eyebrow">
               <span className="cal-dot next" />
-              AGORA
+              {t.eyebrowNow}
             </span>
             <span className="cal-big">{Math.floor(until / 60)}h</span>
             {until % 60 > 0 && <span className="cal-unit">{until % 60} min</span>}
@@ -55,7 +57,7 @@ export function CalendarWidget({ data, wide }: { data: CalendarData | null; wide
           <>
             <span className="cal-eyebrow">
               <span className="cal-dot next" />
-              ÀS
+              {t.eyebrowAt}
             </span>
             <span className="cal-big long">{clock(next.startMs)}</span>
           </>
@@ -73,17 +75,17 @@ export function CalendarWidget({ data, wide }: { data: CalendarData | null; wide
   return (
     <div ref={ref} className="cal-tile wide" data-widget {...bind}>
       {hover && <Tooltip label={label} />}
-      <button className="cal-open" aria-label={`Agenda: ${label}`} onClick={() => ref.current && togglePanel("calendar", ref.current)}>
+      <button className="cal-open" aria-label={t.tile(label)} onClick={() => ref.current && togglePanel("calendar", ref.current)}>
         <span className={`cal-dot ${next ? "next" : "free"}`} />
         <span className="cal-text">
-          <span className="cal-title">{next ? next.title : "Dia livre"}</span>
-          <span className={`cal-sub ${ongoing ? "ongoing" : ""}`}>{next ? countdown(next, now) : "Sem mais eventos hoje"}</span>
+          <span className="cal-title">{next ? next.title : t.free}</span>
+          <span className={`cal-sub ${ongoing ? "ongoing" : ""}`}>{next ? countdown(next, now) : t.noMoreToday}</span>
         </span>
       </button>
       {join && next.meetingUrl && (
         <button className="cal-join" onClick={() => openUrl(next.meetingUrl!)}>
           <Video size={11} strokeWidth={2.4} aria-hidden />
-          Entrar
+          {common.join}
         </button>
       )}
     </div>

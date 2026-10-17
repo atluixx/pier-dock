@@ -61,6 +61,7 @@ const config: Config = {
   showStartButton: true,
   weatherLocation: { name: "Campinas", admin: "São Paulo, Brasil", latitude: -22.9, longitude: -47.06 },
   pomodoro: { preset: "25-5", focusMinutes: 25, breakMinutes: 5 },
+  language: "system",
 };
 
 const windows: WindowsSnapshot = {
@@ -281,6 +282,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   calendar_fetch: () => calendar,
   claude_usage: () => claudeUsage,
   claude_usage_cached: () => claudeUsage,
+  system_language: () => (navigator.language.toLowerCase().startsWith("pt") ? "pt" : "en"),
   platform_info: () => ({ os: "macos", windowList: "needs-accessibility", hideNative: true, shortcuts: true, glass: true }),
   "plugin:autostart|is_enabled": () => true,
   "plugin:app|version": () => "0.1.0",

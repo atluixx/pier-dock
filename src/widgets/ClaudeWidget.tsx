@@ -4,6 +4,7 @@ import { limitLevel, tightest } from "../lib/claudeUsage";
 import { formatPercent, formatResetIn, formatTokens } from "../lib/format";
 import { Ring } from "../ui/Ring";
 import { Tile } from "./Tile";
+import { useT } from "../i18n";
 
 /**
  * Anel do limite mais apertado entre a sessão de 5h e a semana. Sem dado o anel fica vazio e o
@@ -13,14 +14,13 @@ export function ClaudeWidget({ data, wide }: { data: ClaudeUsage | null; wide: b
   const limit = tightest(data);
   const level = limitLevel(limit.percent);
   const progress = (limit.percent ?? 0) / 100;
+  const t = useT().claude;
   const parts = [
-    limit.percent === null
-      ? "Uso do Claude: sem dado (abra o Claude Code para atualizar)"
-      : `${limit.name}: ${formatPercent(limit.percent)} do limite, reseta em ${formatResetIn(limit.resetsIn)}`,
+    limit.percent === null ? t.tileNoData : t.tileLimit(limit.name, formatPercent(limit.percent), formatResetIn(limit.resetsIn)),
   ];
-  if (data?.todayTokens) parts.push(`${formatTokens(data.todayTokens)} tokens hoje`);
+  if (data?.todayTokens) parts.push(t.tileTokensToday(formatTokens(data.todayTokens)));
   // O cache congela com o Claude Code fechado; avisar é melhor do que passar um número velho por atual.
-  if (data?.stale && data.ageMin) parts.push(`coletado há ${formatResetIn(data.ageMin)}`);
+  if (data?.stale && data.ageMin) parts.push(t.collectedAgo(formatResetIn(data.ageMin)));
   const className = `claude-tile ${wide ? "wide" : "small"} claude-${level} ${data?.stale ? "stale" : ""}`;
 
   if (!wide) {
@@ -46,7 +46,7 @@ export function ClaudeWidget({ data, wide }: { data: ClaudeUsage | null; wide: b
       </span>
       <span className="claude-text">
         <span className="claude-value">{formatPercent(limit.percent)}</span>
-        <span className="claude-caption">{limit.percent === null ? "Uso do Claude" : limit.name}</span>
+        <span className="claude-caption">{limit.percent === null ? t.title : limit.name}</span>
       </span>
     </Tile>
   );

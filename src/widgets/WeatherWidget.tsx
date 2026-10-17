@@ -3,11 +3,13 @@ import { ipc, type WeatherData } from "../lib/ipc";
 import { degrees, describe, rainSoon } from "../lib/weather";
 import { Tile } from "./Tile";
 import { WeatherGlyph } from "./WeatherGlyph";
+import { useT } from "../i18n";
 
 export function WeatherWidget({ data, wide, configured }: { data: WeatherData | null; wide: boolean; configured: boolean }) {
   const current = data?.current;
+  const t = useT().weather;
   if (!configured || !current) {
-    const label = configured ? (data?.error ?? "Clima: carregando…") : "Clima: escolha uma cidade nas configurações";
+    const label = configured ? (data?.error ?? t.tileLoading) : t.tileChooseCity;
     return (
       <Tile kind="weather" label={label} className="weather-tile idle" onClick={configured ? undefined : () => ipc.openSettings()} panel={configured}>
         <CloudSun size={wide ? 22 : 18} strokeWidth={1.8} aria-hidden />
@@ -19,7 +21,7 @@ export function WeatherWidget({ data, wide, configured }: { data: WeatherData | 
   const today = data.daily[0];
   const rain = rainSoon(data);
   const range = today ? `↑${degrees(today.max)} ↓${degrees(today.min)}` : "";
-  const label = `${data.location}: ${degrees(current.temperature)}, ${condition.label}${today ? `, máxima ${degrees(today.max)}, mínima ${degrees(today.min)}` : ""}${rain ? `. ${rain}` : ""}`;
+  const label = `${data.location}: ${degrees(current.temperature)}, ${condition.label}${today ? t.tileHighLow(degrees(today.max), degrees(today.min)) : ""}${rain ? `. ${rain}` : ""}`;
 
   if (!wide) {
     return (

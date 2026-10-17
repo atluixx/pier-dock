@@ -7,15 +7,18 @@ import { keys } from "../lib/platform";
 import { useCalendar } from "../hooks/useCalendar";
 import { useNow } from "../hooks/useSystem";
 import { ActionFooter } from "../ui/ActionFooter";
+import { dict, useT } from "../i18n";
 
 function subtitle(e: CalendarEvent): string {
-  if (e.meetingUrl) return e.attendees > 1 ? `Videochamada · ${e.attendees} participantes` : "Videochamada";
+  const t = dict().calendar;
+  if (e.meetingUrl) return e.attendees > 1 ? t.videoCallWith(e.attendees) : t.videoCall;
   return e.location || duration(e);
 }
 
 export function Calendar() {
   const data = useCalendar();
   const now = useNow(15_000).getTime();
+  const { calendar: t, common } = useT();
 
   if (!data?.configured) {
     return (
@@ -23,10 +26,10 @@ export function Calendar() {
         <span className="empty-icon">
           <CalendarDays size={22} strokeWidth={1.8} />
         </span>
-        <span className="empty-title">Nenhum calendário conectado</span>
-        <span className="empty-sub">Cole o endereço iCal da sua agenda nas configurações.</span>
+        <span className="empty-title">{t.noneConnected}</span>
+        <span className="empty-sub">{t.pasteInSettings}</span>
         <button className="action primary" onClick={() => ipc.openSettings()}>
-          Abrir configurações
+          {common.openSettings}
         </button>
       </div>
     );
@@ -41,16 +44,16 @@ export function Calendar() {
   return (
     <>
       <div className="cal-header">
-        <span className="cal-heading">Hoje · {shortDate(new Date(now))}</span>
+        <span className="cal-heading">{t.todayHeading(shortDate(new Date(now)))}</span>
         <span className="popover-meta">
-          {today.length ? `${today.length} ${today.length === 1 ? "evento restante" : "eventos restantes"}` : "Sem mais eventos"}
+          {today.length ? t.remaining(today.length) : t.noMoreEvents}
         </span>
       </div>
       {data.error && <div className="error-box">{data.error}</div>}
       {next ? (
         <div className="cal-next">
           <div className="cal-next-head">
-            <span className="cal-next-when">{isOngoing(next, now) ? "Agora" : countdown(next, now).split(" · ")[0]}</span>
+            <span className="cal-next-when">{isOngoing(next, now) ? common.now : countdown(next, now).split(" · ")[0]}</span>
             <span className="popover-meta">
               {clock(next.startMs)} – {clock(next.endMs)}
             </span>
@@ -61,10 +64,10 @@ export function Calendar() {
             <div className="cal-next-actions">
               <button className="cal-primary" onClick={() => openUrl(next.meetingUrl!)}>
                 <Video size={14} strokeWidth={2.2} aria-hidden />
-                Entrar na chamada
+                {t.joinCall}
               </button>
               <button className="cal-secondary" onClick={() => navigator.clipboard.writeText(next.meetingUrl!)}>
-                Copiar link
+                {t.copyLink}
               </button>
             </div>
           )}
@@ -72,7 +75,7 @@ export function Calendar() {
       ) : (
         <div className="cal-free">
           <span className="cal-dot free" />
-          Dia livre: sem mais eventos hoje.
+          {t.freeDay}
         </div>
       )}
       <ul className="cal-list">
@@ -92,17 +95,17 @@ export function Calendar() {
       </ul>
       {first && (
         <div className="cal-tomorrow">
-          <span className="cal-time">Amanhã</span>
+          <span className="cal-time">{t.tomorrow}</span>
           <span>
             {clock(first.startMs)} · {first.title}
           </span>
         </div>
       )}
       <ActionFooter
-        context={`Atualizado ${timeAgo(data.fetchedAt)}`}
+        context={common.updatedAgo(timeAgo(data.fetchedAt))}
         actions={[
-          ...(join ? [{ label: "Entrar", keys: "↵", onClick: () => openUrl(join) }] : []),
-          { label: "Abrir calendário", keys: `${keys.command} O`, onClick: openCalendar },
+          ...(join ? [{ label: common.join, keys: "↵", onClick: () => openUrl(join) }] : []),
+          { label: t.openCalendar, keys: `${keys.command} O`, onClick: openCalendar },
         ]}
       />
     </>

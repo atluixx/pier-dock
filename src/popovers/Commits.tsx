@@ -5,14 +5,16 @@ import { timeAgo } from "../lib/format";
 import { keys } from "../lib/platform";
 import { ActionFooter } from "../ui/ActionFooter";
 import { GithubError, refreshGithub } from "./PullRequests";
+import { useT } from "../i18n";
 
 export function Commits() {
   const data = useGithub();
+  const { github: t, common } = useT();
   const profile = data?.login ? `https://github.com/${data.login}` : "https://github.com";
   return (
     <>
       <header className="popover-header">
-        <span className="popover-heading">Commits recentes</span>
+        <span className="popover-heading">{t.recentCommits}</span>
         {data?.login && <span className="popover-meta">@{data.login}</span>}
       </header>
       <div className="popover-body">
@@ -22,7 +24,7 @@ export function Commits() {
             <span className="empty-icon">
               <GitCommitHorizontal size={22} strokeWidth={1.8} />
             </span>
-            <span className="empty-title">Nenhum commit encontrado</span>
+            <span className="empty-title">{t.noCommits}</span>
           </div>
         )}
         <ul className="list">
@@ -42,10 +44,10 @@ export function Commits() {
         </ul>
       </div>
       <ActionFooter
-        context={data ? `Atualizado ${timeAgo(data.fetchedAt)}` : ""}
+        context={data ? common.updatedAgo(timeAgo(data.fetchedAt)) : ""}
         actions={[
-          { label: "Ver perfil", keys: "↵", onClick: () => openUrl(profile) },
-          { label: "Atualizar", keys: `${keys.command} R`, onClick: refreshGithub },
+          { label: common.viewProfile, keys: "↵", onClick: () => openUrl(profile) },
+          { label: common.refresh, keys: `${keys.command} R`, onClick: refreshGithub },
         ]}
       />
     </>

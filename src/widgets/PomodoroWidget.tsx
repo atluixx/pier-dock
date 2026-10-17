@@ -6,14 +6,16 @@ import { caption, toggleLabel, tone } from "../lib/pomodoro";
 import { Ring } from "../ui/Ring";
 import { Tooltip } from "../ui/Tooltip";
 import { Tile, togglePanel, useHover } from "./Tile";
+import { useT } from "../i18n";
 
 export function PomodoroWidget({ wide }: { wide: boolean }) {
   const { state, remainingMs } = usePomodoro();
   const ref = useRef<HTMLDivElement>(null);
   const { hover, bind } = useHover();
+  const t = useT().pomodoro;
   const progress = state?.totalMs ? remainingMs / state.totalMs : 1;
   const text = state ? caption(state) : "Pomodoro";
-  const label = `Pomodoro: ${text}, faltam ${formatTimer(remainingMs)}`;
+  const label = t.tile(text, formatTimer(remainingMs));
   const ToggleIcon = state?.running ? Pause : Play;
 
   if (!wide) {
@@ -39,7 +41,7 @@ export function PomodoroWidget({ wide }: { wide: boolean }) {
         <span className="pomo-time">{formatTimer(remainingMs)}</span>
         <span className="pomo-caption">{text}</span>
       </button>
-      <button className="pomo-skip" aria-label="Pular para a próxima etapa" onClick={pomodoro("skip")}>
+      <button className="pomo-skip" aria-label={t.skipNext} onClick={pomodoro("skip")}>
         <SkipForward size={13} />
       </button>
     </div>

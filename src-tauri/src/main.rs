@@ -7,6 +7,7 @@ mod claude;
 mod config;
 mod dock_window;
 mod github;
+mod i18n;
 mod icons;
 mod media;
 mod panels;
@@ -51,10 +52,10 @@ fn quit_app(app: AppHandle) {
 }
 
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let settings = MenuItem::with_id(app, "settings", "Configurações", true, None::<&str>)?;
-    let reload = MenuItem::with_id(app, "reload", "Recarregar dock", true, None::<&str>)?;
+    let [settings_label, reload_label, quit_label] = i18n::tray_labels(i18n::current(app));
+    let settings = MenuItem::with_id(app, "settings", settings_label, true, None::<&str>)?;
+    let reload = MenuItem::with_id(app, "reload", reload_label, true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;
-    let quit_label = if cfg!(windows) { "Restaurar taskbar e sair" } else { "Sair" };
     let quit_item = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&settings, &reload, &separator, &quit_item])?;
 
@@ -94,6 +95,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let tray = tray.icon(Image::from_bytes(include_bytes!("../icons/tray.png"))?);
     tray.build(app)?;
     app.manage(updater::TrayMenu(menu));
+    app.manage(i18n::TrayItems { settings, reload, quit: quit_item });
     Ok(())
 }
 
@@ -204,6 +206,7 @@ fn main() {
             panels::close_panel,
             panels::open_settings,
             platform::platform_info,
+            i18n::system_language,
             platform::platform_setup,
             updater::check_update,
             updater::install_update,

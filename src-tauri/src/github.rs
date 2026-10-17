@@ -305,7 +305,14 @@ pub async fn github_fetch(app: AppHandle) -> Result<GithubData, String> {
     let token = tauri::async_runtime::spawn_blocking(token).await.err_str()?;
     let mut data = match token {
         None => GithubData {
-            error: Some("GitHub não conectado: rode `gh auth login` ou cole um token nas configurações.".into()),
+            error: Some(
+                crate::i18n::current(&app)
+                    .t(
+                        "GitHub não conectado: rode `gh auth login` ou cole um token nas configurações.",
+                        "GitHub not connected: run `gh auth login` or paste a token in settings.",
+                    )
+                    .into(),
+            ),
             ..Default::default()
         },
         Some((token, _)) => match fetch(&token).await {

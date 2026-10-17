@@ -6,6 +6,7 @@ import { useSystemUsage, useTopApps } from "../hooks/useUsage";
 import { ActionFooter } from "../ui/ActionFooter";
 import { Sparkline } from "../ui/Sparkline";
 import { HOT } from "../widgets/UsageWidget";
+import { useT } from "../i18n";
 
 function Bar({ name, value, pct, kind }: { name: string; value: string; pct: number; kind: string }) {
   return (
@@ -26,13 +27,14 @@ export function SystemUsage() {
   const apps = useTopApps();
   const [selected, setSelected] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const t = useT().system;
   const target = selected ?? apps?.[0]?.name ?? null;
 
   const quit = () => {
     if (!target) return;
     ipc
       .quitAppProcesses(target)
-      .then(() => setMessage(`${target} foi encerrado.`))
+      .then(() => setMessage(t.quitDone(target)))
       .catch((e) => setMessage(String(e)));
   };
   const cpu = usage?.cpu ?? 0;
@@ -40,34 +42,34 @@ export function SystemUsage() {
   return (
     <>
       <div className="usage-header">
-        <span className="eyebrow">CPU · últimos 60 s</span>
+        <span className="eyebrow">{t.cpuLast60}</span>
         <span className={`usage-big ${cpu >= HOT ? "hot" : ""}`}>{Math.round(cpu)}%</span>
       </div>
-      <div className={`usage-chart ${cpu >= HOT ? "hot" : ""}`} role="img" aria-label="Gráfico de uso de CPU nos últimos 60 segundos">
+      <div className={`usage-chart ${cpu >= HOT ? "hot" : ""}`} role="img" aria-label={t.cpuChart}>
         <Sparkline values={usage?.cpuHistory ?? []} width={328} height={60} pad={2} area />
       </div>
       <div className="usage-section">
         <Bar
-          name="Memória"
-          value={usage ? `${formatBytes(usage.memUsed)} de ${formatBytes(usage.memTotal)}` : "…"}
+          name={t.memory}
+          value={usage ? t.usedOf(formatBytes(usage.memUsed), formatBytes(usage.memTotal)) : "…"}
           pct={usage?.mem ?? 0}
           kind={(usage?.mem ?? 0) >= HOT ? "hot" : "mem"}
         />
         <Bar
-          name="Disco"
-          value={usage ? `${formatBytes(usage.diskUsed)} de ${formatBytes(usage.diskTotal)}` : "…"}
+          name={t.disk}
+          value={usage ? t.usedOf(formatBytes(usage.diskUsed), formatBytes(usage.diskTotal)) : "…"}
           pct={usage?.diskTotal ? (usage.diskUsed / usage.diskTotal) * 100 : 0}
           kind="disk"
         />
         <div className="usage-bar-head">
-          <span>Rede</span>
+          <span>{t.network}</span>
           <span className="usage-bar-value">{usage ? `↓ ${formatRate(usage.netRx)} · ↑ ${formatRate(usage.netTx)}` : "…"}</span>
         </div>
       </div>
       <div className="usage-apps">
-        <span className="eyebrow usage-apps-label">Mais usando CPU</span>
+        <span className="eyebrow usage-apps-label">{t.topCpu}</span>
         {message && <div className="popover-meta usage-message" role="status">{message}</div>}
-        <ul className="list" aria-label="Apps que mais usam CPU">
+        <ul className="list" aria-label={t.topCpuList}>
           {(apps ?? []).map((app) => (
             <li key={app.name}>
               <button className="usage-app" aria-pressed={app.name === target} onClick={() => setSelected(app.name)}>
@@ -76,14 +78,14 @@ export function SystemUsage() {
               </button>
             </li>
           ))}
-          {apps && !apps.length && <li className="popover-meta usage-message">Medindo…</li>}
+          {apps && !apps.length && <li className="popover-meta usage-message">{t.measuring}</li>}
         </ul>
       </div>
       <ActionFooter
         context=""
         actions={[
-          { label: "Monitor do sistema", keys: "↵", onClick: () => ipc.openShell("system-monitor") },
-          { label: target ? `Encerrar ${target}` : "Encerrar", keys: `${keys.command} ⌫`, onClick: quit },
+          { label: t.monitor, keys: "↵", onClick: () => ipc.openShell("system-monitor") },
+          { label: target ? t.quitApp(target) : t.quit, keys: `${keys.command} ⌫`, onClick: quit },
         ]}
       />
     </>

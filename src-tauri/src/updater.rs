@@ -43,7 +43,7 @@ async fn check(app: &AppHandle) -> Result<Option<UpdateInfo>, String> {
 }
 
 fn announce(app: &AppHandle, info: &UpdateInfo) {
-    let label = format!("Atualizar para {}", info.version);
+    let label = update_label(app, &info.version);
     let state = app.state::<UpdateState>();
     let mut tray_item = state.tray_item.lock().unwrap();
     match tray_item.as_ref() {
@@ -59,6 +59,20 @@ fn announce(app: &AppHandle, info: &UpdateInfo) {
         }
     }
     let _ = app.emit_to(crate::panels::SETTINGS_LABEL, "update-available", info.clone());
+}
+
+fn update_label(app: &AppHandle, version: &str) -> String {
+    format!("{} {version}", crate::i18n::current(app).t("Atualizar para", "Update to"))
+}
+
+/// Traduz o item de atualização da bandeja, se houver um, quando o idioma muda.
+pub fn relabel(app: &AppHandle) {
+    let state = app.state::<UpdateState>();
+    let version = state.pending.lock().unwrap().as_ref().map(|u| u.version.clone());
+    let item = state.tray_item.lock().unwrap().clone();
+    if let (Some(item), Some(version)) = (item, version) {
+        let _ = item.set_text(update_label(app, &version));
+    }
 }
 
 #[tauri::command]

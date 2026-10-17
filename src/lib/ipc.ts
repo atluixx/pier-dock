@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { Lang, LanguageSetting } from "../i18n";
 import type { Accent } from "../theme/accents";
 
 export interface AppEntry {
@@ -63,6 +64,7 @@ export interface Config {
   showStartButton: boolean;
   weatherLocation: WeatherLocation | null;
   pomodoro: PomodoroConfig;
+  language: LanguageSetting;
 }
 
 export interface WindowInfo {
@@ -296,6 +298,7 @@ export const ipc = {
   openSettings: () => invoke<void>("open_settings"),
 
   platformInfo: () => invoke<PlatformInfo>("platform_info"),
+  systemLanguage: () => invoke<Lang>("system_language"),
   platformSetup: (action: "install-extension" | "request-accessibility") => invoke<void>("platform_setup", { action }),
 
   checkUpdate: () => invoke<UpdateInfo | null>("check_update"),

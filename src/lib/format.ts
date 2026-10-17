@@ -1,6 +1,16 @@
-const rtf = new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" });
+import { dict, locale } from "../i18n/index.ts";
+
+const formatters = new Map<string, Intl.RelativeTimeFormat>();
+
+function relativeFormat(): Intl.RelativeTimeFormat {
+  const tag = locale();
+  let rtf = formatters.get(tag);
+  if (!rtf) formatters.set(tag, (rtf = new Intl.RelativeTimeFormat(tag, { numeric: "auto" })));
+  return rtf;
+}
 
 export function timeAgo(iso: string | number): string {
+  const rtf = relativeFormat();
   const diff = (new Date(iso).getTime() - Date.now()) / 1000;
   const abs = Math.abs(diff);
   if (abs < 60) return rtf.format(Math.round(diff), "second");
@@ -9,10 +19,10 @@ export function timeAgo(iso: string | number): string {
   return rtf.format(Math.round(diff / 86400), "day");
 }
 
-/** "qua, 15 out": dia da semana e mês abreviados, sem os pontos que o pt-BR põe. */
+/** "qua, 15 out" ou "Wed, Oct 15": dia da semana e mês abreviados, sem os pontos que o pt-BR põe. */
 export function shortDate(date: Date): string {
-  const part = (options: Intl.DateTimeFormatOptions) => date.toLocaleDateString("pt-BR", options).replace(".", "");
-  return `${part({ weekday: "short" })}, ${date.getDate()} ${part({ month: "short" })}`;
+  const part = (options: Intl.DateTimeFormatOptions) => date.toLocaleDateString(locale(), options).replace(".", "");
+  return dict().format.shortDate(part({ weekday: "short" }), date.getDate(), part({ month: "short" }));
 }
 
 export function formatDuration(ms: number): string {
@@ -39,7 +49,7 @@ export function mediaSourceName(id: string): string {
     const player = id.slice("org.mpris.MediaPlayer2.".length).replace(/\.instance.*$/i, "");
     return mediaSourceName(player);
   }
-  if (lower === "com.apple.music") return "Música";
+  if (lower === "com.apple.music") return dict().format.appleMusic;
   if (lower.includes("chromium")) return "Chromium";
   if (lower.includes("brave")) return "Brave";
   if (lower.includes("spotify")) return "Spotify";
@@ -75,14 +85,14 @@ export function formatBytes(bytes: number): string {
     unit++;
   }
   const digits = value < 100 && unit > 0 ? 1 : 0;
-  return `${value.toLocaleString("pt-BR", { maximumFractionDigits: digits })} ${UNITS[unit]}`;
+  return `${value.toLocaleString(locale(), { maximumFractionDigits: digits })} ${UNITS[unit]}`;
 }
 
 export const formatRate = (bytesPerSecond: number) => `${formatBytes(bytesPerSecond)}/s`;
 
 /** Contagem de tokens curta: 12400000 → "12,4M", 3100 → "3k". */
 export function formatTokens(tokens: number): string {
-  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}M`;
+  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toLocaleString(locale(), { maximumFractionDigits: 1 })}M`;
   if (tokens >= 1_000) return `${Math.round(tokens / 1_000)}k`;
   return String(tokens);
 }

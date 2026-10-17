@@ -247,10 +247,18 @@ fn with_timer<R>(app: &AppHandle, f: impl FnOnce(&mut Timer, Durations) -> R) ->
 }
 
 fn notify(app: &AppHandle, finished: &Finished) {
+    let lang = crate::i18n::current(app);
     let (title, body) = match finished {
-        Finished::Focus { long_break: true } => ("Hora da pausa longa", "Ciclo concluído. Descanse um pouco."),
-        Finished::Focus { long_break: false } => ("Hora da pausa", "Sessão de foco concluída."),
-        Finished::Break => ("Pausa terminou", "Comece o próximo foco quando quiser."),
+        Finished::Focus { long_break: true } => (
+            lang.t("Hora da pausa longa", "Time for a long break"),
+            lang.t("Ciclo concluído. Descanse um pouco.", "Cycle complete. Get some rest."),
+        ),
+        Finished::Focus { long_break: false } => {
+            (lang.t("Hora da pausa", "Time for a break"), lang.t("Sessão de foco concluída.", "Focus session complete."))
+        }
+        Finished::Break => {
+            (lang.t("Pausa terminou", "Break is over"), lang.t("Comece o próximo foco quando quiser.", "Start the next focus whenever you're ready."))
+        }
     };
     let _ = app.notification().builder().title(title).body(body).show();
 }

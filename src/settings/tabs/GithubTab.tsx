@@ -8,13 +8,9 @@ import { Card, Row, SectionLabel } from "../../ui/Card";
 import { Segmented } from "../../ui/Segmented";
 import { Switch } from "../../ui/Switch";
 import type { TabProps } from "../shared";
+import { useT } from "../../i18n";
 
-const DOCK_WIDGETS: { kind: WidgetKind; label: string; description: string }[] = [
-  { kind: "github-mine", label: "Pull requests abertos", description: "PRs criados por você, com o estado dos checks" },
-  { kind: "github-review", label: "Revisões pendentes", description: "PRs aguardando sua revisão, com contador" },
-  { kind: "github-contrib", label: "Contribuições do ano", description: "Total e mapa das últimas 20 semanas" },
-  { kind: "github-commits", label: "Commits recentes", description: "Seus commits e quantos foram feitos hoje" },
-];
+const DOCK_WIDGETS = ["github-mine", "github-review", "github-contrib", "github-commits"] as const satisfies WidgetKind[];
 
 const INTERVALS = [1, 3, 5, 15, 30];
 
@@ -24,6 +20,8 @@ export function GithubTab({ config, update }: TabProps) {
   const [editing, setEditing] = useState(false);
   const [token, setToken] = useState("");
   const [result, setResult] = useState<string | null>(null);
+  const t = useT();
+  const tt = t.githubTab;
   const refreshStatus = () => ipc.githubAuthStatus().then((s) => setSource(s.source));
   useEffect(() => {
     refreshStatus();
@@ -33,12 +31,12 @@ export function GithubTab({ config, update }: TabProps) {
   const login = data?.login;
   const description =
     source === "gh"
-      ? "Token do GitHub CLI (gh auth token)"
+      ? tt.ghToken
       : source === "pat"
-        ? `Token pessoal · escopos repo, read:user · guardado ${labels.keychain}`
+        ? tt.patToken(labels().keychain)
         : source === null
-          ? "Rode gh auth login no terminal ou cole um Personal Access Token."
-          : "Verificando…";
+          ? tt.notConnectedHint
+          : tt.checking;
 
   const save = async () => {
     await ipc.githubSetToken(token);
@@ -52,9 +50,9 @@ export function GithubTab({ config, update }: TabProps) {
     await refreshStatus();
   };
   const sync = async () => {
-    setResult("Sincronizando…");
+    setResult(t.common.syncing);
     const fresh = await ipc.githubFetch();
-    setResult(fresh.error ? `Erro: ${fresh.error}` : `${fresh.reviewCount} revisão(ões) e ${fresh.myPrCount} PR(s) seus.`);
+    setResult(fresh.error ? t.common.error(fresh.error) : tt.syncResult(fresh.reviewCount, fresh.myPrCount));
   };
   const setWidget = (kind: WidgetKind, enabled: boolean) =>
     update((c) => ({ widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, enabled } : w)) }));
@@ -73,12 +71,12 @@ export function GithubTab({ config, update }: TabProps) {
         <div className="account-text">
           <span className="account-name">
             {login ? `@${login}` : "GitHub"}
-            <span className={`status-pill ${connected ? "ok" : "off"}`}>{connected ? "Conectado" : source === undefined ? "…" : "Não conectado"}</span>
+            <span className={`status-pill ${connected ? "ok" : "off"}`}>{connected ? tt.connected : source === undefined ? "…" : tt.notConnected}</span>
           </span>
           <span className="account-sub">{data?.error ?? description}</span>
         </div>
         <button className="btn" onClick={() => setEditing((e) => !e)}>
-          {source === "pat" ? "Trocar token" : "Usar um token"}
+          {source === "pat" ? tt.changeToken : tt.useToken}
         </button>
       </div>
 
@@ -97,38 +95,37 @@ export function GithubTab({ config, update }: TabProps) {
             id="token"
             className="text-input"
             type="password"
-            placeholder="Personal Access Token (tem prioridade sobre o gh)"
+            placeholder={tt.tokenPlaceholder}
             value={token}
             onChange={(e) => setToken(e.target.value)}
           />
           <button className="btn btn-primary" type="submit" disabled={!token.trim()}>
-            Salvar
+            {t.common.save}
           </button>
-          <p className="field-hint">O token precisa dos escopos repo e read:user e nunca sai do processo nativo.</p>
+          <p className="field-hint">{tt.tokenHint}</p>
         </form>
       )}
 
       <div className="field">
-        <SectionLabel>Na dock</SectionLabel>
+        <SectionLabel>{tt.inDock}</SectionLabel>
         <Card>
-          {DOCK_WIDGETS.map(({ kind, label, description }) => (
-            <Row key={kind} label={label} description={description}>
-              <Switch
-                checked={!!config.widgets.find((w) => w.kind === kind)?.enabled}
-                label={label}
-                onChange={(on) => setWidget(kind, on)}
-              />
-            </Row>
-          ))}
+          {DOCK_WIDGETS.map((kind) => {
+            const { label, description } = tt.widgets[kind];
+            return (
+              <Row key={kind} label={label} description={description}>
+                <Switch checked={!!config.widgets.find((w) => w.kind === kind)?.enabled} label={label} onChange={(on) => setWidget(kind, on)} />
+              </Row>
+            );
+          })}
         </Card>
       </div>
 
       <div className="field">
-        <SectionLabel>Sincronização</SectionLabel>
+        <SectionLabel>{tt.sync}</SectionLabel>
         <Card>
-          <Row label="Atualizar a cada">
+          <Row label={tt.every}>
             <Segmented
-              label="Atualizar a cada"
+              label={tt.every}
               value={String(config.githubPollMinutes)}
               onChange={(v) => update({ githubPollMinutes: Number(v) })}
               options={intervals.map((m) => ({ value: String(m), label: `${m} min` }))}
@@ -139,11 +136,11 @@ export function GithubTab({ config, update }: TabProps) {
 
       <div className="column-footer">
         <span className="field-hint" role="status">
-          {result ?? (data ? `Última sincronização ${timeAgo(data.fetchedAt)}` : "")}
+          {result ?? (data ? tt.lastSync(timeAgo(data.fetchedAt)) : "")}
         </span>
         {source === "pat" && (
           <button className="btn btn-danger" onClick={removeToken}>
-            Remover token
+            {tt.removeToken}
           </button>
         )}
       </div>
