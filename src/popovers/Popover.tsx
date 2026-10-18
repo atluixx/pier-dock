@@ -5,6 +5,7 @@ import { Calendar } from "./Calendar";
 import { ClaudeUsage } from "./ClaudeUsage";
 import { Commits } from "./Commits";
 import { Contributions } from "./Contributions";
+import { Launcher } from "./Launcher";
 import { NowPlaying } from "./NowPlaying";
 import { Pomodoro } from "./Pomodoro";
 import { PullRequests } from "./PullRequests";
@@ -37,6 +38,8 @@ function Content({ kind }: { kind: string }) {
       return <ClaudeUsage />;
     case "bluetooth":
       return <BluetoothPanel />;
+    case "launcher":
+      return <Launcher />;
     default:
       return <div className="popover-empty">{t.popover.unknown}</div>;
   }

@@ -251,6 +251,7 @@ export const en: Dict = {
       calendar: "Calendar",
       "claude-usage": "Claude usage",
       bluetooth: "Bluetooth",
+      launcher: "App launcher",
     },
   },
   dock: {
@@ -259,6 +260,8 @@ export const en: Dict = {
     dockSettings: "Dock settings",
     addDivider: "Add divider",
     showStartButton: (name) => `Show ${name} button`,
+    launcher: "App launcher",
+    showLauncher: "Show app launcher",
     reload: "Reload",
     unpin: "Unpin from dock",
     pin: "Pin to dock",
@@ -284,6 +287,8 @@ export const en: Dict = {
     pinned: "Pinned to the dock",
     reorderHint: (dropHint) => `Drag items in the dock itself to reorder, or ${dropHint}.`,
     showStartButton: (name) => `Show the ${name} button`,
+    launcher: "App launcher",
+    showLauncher: "Show the app launcher",
     installed: "Installed",
     loadingApps: "Loading apps…",
     pinApp: (name) => `Pin ${name} to the dock`,
@@ -293,6 +298,12 @@ export const en: Dict = {
     noShortcut: "Only the first 9 apps in the dock have a shortcut",
     position: "Position in the dock",
     remove: "Remove from dock",
+  },
+  launcher: {
+    label: "App launcher",
+    search: "Search apps",
+    loading: "Loading apps…",
+    empty: "No app found.",
   },
   appearance: {
     material: "Material",

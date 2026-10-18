@@ -96,6 +96,8 @@ pub struct Config {
     /// configs antigas; o frontend completa e limpa a lista.
     pub dock_order: Vec<String>,
     pub show_start_button: bool,
+    /// Botão do lançador de apps do próprio Pier (a lista de todos os instalados).
+    pub show_launcher: bool,
     pub weather_location: Option<WeatherLocation>,
     pub pomodoro: PomodoroConfig,
     /// Idioma da interface: "system", "pt" ou "en".
@@ -173,6 +175,7 @@ impl Default for Config {
             claude_poll_minutes: 1,
             dock_order: Vec::new(),
             show_start_button: true,
+            show_launcher: false,
             weather_location: None,
             pomodoro: PomodoroConfig::default(),
             language: "system".into(),

@@ -251,6 +251,7 @@ export const pt = {
       calendar: "Agenda",
       "claude-usage": "Uso do Claude",
       bluetooth: "Bluetooth",
+      launcher: "Lançador de apps",
     } as Record<string, string>,
   },
   dock: {
@@ -259,6 +260,8 @@ export const pt = {
     dockSettings: "Configurações da dock",
     addDivider: "Adicionar separador",
     showStartButton: (name: string) => `Mostrar botão ${name}`,
+    launcher: "Lançador de apps",
+    showLauncher: "Mostrar lançador de apps",
     reload: "Recarregar",
     unpin: "Desafixar da dock",
     pin: "Fixar na dock",
@@ -284,6 +287,8 @@ export const pt = {
     pinned: "Fixados na dock",
     reorderHint: (dropHint: string) => `Arraste os itens na própria dock para reordenar, ou ${dropHint}.`,
     showStartButton: (name: string) => `Mostrar o botão ${name}`,
+    launcher: "Lançador de apps",
+    showLauncher: "Mostrar o lançador de apps",
     installed: "Instalados",
     loadingApps: "Carregando apps…",
     pinApp: (name: string) => `Fixar ${name} na dock`,
@@ -293,6 +298,12 @@ export const pt = {
     noShortcut: "Só os 9 primeiros apps da dock têm atalho",
     position: "Posição na dock",
     remove: "Remover da dock",
+  },
+  launcher: {
+    label: "Lançador de apps",
+    search: "Buscar apps",
+    loading: "Carregando apps…",
+    empty: "Nenhum app encontrado.",
   },
   appearance: {
     material: "Material",
