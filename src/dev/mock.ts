@@ -67,6 +67,7 @@ const config: Config = {
   showRunningUnpinned: true,
   hideTaskbar: true,
   autoHide: "smart",
+  dockWidth: "fit",
   githubPollMinutes: 3,
   claudePollMinutes: 1,
   dockOrder: [],

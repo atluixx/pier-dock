@@ -293,9 +293,9 @@ export function Dock({ config }: { config: Config }) {
     <div className="dock-root" style={{ ["--icon" as string]: `${config.iconSize}px` }}>
       <div
         ref={barRef}
-        className={`dock-bar ${visible ? "" : "dock-hidden"}`}
+        className={`dock-bar ${config.dockWidth === "full" ? "dock-full" : ""} ${visible ? "" : "dock-hidden"}`}
         data-glass
-        style={{ bottom: metrics.margin, height: metrics.barHeight, padding: `0 ${metrics.padding}px` }}
+        style={{ bottom: config.dockWidth === "full" ? 0 : metrics.margin, height: metrics.barHeight, padding: `0 ${metrics.padding}px` }}
         onMouseMove={(e) => mouseX.set(e.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}
         onPointerDown={onPointerDown}

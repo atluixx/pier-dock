@@ -87,6 +87,8 @@ pub struct Config {
     pub hide_taskbar: bool,
     /// "never", "smart" (esconde quando um app está em foco) ou "always".
     pub auto_hide: String,
+    /// "fit" (barra do tamanho do conteúdo, centralizada) ou "full" (ponta a ponta, como um painel).
+    pub dock_width: String,
     pub github_poll_minutes: u32,
     /// De quantos em quantos minutos o uso do Claude Code é relido do disco.
     pub claude_poll_minutes: u32,
@@ -166,6 +168,7 @@ impl Default for Config {
             show_running_unpinned: true,
             hide_taskbar: true,
             auto_hide: "smart".into(),
+            dock_width: "fit".into(),
             github_poll_minutes: 3,
             claude_poll_minutes: 1,
             dock_order: Vec::new(),
@@ -275,6 +278,7 @@ mod tests {
         assert_eq!(config.material, "glass");
         assert_eq!(config.icon_size, 40);
         assert_eq!(config.accent, "coral");
+        assert_eq!(config.dock_width, "fit");
         assert!(!config.widgets.is_empty());
         assert!(config.dock_order.is_empty());
         assert!(config.show_start_button);
