@@ -135,6 +135,9 @@ fn register_shortcuts(app: &AppHandle) {
 fn main() {
     #[cfg(target_os = "linux")]
     platform::linux::prepare_env();
+    // Rodando como AppImage, o Pier se cadastra no menu na primeira execução.
+    #[cfg(target_os = "linux")]
+    platform::linux::desktop_integration::install_if_needed();
     if std::env::args().any(|a| a == "--restore-taskbar") {
         taskbar::restore();
         return;

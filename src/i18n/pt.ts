@@ -442,6 +442,7 @@ export const pt = {
       "needs-accessibility": "Acessibilidade pendente",
       "needs-extension": "Extensão do GNOME não instalada",
       "needs-relogin": "Extensão instalada; entre de novo na sessão",
+      "x11-only": "Apenas apps X11",
       unsupported: "Este ambiente não permite ver as janelas",
     },
     checking: "Procurando atualizações…",
@@ -465,6 +466,8 @@ export const pt = {
       "Instale a extensão Pier do GNOME Shell para a dock ver e focar as janelas, reservar o espaço na tela, esconder o Dash e registrar os atalhos.",
     installExtension: "Instalar extensão",
     needsRelogin: "A extensão Pier está instalada, mas o GNOME só a carrega no próximo login. Encerre a sessão e entre de novo.",
+    x11Only:
+      "Numa sessão Wayland a dock lista as janelas dos apps X11. As janelas dos apps nativos do Wayland ainda não aparecem. Apps fixados e widgets funcionam normalmente.",
     needsAccessibility: "Permissão de Acessibilidade necessária para listar, focar, minimizar e fechar janelas.",
     grant: "Conceder permissão",
     unsupported:
