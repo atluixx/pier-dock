@@ -22,6 +22,7 @@ export type WidgetKind =
   | "bluetooth"
   | "battery"
   | "clock"
+  | "show-desktop"
   | "weather"
   | "pomodoro"
   | "system-usage"
@@ -356,6 +357,7 @@ export const ipc = {
   toggleAppWindows: (ids: number[]) => invoke<void>("toggle_app_windows", { ids }),
   activateWindow: (id: number) => invoke<void>("activate_window", { id }),
   closeWindows: (ids: number[]) => invoke<void>("close_windows", { ids }),
+  toggleDesktop: () => invoke<void>("toggle_desktop"),
   windowThumbnail: (id: number) => invoke<string | null>("window_thumbnail", { id }),
 
   listInstalledApps: () => invoke<AppEntry[]>("list_installed_apps"),

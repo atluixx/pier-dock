@@ -179,6 +179,7 @@ export const pt = {
     volumeTile: (level: number, muted: boolean) =>
       `Volume ${level}%${muted ? " (mudo)" : ""} · role para ajustar, botão direito silencia`,
     battery: (percent: number, charging: boolean) => `Bateria ${percent}%${charging ? " (carregando)" : ""}`,
+    showDesktop: "Mostrar área de trabalho",
   },
   sound: {
     title: "Som",
@@ -408,6 +409,7 @@ export const pt = {
       bluetooth: { summary: "Dispositivos conectados e bateria.", name: "Bluetooth", description: "Se está ligado e quantos dispositivos estão conectados. O clique abre a lista, com a bateria de cada um quando o sistema informa." },
       battery: { summary: "Carga e se está carregando.", name: "Bateria", description: "Carga e se está carregando. Some em computadores sem bateria." },
       clock: { summary: "Hora e data.", name: "Relógio", description: "Hora e data. O clique abre a central de notificações." },
+      "show-desktop": { summary: "Minimiza tudo e mostra a área de trabalho.", name: "Área de trabalho", description: "Minimiza todas as janelas e mostra a área de trabalho. Clicar de novo traz as janelas de volta." },
       weather: { summary: "Temperatura e condição agora.", name: "Clima", description: "Temperatura e condição agora. O clique abre a previsão por hora e para os próximos 5 dias." },
       pomodoro: { summary: "Ciclos de foco com o anel de progresso.",
         name: "Pomodoro",
