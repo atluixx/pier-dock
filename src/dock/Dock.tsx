@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMotionValue } from "framer-motion";
-import { Search } from "lucide-react";
+import { LayoutGrid, Search } from "lucide-react";
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { listen } from "@tauri-apps/api/event";
@@ -20,8 +20,9 @@ import { WindowPreview } from "./WindowPreview";
 import { MagnifyCtx } from "./Magnify";
 import { AppIcon } from "./AppIcon";
 import { SortableItem } from "./SortableItem";
-import { addDivider, applyOrder, isDivider, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
+import { addDivider, applyOrder, isDivider, LAUNCHER_KEY, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
 import { WidgetView, type WidgetData } from "../widgets/WidgetView";
+import { togglePanel } from "../widgets/Tile";
 import { useWeather } from "../hooks/useWeather";
 import { useCalendar } from "../hooks/useCalendar";
 import { useClaudeUsage } from "../hooks/useClaudeUsage";
@@ -41,6 +42,30 @@ function StartButton({ onRemove }: { onRemove: () => void }) {
     <SortableItem id={START_KEY} className="widget-slot" onContextMenu={onContextMenu}>
       <button className="launcher-button" aria-label={labels().startButton} title={labels().startButton} onClick={() => ipc.openShell("start")}>
         <Search size={18} strokeWidth={2} aria-hidden />
+      </button>
+    </SortableItem>
+  );
+}
+
+/** Lançador de apps do Pier: abre a grade de instalados acima do botão (ver `popovers/Launcher`). */
+function LauncherButton({ onRemove }: { onRemove: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const onContextMenu = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const menu = await Menu.new({ items: [{ id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
+    await menu.popup();
+  };
+  return (
+    <SortableItem id={LAUNCHER_KEY} className="widget-slot" onContextMenu={onContextMenu}>
+      <button
+        ref={ref}
+        className="launcher-button"
+        aria-label={dict().dock.launcher}
+        title={dict().dock.launcher}
+        onClick={() => ref.current && togglePanel(LAUNCHER_KEY, ref.current)}
+      >
+        <LayoutGrid size={18} strokeWidth={2} aria-hidden />
       </button>
     </SortableItem>
   );
@@ -100,6 +125,7 @@ export function Dock({ config }: { config: Config }) {
     config.iconSize,
     config.magnification,
     config.dockWidth === "full",
+    config.dockHeight,
     preview ? PREVIEW_HEIGHT + PREVIEW_GAP : 0,
   );
   const apps = useMemo(
@@ -258,6 +284,7 @@ export function Dock({ config }: { config: Config }) {
         ...(config.showStartButton
           ? []
           : [{ id: "start", text: t.showStartButton(labels().startButton), action: () => update({ showStartButton: true }) }]),
+        ...(config.showLauncher ? [] : [{ id: "launcher", text: t.showLauncher, action: () => update({ showLauncher: true }) }]),
         { id: "reload", text: t.reload, action: () => location.reload() },
         { item: "Separator" },
         { id: "quit", text: labels().quit, action: () => ipc.quit() },
@@ -276,7 +303,7 @@ export function Dock({ config }: { config: Config }) {
     calendar,
     claude,
   };
-  const renderWidget = (w: WidgetConfig) => <WidgetView kind={w.kind} wide={w.size === "wide"} data={widgetData} />;
+  const renderWidget = (w: WidgetConfig) => <WidgetView kind={w.kind} size={w.size} data={widgetData} />;
 
   const pinnedApps = new Map(apps.filter((a) => a.pinned).map((a) => [a.key, a]));
   const unpinnedApps = apps.filter((a) => !a.pinned);
@@ -292,6 +319,7 @@ export function Dock({ config }: { config: Config }) {
 
   const renderItem = (key: string) => {
     if (key === START_KEY) return <StartButton key={key} onRemove={() => remove(key)} />;
+    if (key === LAUNCHER_KEY) return <LauncherButton key={key} onRemove={() => remove(key)} />;
     if (isDivider(key)) return <Divider key={key} id={key} onRemove={() => remove(key)} />;
     const app = pinnedApps.get(key);
     if (app) return <AppIcon key={key} app={app} active={key === activeKey} sortable shortcut={shortcutFor(app)} onPreview={showPreview} />;
@@ -323,7 +351,12 @@ export function Dock({ config }: { config: Config }) {
         ref={barRef}
         className={`dock-bar ${config.dockWidth === "full" ? "dock-full" : ""} ${visible ? "" : "dock-hidden"}`}
         data-glass
-        style={{ bottom: config.dockWidth === "full" ? 0 : metrics.margin, height: metrics.barHeight, padding: `0 ${metrics.padding}px` }}
+        style={{
+          ["--dock-item-bottom" as string]: `${metrics.itemBottom}px`,
+          bottom: config.dockWidth === "full" ? 0 : metrics.margin,
+          height: metrics.barHeight,
+          padding: `0 ${metrics.padding}px`,
+        }}
         onMouseMove={(e) => mouseX.set(e.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}
         onPointerDown={onPointerDown}

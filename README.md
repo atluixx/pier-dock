@@ -5,7 +5,7 @@
 <h1 align="center">Pier</h1>
 
 <p align="center">
-  A customizable dock for Windows, macOS, and Linux (GNOME).
+  A customizable dock for Windows, macOS, and Linux (GNOME and KDE Plasma).
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 - **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, and dividers.
 - **Media player:** Shows what's playing in Spotify, YouTube Music, and other players, with playback controls.
 - **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
-- **System widgets:** Network, volume, Bluetooth (with connected devices), battery, clock, system usage (CPU and memory with the last minute of history), and, on Windows, the tray arrow that opens the hidden icons.
+- **System widgets:** Network, volume (with the output device and per-app volume), Bluetooth (with connected devices), battery, clock, system usage (CPU and memory with the last minute of history), and, on Windows, the tray arrow that opens the hidden icons.
 - **Productivity widgets:** Weather, a Pomodoro timer, your next calendar event with a join button for video calls, and your Claude Code usage.
 - **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
 - **Automatic updates:** Pier checks for new versions and installs them in one click.
@@ -42,7 +42,7 @@ Download the installer for your platform from the [latest release](https://githu
 | --- | --- | --- |
 | Windows 10 and 11 | `Pier_x.y.z_x64-setup.exe` | Installs to `%LOCALAPPDATA%\Pier` without admin rights. |
 | macOS 12 or later | `Pier_x.y.z_universal.dmg` | Runs natively on Apple silicon and Intel Macs. |
-| Linux (GNOME 45 to 49) | `Pier_x.y.z_amd64.deb` or `Pier_x.y.z_amd64.AppImage` | Install the `.deb` with `sudo apt install ./Pier_x.y.z_amd64.deb`, or make the AppImage executable with `chmod +x` and run it. |
+| Linux (GNOME 45 to 49, KDE Plasma 6) | `Pier_x.y.z_amd64.deb` or `Pier_x.y.z_amd64.AppImage` | Install the `.deb` with `sudo apt install ./Pier_x.y.z_amd64.deb`, or make the AppImage executable with `chmod +x` and run it. On KDE Plasma nothing else is needed; on GNOME, install the extension from Pier's settings. |
 
 ### First launch
 
@@ -50,7 +50,7 @@ The installers aren't code-signed yet, so your system warns you the first time y
 
 - **Windows:** When SmartScreen appears, select **More info**, and then select **Run anyway**.
 - **macOS:** Drag Pier to **Applications** and open it. When macOS says it can't verify the app, go to **System Settings** > **Privacy & Security** and select **Open Anyway**. Alternatively, run `xattr -dr com.apple.quarantine /Applications/Pier.app` in Terminal.
-- **Linux:** On GNOME, open Pier's settings and select **Install extension**, and then log out and log back in. The extension lets Pier see and focus windows, reserve screen space, hide the Dash, and register shortcuts.
+- **Linux:** On GNOME, open Pier's settings and select **Install extension**, and then log out and log back in. The extension lets Pier see and focus windows, reserve screen space, hide the Dash, and register shortcuts. On KDE Plasma there is nothing to install: in an X11 session the dock lists windows, reserves screen space and blurs with KWin.
 
 ### Updates
 
@@ -65,7 +65,7 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 - **Right-click** an app to see its windows, pin or unpin it, or close it.
 - **Right-click** the dock background to open settings or quit.
 - **Drag** pinned apps to reorder them. To pin an app, drop it on the dock (an `.exe` or shortcut on Windows, an `.app` on macOS, or a `.desktop` file on Linux), or add it in **Settings** > **Apps**.
-- **Click** a widget to open its panel. On the volume widget, scroll to adjust the volume and right-click to mute.
+- **Click** a widget to open its panel. On the volume widget, scroll to adjust the volume and right-click to mute; its panel has the output device and, on Windows and Linux, each app's volume.
 
 | Shortcut | Windows and Linux | macOS |
 | --- | --- | --- |
@@ -110,7 +110,9 @@ macOS has some limitations compared to Windows:
 
 ### Linux
 
-Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
+Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On KDE Plasma 6 the dock needs no extension: in an X11 session it lists windows, reserves screen space and draws glass with KWin's blur, and on Wayland it lists the windows of X11 apps (windows of native Wayland apps aren't listed yet). On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
+
+Running as an AppImage, Pier adds its own menu entry and icons to `~/.local/share` on the first launch, so the dock shows up in the application menu without any manual setup.
 
 ## Configuration
 
@@ -161,7 +163,7 @@ When you run `npm run tauri dev` on macOS, the system grants permissions to the 
 Outside Tauri, `npm run dev` answers IPC calls with sample data so you can review the UI in a browser. Open `http://localhost:1420` with one of these query strings:
 
 - `?view=dock`
-- `?view=panel&kind=media` (or `github-mine`, `github-review`, `github-contrib`)
+- `?view=panel&kind=media` (or `github-mine`, `github-review`, `github-contrib`, `volume`)
 - `?view=settings`
 
 ### Tests

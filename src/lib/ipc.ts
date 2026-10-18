@@ -31,8 +31,11 @@ export type WidgetKind =
 export interface WidgetConfig {
   kind: WidgetKind;
   enabled: boolean;
-  size: "small" | "wide";
+  size: WidgetSize;
 }
+
+/** "count" só existe nas contribuições: o total do ano, sem o mapa. */
+export type WidgetSize = "small" | "wide" | "count";
 
 export interface WeatherLocation {
   name: string;
@@ -61,11 +64,15 @@ export interface Config {
   autoHide: "never" | "smart" | "always";
   /** "fit" (barra do tamanho do conteúdo) ou "full" (ponta a ponta, como um painel). */
   dockWidth: "fit" | "full";
+  /** Altura da barra em pixels; `null` acompanha o tamanho do ícone (`iconSize + 24`). */
+  dockHeight: number | null;
   githubPollMinutes: number;
   claudePollMinutes: number;
   /** Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. */
   dockOrder: string[];
   showStartButton: boolean;
+  /** Botão do lançador de apps do próprio Pier (a lista de todos os instalados). */
+  showLauncher: boolean;
   weatherLocation: WeatherLocation | null;
   pomodoro: PomodoroConfig;
   language: LanguageSetting;
@@ -242,7 +249,7 @@ export interface Volume {
 
 export interface PlatformInfo {
   os: "windows" | "linux" | "macos";
-  windowList: "ok" | "needs-extension" | "needs-relogin" | "needs-accessibility" | "unsupported";
+  windowList: "ok" | "needs-extension" | "needs-relogin" | "needs-accessibility" | "x11-only" | "unsupported";
   hideNative: boolean;
   shortcuts: boolean;
   /** O sistema desenha o vidro; sem ele o material é sempre sólido. */
@@ -252,6 +259,41 @@ export interface PlatformInfo {
 export interface UpdateInfo {
   version: string;
   notes?: string | null;
+}
+
+export type ReportKind = "bug" | "feature";
+
+export interface ReportEnvironment {
+  version: string;
+  os: string;
+  arch: string;
+  /** Só no Linux: área de trabalho, compositor e sessão. */
+  desktop: string | null;
+}
+
+/** "fallback": sem conta conectada (ou a API recusou), a página issues/new preenchida. */
+export type ReportResult = { kind: "created"; url: string } | { kind: "fallback"; url: string; reason: string | null };
+
+export interface OutputDevice {
+  id: string;
+  name: string;
+  default: boolean;
+}
+
+/** Um app tocando áudio; `id` cobre todos os streams dele. */
+export interface AppStream {
+  id: string;
+  name: string;
+  /** Chave para o `getIcon` (caminho do executável). */
+  icon: string | null;
+  level: number;
+  muted: boolean;
+}
+
+export interface AudioState {
+  outputs: OutputDevice[];
+  /** `null` quando o sistema não permite o volume por app (macOS). */
+  apps: AppStream[] | null;
 }
 
 export const ipc = {
@@ -288,8 +330,11 @@ export const ipc = {
   getVolume: () => invoke<Volume>("get_volume"),
   setVolume: (args: { level?: number; muted?: boolean }) => invoke<void>("set_volume", args),
   openTray: (anchorX: number) => invoke<void>("open_tray", { anchorX }),
-  openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar" | "bluetooth") =>
+  openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar" | "bluetooth" | "sound") =>
     invoke<void>("open_shell", { kind }),
+  audioStatus: () => invoke<AudioState>("audio_status"),
+  setOutputDevice: (id: string) => invoke<void>("set_output_device", { id }),
+  setAppVolume: (id: string, patch: { level?: number; muted?: boolean }) => invoke<void>("set_app_volume", { id, ...patch }),
 
   githubFetch: () => invoke<GithubData>("github_fetch"),
   githubCached: () => invoke<GithubData | null>("github_cached"),
@@ -325,4 +370,9 @@ export const ipc = {
 
   checkUpdate: () => invoke<UpdateInfo | null>("check_update"),
   installUpdate: () => invoke<void>("install_update"),
+
+  reportEnvironment: () => invoke<ReportEnvironment>("report_environment"),
+  recentLogs: () => invoke<string>("recent_logs"),
+  reportIssue: (args: { kind: ReportKind; title: string; description: string; logs: string | null }) =>
+    invoke<ReportResult>("report_issue", args),
 };

@@ -89,6 +89,8 @@ pub struct Config {
     pub auto_hide: String,
     /// "fit" (barra do tamanho do conteúdo, centralizada) ou "full" (ponta a ponta, como um painel).
     pub dock_width: String,
+    /// Altura da barra em pixels; `None` acompanha o tamanho do ícone (`iconSize + 24`).
+    pub dock_height: Option<u32>,
     pub github_poll_minutes: u32,
     /// De quantos em quantos minutos o uso do Claude Code é relido do disco.
     pub claude_poll_minutes: u32,
@@ -96,6 +98,8 @@ pub struct Config {
     /// configs antigas; o frontend completa e limpa a lista.
     pub dock_order: Vec<String>,
     pub show_start_button: bool,
+    /// Botão do lançador de apps do próprio Pier (a lista de todos os instalados).
+    pub show_launcher: bool,
     pub weather_location: Option<WeatherLocation>,
     pub pomodoro: PomodoroConfig,
     /// Idioma da interface: "system", "pt" ou "en".
@@ -169,10 +173,12 @@ impl Default for Config {
             hide_taskbar: true,
             auto_hide: "smart".into(),
             dock_width: "fit".into(),
+            dock_height: None,
             github_poll_minutes: 3,
             claude_poll_minutes: 1,
             dock_order: Vec::new(),
             show_start_button: true,
+            show_launcher: false,
             weather_location: None,
             pomodoro: PomodoroConfig::default(),
             language: "system".into(),

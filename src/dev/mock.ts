@@ -68,10 +68,12 @@ const config: Config = {
   hideTaskbar: true,
   autoHide: "smart",
   dockWidth: "fit",
+  dockHeight: null,
   githubPollMinutes: 3,
   claudePollMinutes: 1,
   dockOrder: [],
   showStartButton: true,
+  showLauncher: false,
   weatherLocation: { name: "Campinas", admin: "São Paulo, Brasil", latitude: -22.9, longitude: -47.06 },
   pomodoro: { preset: "25-5", focusMinutes: 25, breakMinutes: 5 },
   language: "system",
@@ -269,6 +271,16 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     network: { connected: true, internet: true, wifi: true, signalBars: 4, name: "Casa" },
   }),
   get_volume: () => ({ level: 0.6, muted: false }),
+  audio_status: () => ({
+    outputs: [
+      { id: "speakers", name: "MacBook Air Speakers", default: true },
+      { id: "headphones", name: "WH-1000XM4", default: false },
+    ],
+    apps: [
+      { id: "1", name: "Spotify", icon: null, level: 0.8, muted: false },
+      { id: "2", name: "Firefox", icon: null, level: 0.45, muted: true },
+    ],
+  }),
   bluetooth_status: () => bluetooth,
   set_bluetooth: (args) => {
     bluetooth = { ...bluetooth, powered: Boolean(args.powered) };
@@ -305,6 +317,9 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   "plugin:autostart|is_enabled": () => true,
   "plugin:app|version": () => "0.1.0",
   check_update: () => ({ version: "0.2.0", notes: null }),
+  report_environment: () => ({ version: "0.1.0", os: "macOS 15.6 Sequoia", arch: "aarch64", desktop: null }),
+  recent_logs: () => "[2026-10-18][10:02:11][pier][WARN] falha ao procurar atualização: timeout",
+  report_issue: () => ({ kind: "created", url: "https://github.com/pier-dock/pier-dock/issues/1" }),
 };
 
 if (!insideTauri) {
