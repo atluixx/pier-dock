@@ -68,6 +68,7 @@ const config: Config = {
   hideTaskbar: true,
   autoHide: "smart",
   dockWidth: "fit",
+  dockHeight: null,
   githubPollMinutes: 3,
   claudePollMinutes: 1,
   dockOrder: [],

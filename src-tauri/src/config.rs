@@ -89,6 +89,8 @@ pub struct Config {
     pub auto_hide: String,
     /// "fit" (barra do tamanho do conteúdo, centralizada) ou "full" (ponta a ponta, como um painel).
     pub dock_width: String,
+    /// Altura da barra em pixels; `None` acompanha o tamanho do ícone (`iconSize + 24`).
+    pub dock_height: Option<u32>,
     pub github_poll_minutes: u32,
     /// De quantos em quantos minutos o uso do Claude Code é relido do disco.
     pub claude_poll_minutes: u32,
@@ -169,6 +171,7 @@ impl Default for Config {
             hide_taskbar: true,
             auto_hide: "smart".into(),
             dock_width: "fit".into(),
+            dock_height: None,
             github_poll_minutes: 3,
             claude_poll_minutes: 1,
             dock_order: Vec::new(),

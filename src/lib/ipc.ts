@@ -61,6 +61,8 @@ export interface Config {
   autoHide: "never" | "smart" | "always";
   /** "fit" (barra do tamanho do conteúdo) ou "full" (ponta a ponta, como um painel). */
   dockWidth: "fit" | "full";
+  /** Altura da barra em pixels; `null` acompanha o tamanho do ícone (`iconSize + 24`). */
+  dockHeight: number | null;
   githubPollMinutes: number;
   claudePollMinutes: number;
   /** Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. */

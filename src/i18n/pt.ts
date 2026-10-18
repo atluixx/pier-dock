@@ -312,6 +312,11 @@ export const pt = {
     dockWidthFit: "No tamanho dos ícones",
     dockWidthFull: "Largura total",
     dockWidthHint: "Em largura total a barra vai de ponta a ponta, como um painel do sistema.",
+    panelHeight: "Altura do painel",
+    panelAuto: "Automática",
+    panelCustom: "Personalizada",
+    panelHeightHint:
+      "A automática acompanha o tamanho do ícone (ícone + 24px). A personalizada muda só a barra: os ícones mantêm o tamanho e continuam centrados.",
     magnify: "Ampliar ícones ao passar o mouse",
     magnification: "Ampliação",
     showRunning: "Mostrar apps abertos que não estão fixados",

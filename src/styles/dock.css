@@ -73,7 +73,7 @@
 .dock-item {
   position: relative;
   align-self: flex-end;
-  margin-bottom: 3px;
+  margin-bottom: var(--dock-item-bottom, 3px);
   display: flex;
   touch-action: none;
 }
