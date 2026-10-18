@@ -270,6 +270,12 @@ export const en: Dict = {
     windows: (n) => `${n} windows`,
     running: "open",
   },
+  preview: {
+    label: (name) => `Windows of ${name}`,
+    close: "Close window",
+    minimized: "Minimized",
+    fallback: "No preview",
+  },
   settings: {
     title: "Pier — Settings",
     sections: "Sections",

@@ -270,6 +270,12 @@ export const pt = {
     windows: (n: number) => `${n} janelas`,
     running: "aberto",
   },
+  preview: {
+    label: (name: string) => `Janelas de ${name}`,
+    close: "Fechar janela",
+    minimized: "Minimizada",
+    fallback: "Sem prévia",
+  },
   settings: {
     title: "Pier — Configurações",
     sections: "Seções",

@@ -161,3 +161,10 @@ pub fn close(id: i64) {
         button.perform(kAXPressAction);
     }
 }
+
+/// Sem captura no macOS por enquanto (o frontend cai no ícone do app). O caminho é o
+/// `SCScreenshotManager`/`CGWindowListCreateImage` do ScreenCaptureKit, que pede a permissão de
+/// gravação de tela.
+pub fn thumbnail(_id: i64) -> Option<Vec<u8>> {
+    None
+}
