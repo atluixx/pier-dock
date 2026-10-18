@@ -18,6 +18,7 @@ export type WidgetKind =
   | "github-contrib"
   | "network"
   | "volume"
+  | "bluetooth"
   | "battery"
   | "clock"
   | "weather"
@@ -139,6 +140,20 @@ export interface GithubData {
 export interface SystemStatus {
   battery: { present: boolean; percent: number; charging: boolean };
   network: { connected: boolean; internet: boolean; wifi: boolean; signalBars?: number | null; name: string };
+}
+
+export interface BluetoothDevice {
+  name: string;
+  kind: "audio" | "mouse" | "keyboard" | "gamepad" | "phone" | "other";
+  battery: number | null;
+}
+
+export interface BluetoothState {
+  available: boolean;
+  powered: boolean;
+  canToggle: boolean;
+  /** Só os conectados. */
+  devices: BluetoothDevice[];
 }
 
 export interface WeatherData {
@@ -264,9 +279,11 @@ export const ipc = {
     invoke<void>("media_control", { id, action, positionMs }),
 
   systemStatus: () => invoke<SystemStatus>("system_status"),
+  bluetoothStatus: () => invoke<BluetoothState>("bluetooth_status"),
+  setBluetooth: (powered: boolean) => invoke<void>("set_bluetooth", { powered }),
   getVolume: () => invoke<Volume>("get_volume"),
   setVolume: (args: { level?: number; muted?: boolean }) => invoke<void>("set_volume", args),
-  openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar") =>
+  openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar" | "bluetooth") =>
     invoke<void>("open_shell", { kind }),
 
   githubFetch: () => invoke<GithubData>("github_fetch"),

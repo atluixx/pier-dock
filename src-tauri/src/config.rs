@@ -148,6 +148,7 @@ impl Default for Config {
                 widget("github-contrib", "wide"),
                 widget("network", "small"),
                 widget("volume", "small"),
+                widget("bluetooth", "small"),
                 widget("battery", "small"),
                 widget("clock", "small"),
                 disabled("weather", "wide"),

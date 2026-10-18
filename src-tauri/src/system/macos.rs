@@ -1,10 +1,11 @@
 //! Bandeja no macOS: bateria pelo `pmset`, rede pela rota padrão e CoreWLAN, volume pelo
-//! AppleScript (Standard Additions, sem pedir permissão de Automação) e os menus do sistema
-//! pelos itens da barra de menus do Central de Controle.
+//! AppleScript (Standard Additions, sem pedir permissão de Automação), Bluetooth pelo IOBluetooth e
+//! os menus do sistema pelos itens da barra de menus do Central de Controle.
 
 use objc2_core_wlan::CWWiFiClient;
+use objc2_io_bluetooth::{BluetoothHCIPowerState, IOBluetoothDevice, IOBluetoothHostController};
 
-use super::{Battery, Network, Volume};
+use super::{kind_from_class, Battery, Bluetooth, BluetoothDevice, Network, Volume};
 use crate::platform::macos::ax::Element;
 use crate::platform::macos::{osascript, workspace};
 use crate::util::{run, spawn_detached};
@@ -79,6 +80,29 @@ pub fn set_volume(level: Option<f32>, muted: Option<bool>) -> Result<(), String>
     Ok(())
 }
 
+/// A bateria dos dispositivos só sai de APIs privadas do IOBluetooth, então fica de fora.
+pub fn bluetooth() -> Bluetooth {
+    let Some(controller) = (unsafe { IOBluetoothHostController::defaultController() }) else { return Bluetooth::absent() };
+    let powered = unsafe { controller.powerState() } == BluetoothHCIPowerState::ON;
+    let paired = unsafe { IOBluetoothDevice::pairedDevices() };
+    let devices = paired
+        .iter()
+        .flat_map(|list| list.iter())
+        .filter_map(|object| object.downcast::<IOBluetoothDevice>().ok())
+        .filter(|device| unsafe { device.isConnected() })
+        .map(|device| BluetoothDevice {
+            name: unsafe { device.nameOrAddress() }.map(|n| n.to_string()).unwrap_or_default(),
+            kind: kind_from_class(unsafe { device.classOfDevice() }),
+            battery: None,
+        })
+        .collect();
+    Bluetooth { available: true, powered, can_toggle: false, devices }
+}
+
+pub fn set_bluetooth(_powered: bool) -> Result<(), String> {
+    Err("o macOS não permite ligar o Bluetooth por apps".into())
+}
+
 /// Clica num item da barra de menus do Central de Controle pelo identificador (que, ao
 /// contrário do título, não é traduzido). Exige a permissão de Acessibilidade.
 fn press_menu_extra(identifier: &str) -> bool {
@@ -113,6 +137,7 @@ pub fn open_shell(kind: &str) {
         }
         "system-monitor" => drop(spawn_detached("/usr/bin/open", &["-b", "com.apple.ActivityMonitor"])),
         "calendar" => drop(spawn_detached("/usr/bin/open", &["-b", "com.apple.iCal"])),
+        "bluetooth" => drop(spawn_detached("/usr/bin/open", &["x-apple.systempreferences:com.apple.BluetoothSettings"])),
         _ => {}
     }
 }

@@ -74,6 +74,21 @@
   border-radius: var(--radius-control);
 }
 
+.bt-tile.off svg {
+  opacity: 0.45;
+}
+
+.bt-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 0 1.5px rgb(var(--glass-tint));
+}
+
 .battery-tile {
   height: 34px;
   padding: 0 8px;
