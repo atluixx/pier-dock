@@ -5,7 +5,7 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
 
-use crate::dock_window::{reserved_top_and_scale, DOCK_LABEL};
+use crate::dock_window::{position, reserved_rect, DOCK_LABEL, LEFT, RIGHT, TOP};
 use crate::util::ErrStr;
 
 pub const SETTINGS_LABEL: &str = "settings";
@@ -36,22 +36,36 @@ pub fn close_open_panel(app: &AppHandle) -> Option<String> {
     Some(kind)
 }
 
-/// Abre o painel de um widget acima dele; clicar de novo no mesmo widget fecha.
+/// Abre o painel de um widget ao lado dele; clicar de novo no mesmo widget fecha. `anchor_x` e
+/// `anchor_y` são o centro do widget em pixels lógicos da janela da dock.
 #[tauri::command]
-pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64, height: f64) -> Result<(), String> {
+pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, anchor_y: f64, width: f64, height: f64) -> Result<(), String> {
     if close_open_panel(&app).as_deref() == Some(kind.as_str()) {
         return Ok(());
     }
     let dock = app.get_webview_window(DOCK_LABEL).ok_or("dock não encontrada")?;
-    let (reserved_top, scale, mon_x, mon_w) = reserved_top_and_scale(&dock).ok_or("monitor não encontrado")?;
-    let dock_x = dock.outer_position().err_str()?.x as f64;
+    let reserved = reserved_rect(&dock).ok_or("monitor não encontrado")?;
+    let dock_pos = dock.outer_position().err_str()?;
 
+    let scale = reserved.scale;
+    let monitor = reserved.monitor;
     let margin = 10.0 * scale;
     let (w, h) = (width * scale, height * scale);
-    let x = (dock_x + anchor_x * scale - w / 2.0).clamp(mon_x + margin, mon_x + mon_w - w - margin);
-    // A janela tem uma margem transparente em volta do painel (sombra), que já serve de espaço
-    // entre o painel e a dock.
-    let y = reserved_top - h;
+    // O painel abre para dentro da tela, encostado na faixa reservada e centrado no widget.
+    let anchor = (
+        dock_pos.x as f64 + anchor_x * scale,
+        dock_pos.y as f64 + anchor_y * scale,
+    );
+    let centered_x = clamp(anchor.0 - w / 2.0, monitor.left as f64 + margin, monitor.right as f64 - w - margin);
+    let centered_y = clamp(anchor.1 - h / 2.0, monitor.top as f64 + margin, monitor.bottom as f64 - h - margin);
+    let (x, y) = match position() {
+        TOP => (centered_x, reserved.band.bottom as f64),
+        LEFT => (reserved.band.right as f64, centered_y),
+        RIGHT => (reserved.band.left as f64 - w, centered_y),
+        // Acima da barra: a margem transparente em volta do painel (sombra) já serve de espaço
+        // entre ele e a dock.
+        _ => (centered_x, reserved.band.top as f64 - h),
+    };
 
     let label = format!("panel-{}", PANEL_COUNTER.fetch_add(1, Ordering::SeqCst));
     let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App("index.html".into()))
@@ -108,6 +122,12 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, width: f64,
     });
     *OPEN_PANEL.lock().unwrap() = Some((label, kind));
     Ok(())
+}
+
+/// Prende `value` entre `min` e `max`. Uma janela maior que o intervalo fica no começo dele, em
+/// vez de estourar o `clamp` do `f64`.
+fn clamp(value: f64, min: f64, max: f64) -> f64 {
+    value.clamp(min, max.max(min))
 }
 
 /// Fecha o painel aberto se o clique (em pixels físicos de tela) caiu fora dele. No Windows o

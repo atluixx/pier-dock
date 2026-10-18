@@ -736,6 +736,44 @@ input[type="range"] {
   padding: 0 4px;
 }
 
+/* A miniatura acompanha a borda escolhida: em cima, embaixo ou nas laterais. */
+.preview-stage[data-pos="top"] {
+  align-items: flex-start;
+  padding-bottom: 0;
+  padding-top: 28px;
+}
+
+.preview-stage[data-pos="left"],
+.preview-stage[data-pos="right"] {
+  align-items: center;
+  padding-bottom: 0;
+}
+
+.preview-stage[data-pos="left"] {
+  justify-content: flex-start;
+  padding-left: 28px;
+}
+
+.preview-stage[data-pos="right"] {
+  justify-content: flex-end;
+  padding-right: 28px;
+}
+
+/* Nas laterais a miniatura da barra fica em pé, como a dock de verdade. */
+.preview-stage.vertical .preview-bar {
+  flex-direction: column;
+}
+
+.preview-stage.vertical .preview-bar .divider {
+  width: 26px;
+  height: 1px;
+  margin: 6px 0;
+}
+
+.preview-stage.vertical .preview-clock {
+  align-items: center;
+}
+
 /* GitHub */
 .account-card,
 .version-card {
