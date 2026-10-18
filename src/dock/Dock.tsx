@@ -7,7 +7,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { Menu } from "@tauri-apps/api/menu";
 import { ipc, type AppEntry, type Config, type WidgetConfig } from "../lib/ipc";
-import { labels, os } from "../lib/platform";
+import { labels, os, widgetSupported } from "../lib/platform";
 import { dict } from "../i18n";
 import { useConfig } from "../store/config";
 import { useWindows } from "../hooks/useWindows";
@@ -22,7 +22,7 @@ import { SortableItem } from "./SortableItem";
 import { addDivider, applyOrder, isDivider, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
 import { MediaWidget } from "../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../widgets/GithubWidgets";
-import { BatteryWidget, ClockWidget, NetworkWidget, VolumeWidget } from "../widgets/SystemWidgets";
+import { BatteryWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "../widgets/SystemWidgets";
 import { WeatherWidget } from "../widgets/WeatherWidget";
 import { PomodoroWidget } from "../widgets/PomodoroWidget";
 import { UsageWidget } from "../widgets/UsageWidget";
@@ -227,6 +227,8 @@ export function Dock({ config }: { config: Config }) {
         return <GithubCommitsWidget data={github} />;
       case "github-contrib":
         return <ContributionsWidget data={github} wide={wide} />;
+      case "tray":
+        return <TrayWidget />;
       case "network":
         return <NetworkWidget status={system} />;
       case "volume":
@@ -250,7 +252,7 @@ export function Dock({ config }: { config: Config }) {
 
   const pinnedApps = new Map(apps.filter((a) => a.pinned).map((a) => [a.key, a]));
   const unpinnedApps = apps.filter((a) => !a.pinned);
-  const widgets = new Map(config.widgets.filter((w) => w.enabled).map((w) => [widgetKey(w.kind), w]));
+  const widgets = new Map(config.widgets.filter((w) => w.enabled && widgetSupported(w.kind)).map((w) => [widgetKey(w.kind), w]));
   const activeKey = apps.find((a) => a.windows.some((w) => w.id === snapshot.foreground))?.key;
   const shortcutFor = (app: DockApp) => {
     const n = apps.indexOf(app) + 1;

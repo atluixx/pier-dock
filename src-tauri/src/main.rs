@@ -185,6 +185,7 @@ fn main() {
             system::get_volume,
             system::set_volume,
             system::open_shell,
+            system::open_tray,
             github::github_fetch,
             github::github_cached,
             github::github_auth_status,

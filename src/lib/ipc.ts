@@ -16,6 +16,7 @@ export type WidgetKind =
   | "github-mine"
   | "github-commits"
   | "github-contrib"
+  | "tray"
   | "network"
   | "volume"
   | "battery"
@@ -266,6 +267,7 @@ export const ipc = {
   systemStatus: () => invoke<SystemStatus>("system_status"),
   getVolume: () => invoke<Volume>("get_volume"),
   setVolume: (args: { level?: number; muted?: boolean }) => invoke<void>("set_volume", args),
+  openTray: (anchorX: number) => invoke<void>("open_tray", { anchorX }),
   openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar") =>
     invoke<void>("open_shell", { kind }),
 

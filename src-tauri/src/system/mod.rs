@@ -74,6 +74,26 @@ pub async fn set_volume(level: Option<f32>, muted: Option<bool>) -> Result<(), S
         .err_str()?
 }
 
+/// Abre a gaveta de ícones ocultos da bandeja do Windows acima de `anchor_x` (px da dock). Nos
+/// outros sistemas não existe.
+#[tauri::command]
+pub async fn open_tray(app: tauri::AppHandle, anchor_x: f64) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        use tauri::Manager;
+        let dock = app.get_webview_window(crate::dock_window::DOCK_LABEL).ok_or("dock não encontrada")?;
+        let (reserved_top, scale, _, _) = crate::dock_window::reserved_top_and_scale(&dock).ok_or("monitor não encontrado")?;
+        let x = dock.outer_position().err_str()?.x as f64 + anchor_x * scale;
+        let bottom = reserved_top - 8.0 * scale;
+        tauri::async_runtime::spawn_blocking(move || backend::open_tray(x.round() as i32, bottom.round() as i32)).await.err_str()?
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (app, anchor_x);
+        Err("a bandeja só existe no Windows".into())
+    }
+}
+
 /// Abre os menus e apps nativos: `start`, `quick-settings`, `notifications`, `system-monitor` e
 /// `calendar`.
 #[tauri::command]
