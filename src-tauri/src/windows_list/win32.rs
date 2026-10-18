@@ -221,3 +221,9 @@ pub fn close(id: i64) {
         let _ = PostMessageW(hwnd(id), WM_CLOSE, WPARAM(0), LPARAM(0));
     }
 }
+
+/// Sem captura no Windows por enquanto (o frontend cai no ícone do app). O caminho é
+/// `PrintWindow` com `PW_RENDERFULLCONTENT`, e `DwmRegisterThumbnail` para uma prévia ao vivo.
+pub fn thumbnail(_id: i64) -> Option<Vec<u8>> {
+    None
+}
