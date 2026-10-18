@@ -139,25 +139,31 @@ export function Dock({ config }: { config: Config }) {
   const [visible, setVisible] = useState(true);
   useEffect(() => {
     ipc.dockVisible().then(setVisible);
-    const unlisten = listen<boolean>("dock-visibility", (e) => setVisible(e.payload));
+    const unlisten = listen<boolean>("dock-visibility", (e) => {
+      setVisible(e.payload);
+      if (!e.payload) mouseX.set(Infinity);
+    });
     return () => {
       unlisten.then((f) => f());
     };
-  }, []);
+  }, [mouseX]);
 
   // Linux: o click-through recorta a região de input da janela, e o Rust só sabe do hover por aqui.
   useEffect(() => {
     if (os !== "linux") return;
     const root = document.documentElement;
     const enter = () => ipc.setDockHover(true);
-    const leave = () => ipc.setDockHover(false);
+    const leave = () => {
+      ipc.setDockHover(false);
+      mouseX.set(Infinity);
+    };
     root.addEventListener("mouseenter", enter);
     root.addEventListener("mouseleave", leave);
     return () => {
       root.removeEventListener("mouseenter", enter);
       root.removeEventListener("mouseleave", leave);
     };
-  }, []);
+  }, [mouseX]);
 
   useEffect(() => {
     const subs = [

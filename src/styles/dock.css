@@ -69,7 +69,7 @@
   transition: background 0.15s ease;
 }
 
-.app-button:is(:hover, [data-hover]) {
+.app-button.hovered {
   background: var(--fill-hover);
 }
 
