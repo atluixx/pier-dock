@@ -25,7 +25,7 @@ O Pier substitui a barra de tarefas ou a dock do sistema por uma barra única co
 - **Apps:** apps fixados e abertos, com ampliação, reordenação por arrastar, lista de janelas e separadores.
 - **Player de mídia:** mostra o que está tocando no Spotify, no YouTube Music e em outros players, com os controles de reprodução.
 - **Widgets do GitHub:** pull requests aguardando a sua revisão, os seus pull requests abertos, commits recentes e o gráfico de contribuições.
-- **Widgets do sistema:** rede, volume, bateria, relógio e uso do sistema (CPU e memória com o histórico do último minuto).
+- **Widgets do sistema:** rede, volume, bateria, relógio, uso do sistema (CPU e memória com o histórico do último minuto) e, no Windows, a seta da bandeja que abre os ícones ocultos.
 - **Widgets de produtividade:** clima, timer Pomodoro e o próximo compromisso da agenda, com botão para entrar na videochamada.
 - **Atalhos de teclado:** abra ou foque o app da posição 1 a 9 de qualquer lugar.
 - **Atualização automática:** o Pier procura versões novas e as instala com um clique.

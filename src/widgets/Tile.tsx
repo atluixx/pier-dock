@@ -20,7 +20,7 @@ interface TileProps {
   kind: string;
   label: string;
   panel?: boolean;
-  onClick?: () => void;
+  onClick?: (el: HTMLButtonElement) => void;
   onWheel?: (e: React.WheelEvent) => void;
   onContextMenu?: (e: React.MouseEvent) => void;
   className?: string;
@@ -33,7 +33,7 @@ export function Tile({ kind, label, panel = true, onClick, onWheel, onContextMen
   const { hover, bind } = useHover();
 
   const handleClick = () => {
-    if (onClick) return onClick();
+    if (onClick && ref.current) return onClick(ref.current);
     if (panel && ref.current) togglePanel(kind, ref.current);
   };
 

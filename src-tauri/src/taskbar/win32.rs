@@ -12,11 +12,12 @@ use windows::core::{w, PCWSTR};
 use windows::Win32::Foundation::{BOOL, HWND, LPARAM};
 use windows::Win32::System::Console::SetConsoleCtrlHandler;
 use windows::Win32::UI::Shell::{SHAppBarMessage, ABM_GETSTATE, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA};
-use windows::Win32::UI::WindowsAndMessaging::{FindWindowExW, FindWindowW, IsWindowVisible, ShowWindow, SW_HIDE, SW_SHOW};
+use windows::Win32::UI::WindowsAndMessaging::{FindWindowExW, FindWindowW, IsWindowVisible, ShowWindow, SW_HIDE, SW_SHOW, SW_SHOWNA};
 
 use crate::util::data_dir;
 
 static HIDDEN: AtomicBool = AtomicBool::new(false);
+static SHOWN_FOR_TRAY: AtomicBool = AtomicBool::new(false);
 static PRIMARY_TRAY: AtomicIsize = AtomicIsize::new(0);
 
 #[derive(Serialize, Deserialize)]
@@ -107,12 +108,29 @@ fn is_hidden() -> bool {
     HIDDEN.load(Ordering::SeqCst)
 }
 
+/// Com a taskbar escondida a seta da bandeja pode não abrir a gaveta de ícones ocultos. Aqui ela
+/// volta a ficar visível (em "ocultar automaticamente", só uma faixa fora da dock) enquanto a gaveta
+/// estiver aberta; o watchdog a esconde de novo quando `shown` vira `false`.
+pub fn show_for_tray(shown: bool) {
+    if !is_hidden() {
+        return;
+    }
+    SHOWN_FOR_TRAY.store(shown, Ordering::SeqCst);
+    if shown {
+        for h in taskbar_windows() {
+            unsafe {
+                let _ = ShowWindow(h, SW_SHOWNA);
+            }
+        }
+    }
+}
+
 /// Reaplica o ocultamento se a taskbar reaparecer (o Win11 às vezes a reexibe) e avisa quando o
 /// explorer.exe reinicia, já que um explorer novo perde o registro da nossa AppBar.
 pub fn start_watchdog(on_explorer_restart: impl Fn() + Send + 'static) {
     std::thread::spawn(move || loop {
         std::thread::sleep(Duration::from_millis(1500));
-        if !is_hidden() {
+        if !is_hidden() || SHOWN_FOR_TRAY.load(Ordering::SeqCst) {
             continue;
         }
         let windows = taskbar_windows();
