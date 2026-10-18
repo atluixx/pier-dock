@@ -8,9 +8,9 @@ import { useMedia } from "../../hooks/useMedia";
 import { useBluetooth, useSystemStatus } from "../../hooks/useSystem";
 import { useWeather } from "../../hooks/useWeather";
 import { useCalendar } from "../../hooks/useCalendar";
-import { useClaudeUsage } from "../../hooks/useClaudeUsage";
+import { useAiUsage } from "../../hooks/useAiUsage";
 import { RESIZABLE, WidgetView, formatsOf, type WidgetData } from "../../widgets/WidgetView";
-import { CalendarOptions, PomodoroOptions, WeatherOptions } from "./WidgetOptions";
+import { AiUsageOptions, CalendarOptions, PomodoroOptions, WeatherOptions } from "./WidgetOptions";
 import { Card, Row } from "../../ui/Card";
 import { Segmented } from "../../ui/Segmented";
 import { Switch } from "../../ui/Switch";
@@ -36,7 +36,7 @@ const WIDGETS: Record<WidgetKind, { group: Group; tint: [string, string] }> = {
   pomodoro: { group: "productivity", tint: ["#6A1E22", "#3A1A2A"] },
   "system-usage": { group: "system", tint: ["#3A1E6A", "#1E2A4A"] },
   calendar: { group: "productivity", tint: ["#1E2A6A", "#2A1E5A"] },
-  "claude-usage": { group: "productivity", tint: ["#5A2E1E", "#20242C"] },
+  "ai-usage": { group: "productivity", tint: ["#5A2E1E", "#20242C"] },
 };
 
 const isWidget = (key: string) => key.startsWith("widget:");
@@ -211,6 +211,7 @@ function WidgetDialog({
             {widget.kind === "weather" && <WeatherOptions config={config} update={update} />}
             {widget.kind === "pomodoro" && <PomodoroOptions config={config} update={update} />}
             {widget.kind === "calendar" && <CalendarOptions />}
+            {widget.kind === "ai-usage" && <AiUsageOptions config={config} update={update} />}
             {widget.enabled && (
               <Row label={t.position} description={common.dragInDock}>
                 <span className="row-value">{common.positionOf(position, enabled.length)}</span>
@@ -257,7 +258,7 @@ export function WidgetsTab({ config, update, setFooter }: TabProps) {
     weather: useWeather(),
     weatherConfigured: !!config.weatherLocation,
     calendar: useCalendar(),
-    claude: useClaudeUsage(),
+    ai: useAiUsage(),
   };
 
   const actions: WidgetActions = {

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { ipc } from "../lib/ipc";
 import { BluetoothPanel } from "./Bluetooth";
 import { Calendar } from "./Calendar";
-import { ClaudeUsage } from "./ClaudeUsage";
+import { AiUsagePanel } from "./AiUsagePanel";
 import { Commits } from "./Commits";
 import { Contributions } from "./Contributions";
 import { Launcher } from "./Launcher";
@@ -36,8 +36,8 @@ function Content({ kind }: { kind: string }) {
       return <SystemUsage />;
     case "calendar":
       return <Calendar />;
-    case "claude-usage":
-      return <ClaudeUsage />;
+    case "ai-usage":
+      return <AiUsagePanel />;
     case "bluetooth":
       return <BluetoothPanel />;
     case "launcher":

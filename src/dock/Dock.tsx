@@ -25,7 +25,7 @@ import { WidgetView, type WidgetData } from "../widgets/WidgetView";
 import { togglePanel } from "../widgets/Tile";
 import { useWeather } from "../hooks/useWeather";
 import { useCalendar } from "../hooks/useCalendar";
-import { useClaudeUsage } from "../hooks/useClaudeUsage";
+import { useAiUsage } from "../hooks/useAiUsage";
 
 /** Espera antes de fechar a faixa quando o cursor sai da dock (ver o efeito do `mouseleave`). */
 const PREVIEW_CLOSE_DELAY = 200;
@@ -105,7 +105,7 @@ export function Dock({ config }: { config: Config }) {
   const weather = useWeather(enabled("weather"), place ? `${place.latitude},${place.longitude}` : undefined);
   const calendar = useCalendar(enabled("calendar"));
   const [bluetooth] = useBluetooth(enabled("bluetooth"));
-  const claude = useClaudeUsage(enabled("claude-usage") ? config.claudePollMinutes : undefined);
+  const ai = useAiUsage(enabled("ai-usage") ? config.aiPollMinutes : undefined, config.aiProvider);
   const mouseX = useMotionValue(Infinity);
   const barRef = useRef<HTMLDivElement>(null);
   // Janela em prévia: guarda o app pelo `key`, porque a lista de apps é remontada a cada snapshot.
@@ -301,7 +301,7 @@ export function Dock({ config }: { config: Config }) {
     weather,
     weatherConfigured: !!config.weatherLocation,
     calendar,
-    claude,
+    ai,
   };
   const renderWidget = (w: WidgetConfig) => <WidgetView kind={w.kind} size={w.size} data={widgetData} />;
 

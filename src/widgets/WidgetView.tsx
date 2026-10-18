@@ -1,4 +1,4 @@
-import type { BluetoothState, CalendarData, ClaudeUsage, GithubData, MediaState, SystemStatus, WeatherData, WidgetKind, WidgetSize } from "../lib/ipc";
+import type { AiUsage, BluetoothState, CalendarData, GithubData, MediaState, SystemStatus, WeatherData, WidgetKind, WidgetSize } from "../lib/ipc";
 import { MediaWidget } from "./MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "./GithubWidgets";
 import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "./SystemWidgets";
@@ -6,7 +6,7 @@ import { WeatherWidget } from "./WeatherWidget";
 import { PomodoroWidget } from "./PomodoroWidget";
 import { UsageWidget } from "./UsageWidget";
 import { CalendarWidget } from "./CalendarWidget";
-import { ClaudeWidget } from "./ClaudeWidget";
+import { AiUsageWidget } from "./AiUsageWidget";
 
 /** Dados que os widgets mostram, lidos uma vez por quem os desenha (a dock ou as configurações). */
 export interface WidgetData {
@@ -17,11 +17,11 @@ export interface WidgetData {
   weather: WeatherData | null;
   weatherConfigured: boolean;
   calendar: CalendarData | null;
-  claude: ClaudeUsage | null;
+  ai: AiUsage | null;
 }
 
 /** Widgets com formato largo e compacto. */
-export const RESIZABLE = new Set<WidgetKind>(["media", "github-contrib", "weather", "pomodoro", "system-usage", "calendar", "claude-usage"]);
+export const RESIZABLE = new Set<WidgetKind>(["media", "github-contrib", "weather", "pomodoro", "system-usage", "calendar", "ai-usage"]);
 
 /** Formatos de um widget redimensionável, na ordem do seletor. */
 export function formatsOf(kind: WidgetKind): WidgetSize[] {
@@ -61,7 +61,7 @@ export function WidgetView({ kind, size, data }: { kind: WidgetKind; size: Widge
       return <UsageWidget wide={wide} />;
     case "calendar":
       return <CalendarWidget data={data.calendar} wide={wide} />;
-    case "claude-usage":
-      return <ClaudeWidget data={data.claude} wide={wide} />;
+    case "ai-usage":
+      return <AiUsageWidget data={data.ai} wide={wide} />;
   }
 }

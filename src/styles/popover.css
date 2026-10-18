@@ -956,8 +956,8 @@
   color: var(--text-tertiary);
 }
 
-/* Uso do Claude: as barras logo abaixo do cabeçalho, sem a divisória das seções seguintes. */
-.claude-limits {
+/* Uso de IA: as barras logo abaixo do cabeçalho, sem a divisória das seções seguintes. */
+.ai-limits {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -965,18 +965,18 @@
 }
 
 /* As barras usam as faixas de cor definidas em widgets.css. */
-.usage-fill.claude-normal,
-.usage-fill.claude-warn,
-.usage-fill.claude-critical {
-  background: var(--claude);
+.usage-fill.ai-normal,
+.usage-fill.ai-warn,
+.usage-fill.ai-critical {
+  background: var(--ai-level);
 }
 
 /* Percentual desconhecido: barra vazia em vez de zero pintado. */
-.usage-fill.claude-unknown {
+.usage-fill.ai-unknown {
   background: transparent;
 }
 
-.popover-meta.claude-stale {
+.popover-meta.ai-stale {
   color: var(--warning);
 }
 

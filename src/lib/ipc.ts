@@ -26,7 +26,7 @@ export type WidgetKind =
   | "pomodoro"
   | "system-usage"
   | "calendar"
-  | "claude-usage";
+  | "ai-usage";
 
 export interface WidgetConfig {
   kind: WidgetKind;
@@ -67,7 +67,9 @@ export interface Config {
   /** Altura da barra em pixels; `null` acompanha o tamanho do ícone (`iconSize + 24`). */
   dockHeight: number | null;
   githubPollMinutes: number;
-  claudePollMinutes: number;
+  aiPollMinutes: number;
+  /** Qual IA o widget de uso lê: "auto" (a de leitura mais recente), "claude" ou "codex". */
+  aiProvider: AiProviderChoice;
   /** Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. */
   dockOrder: string[];
   showStartButton: boolean;
@@ -224,14 +226,23 @@ export interface CalendarData {
   error?: string | null;
 }
 
-export interface ClaudeUsage {
-  /** Percentuais reais do `/usage`. `null` é desconhecido — cache ausente ou janela virada. */
-  sessionPercent: number | null;
+export interface AiUsageWindow {
+  /** Papel da janela na ferramenta (`session`, `weekly`, `primary`, `secondary`); só uma chave. */
+  id: string;
+  /** Duração da janela em minutos, quando a ferramenta informa (300 = 5h, 10080 = semana). */
+  minutes: number | null;
+  /** Percentual já usado. `null` é desconhecido — cache ausente ou janela que já virou. */
+  percent: number | null;
   /** Minutos até o reset; negativo se a janela já passou. */
-  sessionResetsIn: number | null;
-  weeklyPercent: number | null;
-  weeklyResetsIn: number | null;
-  /** Idade do cache de limites, em minutos. */
+  resetsIn: number | null;
+}
+
+/** Uso de uma IA de linha de comando, já normalizado entre os provedores. */
+export interface AiUsage {
+  /** Qual IA respondeu: "claude" ou "codex". */
+  provider: AiProviderId;
+  windows: AiUsageWindow[];
+  /** Idade da leitura dos limites, em minutos. */
   ageMin: number | null;
   stale: boolean;
   todayTokens: number;
@@ -240,6 +251,17 @@ export interface ClaudeUsage {
   topModel: string | null;
   fetchedAt: number;
   error?: string | null;
+}
+
+/** As IAs que o widget sabe ler. */
+export type AiProviderId = "claude" | "codex";
+/** O que fica salvo na config: "auto" segue a IA com a leitura mais recente. */
+export type AiProviderChoice = "auto" | AiProviderId;
+
+export interface AiProvider {
+  id: AiProviderId;
+  /** Se os arquivos de dados da IA existem nesta máquina. */
+  detected: boolean;
 }
 
 export interface Volume {
@@ -385,8 +407,9 @@ export const ipc = {
   calendarCached: () => invoke<CalendarData | null>("calendar_cached"),
   calendarSetUrl: (url: string | null) => invoke<void>("calendar_set_url", { url }),
 
-  claudeUsage: () => invoke<ClaudeUsage>("claude_usage"),
-  claudeUsageCached: () => invoke<ClaudeUsage | null>("claude_usage_cached"),
+  aiUsage: (provider: AiProviderChoice) => invoke<AiUsage>("ai_usage", { provider }),
+  aiUsageCached: () => invoke<AiUsage | null>("ai_usage_cached"),
+  aiProviders: () => invoke<AiProvider[]>("ai_providers"),
 
   openPanel: (kind: string, anchorX: number, width: number, height: number) =>
     invoke<void>("open_panel", { kind, anchorX, width, height }),
