@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { ipc } from "../lib/ipc";
+import { BluetoothPanel } from "./Bluetooth";
 import { Calendar } from "./Calendar";
 import { ClaudeUsage } from "./ClaudeUsage";
 import { Commits } from "./Commits";
@@ -34,6 +35,8 @@ function Content({ kind }: { kind: string }) {
       return <Calendar />;
     case "claude-usage":
       return <ClaudeUsage />;
+    case "bluetooth":
+      return <BluetoothPanel />;
     default:
       return <div className="popover-empty">{t.popover.unknown}</div>;
   }

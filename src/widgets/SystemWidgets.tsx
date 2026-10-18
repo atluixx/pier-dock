@@ -3,6 +3,9 @@ import {
   BatteryFull,
   BatteryLow,
   BatteryMedium,
+  Bluetooth,
+  BluetoothConnected,
+  BluetoothOff,
   ChevronUp,
   Globe,
   Volume1,
@@ -13,7 +16,7 @@ import {
   WifiLow,
   WifiOff,
 } from "lucide-react";
-import { ipc, type SystemStatus } from "../lib/ipc";
+import { ipc, type BluetoothState, type SystemStatus } from "../lib/ipc";
 import { useNow, useVolume } from "../hooks/useSystem";
 import { shortDate } from "../lib/format";
 import { Tile } from "./Tile";
@@ -67,6 +70,21 @@ export function VolumeWidget() {
       onWheel={(e) => volume && setVolume({ level: Math.min(1, Math.max(0, level + (e.deltaY < 0 ? 0.04 : -0.04))) })}
     >
       <Icon size={17} />
+    </Tile>
+  );
+}
+
+export function BluetoothWidget({ bluetooth }: { bluetooth: BluetoothState | null }) {
+  const t = useT().bluetooth;
+  if (bluetooth && !bluetooth.available) return null;
+  const on = !!bluetooth?.powered;
+  const names = bluetooth?.devices.map((d) => d.name) ?? [];
+  const Icon = !on ? BluetoothOff : names.length ? BluetoothConnected : Bluetooth;
+  const label = !on ? t.off : names.length ? `Bluetooth · ${names.join(", ")}` : t.tileOn;
+  return (
+    <Tile kind="bluetooth" label={label} className={`sys-tile bt-tile ${on ? "" : "off"}`}>
+      <Icon size={17} />
+      {names.length > 0 && <span className="bt-dot" aria-hidden />}
     </Tile>
   );
 }

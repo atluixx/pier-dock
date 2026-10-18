@@ -186,6 +186,8 @@ fn main() {
             system::set_volume,
             system::open_shell,
             system::open_tray,
+            system::bluetooth_status,
+            system::set_bluetooth,
             github::github_fetch,
             github::github_cached,
             github::github_auth_status,

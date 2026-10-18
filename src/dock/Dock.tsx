@@ -13,7 +13,7 @@ import { useConfig } from "../store/config";
 import { useWindows } from "../hooks/useWindows";
 import { useMedia } from "../hooks/useMedia";
 import { useGithub } from "../hooks/useGithub";
-import { useSystemStatus } from "../hooks/useSystem";
+import { useBluetooth, useSystemStatus } from "../hooks/useSystem";
 import { buildDockApps, type DockApp } from "./apps";
 import { dockMetrics } from "./layout";
 import { MagnifyCtx } from "./Magnify";
@@ -22,7 +22,7 @@ import { SortableItem } from "./SortableItem";
 import { addDivider, applyOrder, isDivider, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
 import { MediaWidget } from "../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../widgets/GithubWidgets";
-import { BatteryWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "../widgets/SystemWidgets";
+import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "../widgets/SystemWidgets";
 import { WeatherWidget } from "../widgets/WeatherWidget";
 import { PomodoroWidget } from "../widgets/PomodoroWidget";
 import { UsageWidget } from "../widgets/UsageWidget";
@@ -82,6 +82,7 @@ export function Dock({ config }: { config: Config }) {
   const place = config.weatherLocation;
   const weather = useWeather(enabled("weather"), place ? `${place.latitude},${place.longitude}` : undefined);
   const calendar = useCalendar(enabled("calendar"));
+  const [bluetooth] = useBluetooth(enabled("bluetooth"));
   const claude = useClaudeUsage(enabled("claude-usage") ? config.claudePollMinutes : undefined);
   const mouseX = useMotionValue(Infinity);
   const barRef = useRef<HTMLDivElement>(null);
@@ -239,6 +240,8 @@ export function Dock({ config }: { config: Config }) {
         return <NetworkWidget status={system} />;
       case "volume":
         return <VolumeWidget />;
+      case "bluetooth":
+        return <BluetoothWidget bluetooth={bluetooth} />;
       case "battery":
         return <BatteryWidget status={system} />;
       case "clock":

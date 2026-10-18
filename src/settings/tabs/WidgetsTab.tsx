@@ -3,6 +3,7 @@ import {
   ArrowDown,
   ArrowUp,
   BatteryMedium,
+  Bluetooth,
   CalendarDays,
   ChevronUp,
   Asterisk,
@@ -24,10 +25,10 @@ import { os, widgetSupported } from "../../lib/platform";
 import { moveAmong, widgetKey } from "../../dock/order";
 import { useGithub } from "../../hooks/useGithub";
 import { useMedia } from "../../hooks/useMedia";
-import { useSystemStatus } from "../../hooks/useSystem";
+import { useBluetooth, useSystemStatus } from "../../hooks/useSystem";
 import { MediaWidget } from "../../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../../widgets/GithubWidgets";
-import { BatteryWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "../../widgets/SystemWidgets";
+import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "../../widgets/SystemWidgets";
 import { WeatherWidget } from "../../widgets/WeatherWidget";
 import { PomodoroWidget } from "../../widgets/PomodoroWidget";
 import { UsageWidget } from "../../widgets/UsageWidget";
@@ -55,6 +56,7 @@ const WIDGETS: Record<WidgetKind, { group: Group; Icon: LucideIcon }> = {
   tray: { group: "system", Icon: ChevronUp },
   network: { group: "system", Icon: Wifi },
   volume: { group: "system", Icon: Volume2 },
+  bluetooth: { group: "system", Icon: Bluetooth },
   battery: { group: "system", Icon: BatteryMedium },
   clock: { group: "system", Icon: Clock },
   weather: { group: "productivity", Icon: CloudSun },
@@ -72,6 +74,7 @@ function Preview({ widget, configured }: { widget: WidgetConfig; configured: boo
   const media = useMedia();
   const github = useGithub();
   const system = useSystemStatus();
+  const [bluetooth] = useBluetooth(widget.kind === "bluetooth");
   const weather = useWeather();
   const calendar = useCalendar();
   const claude = useClaudeUsage();
@@ -86,6 +89,7 @@ function Preview({ widget, configured }: { widget: WidgetConfig; configured: boo
     tray: <TrayWidget />,
     network: <NetworkWidget status={system} />,
     volume: <VolumeWidget />,
+    bluetooth: <BluetoothWidget bluetooth={bluetooth} />,
     battery: <BatteryWidget status={system} />,
     clock: <ClockWidget />,
     weather: <WeatherWidget data={weather} wide={wide} configured={configured} />,

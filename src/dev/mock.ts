@@ -7,7 +7,7 @@
  * chama `listen` ao ser carregado. Dentro do Tauri ele não faz nada.
  */
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
-import type { AppEntry, CalendarData, ClaudeUsage, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
+import type { AppEntry, BluetoothState, CalendarData, ClaudeUsage, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
 import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
 
 const insideTauri = "__TAURI_INTERNALS__" in window;
@@ -29,6 +29,17 @@ function iconDataUrl(color: string, init: string): string {
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
+let bluetooth: BluetoothState = {
+  available: true,
+  powered: true,
+  canToggle: true,
+  devices: [
+    { name: "AirPods Pro", kind: "audio", battery: 82 },
+    { name: "MX Master 3", kind: "mouse", battery: 54 },
+    { name: "Keychron K2", kind: "keyboard", battery: null },
+  ],
+};
+
 const config: Config = {
   pinnedApps: apps.map(({ id, name, target }) => ({ id, name, target, exe: target, aumid: null })),
   widgets: [
@@ -39,6 +50,7 @@ const config: Config = {
     { kind: "github-contrib", enabled: true, size: "wide" },
     { kind: "network", enabled: true, size: "small" },
     { kind: "volume", enabled: true, size: "small" },
+    { kind: "bluetooth", enabled: true, size: "small" },
     { kind: "battery", enabled: true, size: "small" },
     { kind: "clock", enabled: true, size: "small" },
     { kind: "weather", enabled: params.has("new"), size: "wide" },
@@ -256,6 +268,11 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     network: { connected: true, internet: true, wifi: true, signalBars: 4, name: "Casa" },
   }),
   get_volume: () => ({ level: 0.6, muted: false }),
+  bluetooth_status: () => bluetooth,
+  set_bluetooth: (args) => {
+    bluetooth = { ...bluetooth, powered: Boolean(args.powered) };
+    return null;
+  },
   github_cached: () => github,
   github_fetch: () => github,
   github_auth_status: () => ({ source: "gh" }),

@@ -1,9 +1,12 @@
 //! Bandeja no Linux: bateria pelo sysfs, rede pelo NetworkManager (D-Bus), volume pelo `pactl`
-//! (PulseAudio ou PipeWire) e menus do GNOME pela extensão.
+//! (PulseAudio ou PipeWire), Bluetooth pelo BlueZ (D-Bus) e menus do GNOME pela extensão.
 
+use std::collections::HashMap;
 use std::path::Path;
 
-use super::{Battery, Network, Volume};
+use zbus::zvariant::OwnedValue;
+
+use super::{Battery, Bluetooth, BluetoothDevice, Network, Volume};
 use crate::platform::linux::{dbus, gnome_shell, x11};
 use crate::util::{run, spawn_detached};
 
@@ -91,6 +94,83 @@ pub fn set_volume(level: Option<f32>, muted: Option<bool>) -> Result<(), String>
     Ok(())
 }
 
+const BLUEZ: &str = "org.bluez";
+
+/// Propriedades de cada interface de um objeto do BlueZ (`Adapter1`, `Device1`, `Battery1`…).
+type Interfaces = HashMap<String, HashMap<String, OwnedValue>>;
+
+fn bluez_objects() -> Option<Vec<(String, Interfaces)>> {
+    let manager = zbus::blocking::fdo::ObjectManagerProxy::builder(dbus::system()?)
+        .destination(BLUEZ)
+        .ok()?
+        .path("/")
+        .ok()?
+        .build()
+        .ok()?;
+    let objects = manager.get_managed_objects().ok()?;
+    Some(
+        objects
+            .into_iter()
+            .map(|(path, interfaces)| (path.to_string(), interfaces.into_iter().map(|(name, props)| (name.to_string(), props)).collect()))
+            .collect(),
+    )
+}
+
+fn prop<T: TryFrom<OwnedValue>>(interfaces: &Interfaces, interface: &str, name: &str) -> Option<T> {
+    T::try_from(interfaces.get(interface)?.get(name)?.try_clone().ok()?).ok()
+}
+
+/// Tipo do dispositivo pelo ícone freedesktop que o BlueZ anuncia (`audio-headset`, `input-mouse`…).
+fn kind_from_icon(icon: &str) -> &'static str {
+    match icon {
+        i if i.starts_with("audio-") => "audio",
+        "input-mouse" | "input-tablet" => "mouse",
+        "input-keyboard" => "keyboard",
+        "input-gaming" => "gamepad",
+        "phone" => "phone",
+        _ => "other",
+    }
+}
+
+fn bluetooth_from_objects(objects: &[(String, Interfaces)]) -> Bluetooth {
+    let adapters: Vec<_> = objects.iter().filter(|(_, i)| i.contains_key("org.bluez.Adapter1")).collect();
+    if adapters.is_empty() {
+        return Bluetooth::absent();
+    }
+    let powered = adapters.iter().any(|(_, i)| prop::<bool>(i, "org.bluez.Adapter1", "Powered").unwrap_or(false));
+    let devices = objects
+        .iter()
+        .filter(|(_, i)| prop::<bool>(i, "org.bluez.Device1", "Connected").unwrap_or(false))
+        .map(|(_, i)| BluetoothDevice {
+            name: prop::<String>(i, "org.bluez.Device1", "Alias").unwrap_or_default(),
+            kind: kind_from_icon(&prop::<String>(i, "org.bluez.Device1", "Icon").unwrap_or_default()),
+            battery: prop::<u8>(i, "org.bluez.Battery1", "Percentage").map(|p| p.min(100)),
+        })
+        .collect();
+    Bluetooth { available: true, powered, can_toggle: true, devices }
+}
+
+pub fn bluetooth() -> Bluetooth {
+    bluez_objects().map(|objects| bluetooth_from_objects(&objects)).unwrap_or_else(Bluetooth::absent)
+}
+
+pub fn set_bluetooth(powered: bool) -> Result<(), String> {
+    let conn = dbus::system().ok_or("sem acesso ao D-Bus do sistema")?;
+    let objects = bluez_objects().ok_or("BlueZ indisponível")?;
+    for (path, _) in objects.iter().filter(|(_, i)| i.contains_key("org.bluez.Adapter1")) {
+        let adapter = dbus::proxy(conn, BLUEZ, path, "org.bluez.Adapter1").ok_or("adaptador não encontrado")?;
+        adapter.set_property("Powered", powered).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// Configurações de Bluetooth: as do GNOME, as do Blueman (Linux Mint e outras) ou as do Cinnamon.
+fn open_bluetooth_settings() {
+    let _ = spawn_detached("gnome-control-center", &["bluetooth"])
+        .or_else(|_| spawn_detached("blueman-manager", &[]))
+        .or_else(|_| spawn_detached("cinnamon-settings", &["bluetooth"]));
+}
+
 /// Grade de apps, menu de configurações rápidas e calendário/notificações do GNOME. Sem a
 /// extensão, o menu de apps abre pela tecla Super (Cinnamon, MATE e Xfce, sessões X11) e as
 /// configurações pelo app de Configurações. O Monitor do Sistema e o Agenda do GNOME são apps
@@ -108,6 +188,7 @@ pub fn open_shell(kind: &str) {
         (None, "quick-settings") => drop(spawn_detached("gnome-control-center", &[])),
         (_, "system-monitor") => drop(spawn_detached("gnome-system-monitor", &[])),
         (_, "calendar") => drop(spawn_detached("gnome-calendar", &[])),
+        (_, "bluetooth") => open_bluetooth_settings(),
         _ => {}
     }
 }
@@ -122,6 +203,37 @@ mod tests {
         assert_eq!(parse_volume_percent(out), Some(0.5));
         assert_eq!(parse_volume_percent("Volume: mono: 65536 / 100% / 0,00 dB"), Some(1.0));
         assert_eq!(parse_volume_percent("Failed"), None);
+    }
+
+    #[test]
+    fn reads_bluez_objects() {
+        let props = |pairs: &[(&str, OwnedValue)]| pairs.iter().map(|(k, v)| (k.to_string(), v.try_clone().unwrap())).collect();
+        let adapter: Interfaces = [("org.bluez.Adapter1".to_string(), props(&[("Powered", OwnedValue::from(true))]))].into();
+        let headset: Interfaces = [
+            (
+                "org.bluez.Device1".to_string(),
+                props(&[
+                    ("Connected", OwnedValue::from(true)),
+                    ("Alias", OwnedValue::try_from(zbus::zvariant::Value::from("WH-1000XM4")).unwrap()),
+                    ("Icon", OwnedValue::try_from(zbus::zvariant::Value::from("audio-headset")).unwrap()),
+                ]),
+            ),
+            ("org.bluez.Battery1".to_string(), props(&[("Percentage", OwnedValue::from(80u8))])),
+        ]
+        .into();
+        let paired: Interfaces = [("org.bluez.Device1".to_string(), props(&[("Connected", OwnedValue::from(false))]))].into();
+        let objects = vec![
+            ("/org/bluez/hci0".to_string(), adapter),
+            ("/org/bluez/hci0/dev_1".to_string(), headset),
+            ("/org/bluez/hci0/dev_2".to_string(), paired),
+        ];
+        let bt = bluetooth_from_objects(&objects);
+        assert!(bt.available && bt.powered);
+        assert_eq!(bt.devices.len(), 1);
+        assert_eq!(bt.devices[0].name, "WH-1000XM4");
+        assert_eq!(bt.devices[0].kind, "audio");
+        assert_eq!(bt.devices[0].battery, Some(80));
+        assert!(!bluetooth_from_objects(&[]).available);
     }
 
     #[test]

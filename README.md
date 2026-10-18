@@ -25,7 +25,7 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 - **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, and dividers.
 - **Media player:** Shows what's playing in Spotify, YouTube Music, and other players, with playback controls.
 - **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
-- **System widgets:** Network, volume, battery, clock, system usage (CPU and memory with the last minute of history), and, on Windows, the tray arrow that opens the hidden icons.
+- **System widgets:** Network, volume, Bluetooth (with connected devices), battery, clock, system usage (CPU and memory with the last minute of history), and, on Windows, the tray arrow that opens the hidden icons.
 - **Productivity widgets:** Weather, a Pomodoro timer, your next calendar event with a join button for video calls, and your Claude Code usage.
 - **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
 - **Automatic updates:** Pier checks for new versions and installs them in one click.
@@ -106,6 +106,7 @@ macOS has some limitations compared to Windows:
 - The native Dock can't be removed. Pier sets it to auto-hide with a very long reveal delay and restores your original preferences when it quits.
 - The media widget supports only Spotify and Music.
 - The Wi-Fi widget shows the network name only if Pier has Location permission.
+- The Bluetooth widget asks for Bluetooth permission the first time, can't turn Bluetooth on or off (macOS doesn't allow it), and doesn't show device battery levels.
 
 ### Linux
 

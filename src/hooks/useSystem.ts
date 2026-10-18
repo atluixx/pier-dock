@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ipc, type SystemStatus, type Volume } from "../lib/ipc";
+import { ipc, type BluetoothState, type SystemStatus, type Volume } from "../lib/ipc";
 
 export function useSystemStatus(): SystemStatus | null {
   const [status, setStatus] = useState<SystemStatus | null>(null);
@@ -25,6 +25,26 @@ export function useVolume(): [Volume | null, (patch: Partial<Volume>) => void] {
     ipc.setVolume(patch).catch(() => {});
   }, []);
   return [volume, update];
+}
+
+/** Só consulta com `enabled`: no macOS a primeira leitura pede a permissão de Bluetooth. */
+export function useBluetooth(enabled = true, intervalMs = 10_000): [BluetoothState | null, (powered: boolean) => void] {
+  const [state, setState] = useState<BluetoothState | null>(null);
+  const refresh = useCallback(() => ipc.bluetoothStatus().then(setState).catch(() => {}), []);
+  useEffect(() => {
+    if (!enabled) return;
+    refresh();
+    const id = setInterval(refresh, intervalMs);
+    return () => clearInterval(id);
+  }, [enabled, intervalMs, refresh]);
+  const setPowered = useCallback(
+    (powered: boolean) => {
+      setState((s) => (s ? { ...s, powered, devices: powered ? s.devices : [] } : s));
+      ipc.setBluetooth(powered).catch(console.error).finally(refresh);
+    },
+    [refresh],
+  );
+  return [state, setPowered];
 }
 
 export function useNow(intervalMs = 1000): Date {

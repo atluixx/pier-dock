@@ -149,6 +149,7 @@ impl Default for Config {
                 if cfg!(windows) { widget("tray", "small") } else { disabled("tray", "small") },
                 widget("network", "small"),
                 widget("volume", "small"),
+                widget("bluetooth", "small"),
                 widget("battery", "small"),
                 widget("clock", "small"),
                 disabled("weather", "wide"),
