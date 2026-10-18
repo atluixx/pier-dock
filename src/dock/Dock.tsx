@@ -88,7 +88,7 @@ export function Dock({ config }: { config: Config }) {
     return () => clearInterval(id);
   }, []);
 
-  const metrics = dockMetrics(config.iconSize, config.magnification, config.dockWidth === "full");
+  const metrics = dockMetrics(config.iconSize, config.magnification, config.dockWidth === "full", config.dockHeight);
   const apps = useMemo(
     () => buildDockApps(config.pinnedApps, snapshot.windows, config.showRunningUnpinned, installed),
     [config.pinnedApps, snapshot.windows, config.showRunningUnpinned, installed],
@@ -262,7 +262,12 @@ export function Dock({ config }: { config: Config }) {
         ref={barRef}
         className={`dock-bar ${config.dockWidth === "full" ? "dock-full" : ""} ${visible ? "" : "dock-hidden"}`}
         data-glass
-        style={{ bottom: config.dockWidth === "full" ? 0 : metrics.margin, height: metrics.barHeight, padding: `0 ${metrics.padding}px` }}
+        style={{
+          ["--dock-item-bottom" as string]: `${metrics.itemBottom}px`,
+          bottom: config.dockWidth === "full" ? 0 : metrics.margin,
+          height: metrics.barHeight,
+          padding: `0 ${metrics.padding}px`,
+        }}
         onMouseMove={(e) => mouseX.set(e.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}
         onPointerDown={onPointerDown}

@@ -312,6 +312,11 @@ export const en: Dict = {
     dockWidthFit: "Fit to icons",
     dockWidthFull: "Full width",
     dockWidthHint: "Full width stretches the bar from edge to edge, like a system panel.",
+    panelHeight: "Panel height",
+    panelAuto: "Automatic",
+    panelCustom: "Custom",
+    panelHeightHint:
+      "Automatic follows the icon size (icon + 24px). A custom height changes the bar alone: the icons keep their size and stay centred.",
     magnify: "Magnify icons on hover",
     magnification: "Magnification",
     showRunning: "Show open apps that aren't pinned",
