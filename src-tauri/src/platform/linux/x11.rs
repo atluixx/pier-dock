@@ -5,11 +5,15 @@ use std::sync::OnceLock;
 
 use x11rb::connection::Connection;
 use x11rb::protocol::xproto::{
-    AtomEnum, ChangeWindowAttributesAux, ClientMessageEvent, ConfigureWindowAux, ConnectionExt as _, EventMask, PropMode, Window,
+    AtomEnum, ChangeWindowAttributesAux, ClientMessageEvent, ConfigureWindowAux, ConnectionExt as _, EventMask, Keycode, Keysym,
+    PropMode, Window, KEY_PRESS_EVENT, KEY_RELEASE_EVENT,
 };
+use x11rb::protocol::xtest::ConnectionExt as _;
 use x11rb::protocol::Event;
 use x11rb::rust_connection::RustConnection;
 use x11rb::wrapper::ConnectionExt as _;
+
+const XK_SUPER_L: Keysym = 0xffeb;
 
 x11rb::atom_manager! {
     pub Atoms: AtomsCookie {
@@ -178,6 +182,22 @@ impl X11 {
         let _ = self.conn.flush();
     }
 
+    /// Toca a tecla Super pelo XTest. É o atalho do menu de apps no Cinnamon, MATE e Xfce, que não
+    /// têm uma chamada pública para abri-lo.
+    pub fn tap_super(&self) {
+        let setup = self.conn.setup();
+        let (min, max) = (setup.min_keycode, setup.max_keycode);
+        let Some(mapping) = self.conn.get_keyboard_mapping(min, (max - min).saturating_add(1)).ok().and_then(|c| c.reply().ok())
+        else {
+            return;
+        };
+        let Some(keycode) = keycode_for(XK_SUPER_L, min, mapping.keysyms_per_keycode, &mapping.keysyms) else { return };
+        for kind in [KEY_PRESS_EVENT, KEY_RELEASE_EVENT] {
+            let _ = self.conn.xtest_fake_input(kind, keycode, x11rb::CURRENT_TIME, x11rb::NONE, 0, 0, 0);
+        }
+        let _ = self.conn.flush();
+    }
+
     /// O KWin anuncia o efeito de blur pondo a propriedade na janela raiz.
     pub fn blur_supported(&self) -> bool {
         self.conn
@@ -207,6 +227,13 @@ impl X11 {
     }
 }
 
+/// Keycode de `keysym` no mapa do teclado, que traz `per_keycode` keysyms para cada keycode a partir
+/// de `min_keycode`.
+fn keycode_for(keysym: Keysym, min_keycode: Keycode, per_keycode: u8, keysyms: &[Keysym]) -> Option<Keycode> {
+    let index = keysyms.chunks(per_keycode.max(1) as usize).position(|syms| syms.contains(&keysym))?;
+    min_keycode.checked_add(u8::try_from(index).ok()?)
+}
+
 /// Chama `on_change` quando a lista de janelas, o foco, um título ou um estado mudam. Usa uma
 /// conexão própria, já que fica bloqueada esperando eventos.
 pub fn watch(on_change: fn()) {
@@ -233,4 +260,16 @@ pub fn watch(on_change: fn()) {
             }
         }
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn finds_super_keycode_in_mapping() {
+        let mapping = [0x61, 0x41, XK_SUPER_L, 0, 0xff1b, 0];
+        assert_eq!(keycode_for(XK_SUPER_L, 8, 2, &mapping), Some(9));
+        assert_eq!(keycode_for(0x62, 8, 2, &mapping), None);
+    }
 }

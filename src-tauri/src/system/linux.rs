@@ -4,7 +4,7 @@
 use std::path::Path;
 
 use super::{Battery, Network, Volume};
-use crate::platform::linux::{dbus, gnome_shell};
+use crate::platform::linux::{dbus, gnome_shell, x11};
 use crate::util::{run, spawn_detached};
 
 fn read(path: &Path) -> String {
@@ -92,13 +92,19 @@ pub fn set_volume(level: Option<f32>, muted: Option<bool>) -> Result<(), String>
 }
 
 /// Grade de apps, menu de configurações rápidas e calendário/notificações do GNOME. Sem a
-/// extensão, só as configurações têm equivalente (o app de Configurações). O Monitor do Sistema e
-/// o Agenda do GNOME são apps comuns.
+/// extensão, o menu de apps abre pela tecla Super (Cinnamon, MATE e Xfce, sessões X11) e as
+/// configurações pelo app de Configurações. O Monitor do Sistema e o Agenda do GNOME são apps
+/// comuns.
 pub fn open_shell(kind: &str) {
     match (gnome_shell::shell(), kind) {
         (Some(shell), "start") => drop(shell.show_apps()),
         (Some(shell), "quick-settings") => drop(shell.open_quick_settings()),
         (Some(shell), "notifications") => drop(shell.open_calendar()),
+        (None, "start") => {
+            if let Some(x11) = x11::get() {
+                x11.tap_super();
+            }
+        }
         (None, "quick-settings") => drop(spawn_detached("gnome-control-center", &[])),
         (_, "system-monitor") => drop(spawn_detached("gnome-system-monitor", &[])),
         (_, "calendar") => drop(spawn_detached("gnome-calendar", &[])),
