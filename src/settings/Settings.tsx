@@ -6,7 +6,7 @@ import { useConfig } from "../store/config";
 import { ActionFooter, type Action } from "../ui/ActionFooter";
 import { Logo } from "../ui/Logo";
 import { PlatformNotice } from "./PlatformNotice";
-import type { TabProps } from "./shared";
+import type { TabFooter, TabProps } from "./shared";
 import { AppsTab } from "./tabs/AppsTab";
 import { WidgetsTab } from "./tabs/WidgetsTab";
 import { AppearanceTab } from "./tabs/AppearanceTab";
@@ -33,6 +33,7 @@ export function Settings() {
   const t = useT();
   const [tab, setTab] = useState<TabId>("apps");
   const [platform, setPlatform] = useState<PlatformInfo | null>(null);
+  const [footer, setFooter] = useState<TabFooter | null>(null);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const refreshPlatform = () => void ipc.platformInfo().then(setPlatform).catch(() => {});
   useEffect(refreshPlatform, []);
@@ -48,7 +49,7 @@ export function Settings() {
     tabRefs.current[target.id]?.focus();
   };
 
-  const props: TabProps = { config, update: (p) => void update(p), platform };
+  const props: TabProps = { config, update: (p) => void update(p), platform, setFooter };
   const { Content } = TABS.find((t) => t.id === tab)!;
   const actions: Record<TabId, Action[]> = {
     apps: [{ label: t.dock.addDivider, onClick: () => update((c) => addDivider(c)) }],
@@ -91,7 +92,7 @@ export function Settings() {
       <main className="settings-main" id="settings-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
         <Content {...props} />
       </main>
-      <ActionFooter keyboard context={`Pier · ${OS_NAMES[os]}`} actions={actions[tab]} />
+      <ActionFooter keyboard context={footer?.context ?? `Pier · ${OS_NAMES[os]}`} actions={footer?.actions ?? actions[tab]} />
     </div>
   );
 }
