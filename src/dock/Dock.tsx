@@ -88,7 +88,7 @@ export function Dock({ config }: { config: Config }) {
     return () => clearInterval(id);
   }, []);
 
-  const metrics = dockMetrics(config.iconSize, config.magnification);
+  const metrics = dockMetrics(config.iconSize, config.magnification, config.dockWidth === "full");
   const apps = useMemo(
     () => buildDockApps(config.pinnedApps, snapshot.windows, config.showRunningUnpinned, installed),
     [config.pinnedApps, snapshot.windows, config.showRunningUnpinned, installed],
