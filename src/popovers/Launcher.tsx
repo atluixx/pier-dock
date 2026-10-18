@@ -6,7 +6,7 @@ import { iconKeyForEntry } from "../dock/apps";
 import { useIcon } from "../hooks/useIcon";
 import { useConfig } from "../store/config";
 import { useT } from "../i18n";
-import { filterApps } from "./launcher";
+import { filterApps } from "./launcherSearch";
 
 function AppIcon({ app }: { app: AppEntry }) {
   const src = useIcon(iconKeyForEntry(app));

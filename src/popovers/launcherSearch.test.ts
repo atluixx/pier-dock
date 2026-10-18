@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { filterApps } from "./launcher.ts";
+import { filterApps } from "./launcherSearch.ts";
 
 const app = (name: string) => ({ id: name.toLowerCase(), name, target: `/usr/share/applications/${name}.desktop` });
 
