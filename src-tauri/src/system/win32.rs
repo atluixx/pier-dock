@@ -13,7 +13,8 @@ use windows::Win32::Media::Audio::{eConsole, eRender, IMMDeviceEnumerator, MMDev
 use windows::Win32::Foundation::{HWND, LPARAM, RECT, WPARAM};
 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL, CLSCTX_INPROC_SERVER};
 use windows::Win32::UI::Accessibility::{
-    CUIAutomation, IUIAutomation, IUIAutomationInvokePattern, TreeScope_Descendants, UIA_AutomationIdPropertyId, UIA_InvokePatternId,
+    CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationInvokePattern, TreeScope_Descendants, UIA_AutomationIdPropertyId,
+    UIA_ClassNamePropertyId, UIA_InvokePatternId,
 };
 use windows::core::{w, HSTRING, PCWSTR, VARIANT};
 use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
@@ -184,26 +185,38 @@ fn tray_overflow() -> Option<HWND> {
         .find(|&h| !h.is_invalid() && unsafe { IsWindowVisible(h) }.as_bool())
 }
 
-fn wait_tray_overflow() -> Option<HWND> {
-    for _ in 0..20 {
-        if let Some(h) = tray_overflow() {
-            return Some(h);
+/// Repete `f` a cada 25 ms até ela devolver algo ou o tempo acabar.
+fn poll<T>(timeout: Duration, mut f: impl FnMut() -> Option<T>) -> Option<T> {
+    let deadline = Instant::now() + timeout;
+    loop {
+        if let Some(value) = f() {
+            return Some(value);
+        }
+        if Instant::now() >= deadline {
+            return None;
         }
         std::thread::sleep(Duration::from_millis(25));
     }
-    None
 }
 
-/// Windows 11: a seta é um botão XAML da taskbar, só alcançável pela UI Automation.
-fn invoke_tray_chevron() -> windows::core::Result<()> {
+/// Windows 11: a seta é um botão XAML da taskbar, só alcançável pela UI Automation. O id
+/// `SystemTrayIcon` se repete na rede, volume, relógio e indicador de idioma; a seta é o primeiro
+/// `SystemTray.NormalButton` com ele (o indicador de idioma tem a mesma classe, mas vem depois).
+fn find_tray_chevron() -> windows::core::Result<IUIAutomationElement> {
     com_init();
     unsafe {
         let taskbar = FindWindowW(w!("Shell_TrayWnd"), PCWSTR::null())?;
         let automation: IUIAutomation = CoCreateInstance(&CUIAutomation, None, CLSCTX_INPROC_SERVER)?;
-        let condition = automation.CreatePropertyCondition(UIA_AutomationIdPropertyId, &VARIANT::from("SystemTrayIcon"))?;
-        let chevron = automation.ElementFromHandle(taskbar)?.FindFirst(TreeScope_Descendants, &condition)?;
-        chevron.GetCurrentPatternAs::<IUIAutomationInvokePattern>(UIA_InvokePatternId)?.Invoke()
+        let condition = automation.CreateAndCondition(
+            &automation.CreatePropertyCondition(UIA_AutomationIdPropertyId, &VARIANT::from("SystemTrayIcon"))?,
+            &automation.CreatePropertyCondition(UIA_ClassNamePropertyId, &VARIANT::from("SystemTray.NormalButton"))?,
+        )?;
+        automation.ElementFromHandle(taskbar)?.FindFirst(TreeScope_Descendants, &condition)
     }
+}
+
+fn invoke(element: &IUIAutomationElement) -> windows::core::Result<()> {
+    unsafe { element.GetCurrentPatternAs::<IUIAutomationInvokePattern>(UIA_InvokePatternId)?.Invoke() }
 }
 
 /// Windows 10: a seta é um `Button` Win32 dentro da área de notificação.
@@ -217,8 +230,26 @@ fn click_tray_chevron_win10() -> windows::core::Result<()> {
     Ok(())
 }
 
-fn click_tray_chevron() -> bool {
-    invoke_tray_chevron().is_ok() || click_tray_chevron_win10().is_ok()
+fn click_tray_chevron() -> windows::core::Result<()> {
+    find_tray_chevron().and_then(|chevron| invoke(&chevron)).or_else(|_| click_tray_chevron_win10())
+}
+
+/// Clica na seta e espera a gaveta aparecer.
+fn show_tray_overflow() -> Option<HWND> {
+    // Logo depois de a taskbar reaparecer a árvore de UI Automation ainda está vazia; a seta surge
+    // em poucos milissegundos.
+    if let Some(chevron) = poll(Duration::from_millis(300), || find_tray_chevron().ok()) {
+        invoke(&chevron).ok()?;
+        let overflow = poll(Duration::from_secs(1), tray_overflow);
+        if overflow.is_none() {
+            // Sem ícones ocultos o Windows tira a seta, e o botão encontrado é o indicador de
+            // idioma: o segundo clique fecha o que ele abriu.
+            let _ = invoke(&chevron);
+        }
+        return overflow;
+    }
+    click_tray_chevron_win10().ok()?;
+    poll(Duration::from_secs(1), tray_overflow)
 }
 
 /// Abre a gaveta de ícones ocultos centrada em `anchor_x`, com a base em `bottom` (pixels
@@ -231,15 +262,12 @@ pub fn open_tray(anchor_x: i32, bottom: i32) -> Result<(), String> {
         return Ok(());
     }
     if tray_overflow().is_some() {
-        click_tray_chevron();
+        let _ = click_tray_chevron();
         return Ok(());
     }
-    let mut overflow = if click_tray_chevron() { wait_tray_overflow() } else { None };
-    if overflow.is_none() {
-        crate::taskbar::show_for_tray(true);
-        overflow = if click_tray_chevron() { wait_tray_overflow() } else { None };
-    }
-    let Some(overflow) = overflow else {
+    // Escondida pelo Pier (`SW_HIDE`), a taskbar não expõe nenhum elemento à UI Automation.
+    crate::taskbar::show_for_tray(true);
+    let Some(overflow) = show_tray_overflow() else {
         crate::taskbar::show_for_tray(false);
         return Err("não foi possível abrir a bandeja".into());
     };
