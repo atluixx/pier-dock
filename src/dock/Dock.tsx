@@ -20,14 +20,7 @@ import { MagnifyCtx } from "./Magnify";
 import { AppIcon } from "./AppIcon";
 import { SortableItem } from "./SortableItem";
 import { addDivider, applyOrder, isDivider, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
-import { MediaWidget } from "../widgets/MediaWidget";
-import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../widgets/GithubWidgets";
-import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "../widgets/SystemWidgets";
-import { WeatherWidget } from "../widgets/WeatherWidget";
-import { PomodoroWidget } from "../widgets/PomodoroWidget";
-import { UsageWidget } from "../widgets/UsageWidget";
-import { CalendarWidget } from "../widgets/CalendarWidget";
-import { ClaudeWidget } from "../widgets/ClaudeWidget";
+import { WidgetView, type WidgetData } from "../widgets/WidgetView";
 import { useWeather } from "../hooks/useWeather";
 import { useCalendar } from "../hooks/useCalendar";
 import { useClaudeUsage } from "../hooks/useClaudeUsage";
@@ -221,43 +214,17 @@ export function Dock({ config }: { config: Config }) {
     await menu.popup();
   };
 
-  const renderWidget = (w: WidgetConfig) => {
-    const wide = w.size === "wide";
-    switch (w.kind) {
-      case "media":
-        return <MediaWidget media={media} wide={wide} />;
-      case "github-review":
-        return <GithubReviewWidget data={github} />;
-      case "github-mine":
-        return <GithubMineWidget data={github} />;
-      case "github-commits":
-        return <GithubCommitsWidget data={github} />;
-      case "github-contrib":
-        return <ContributionsWidget data={github} wide={wide} />;
-      case "tray":
-        return <TrayWidget />;
-      case "network":
-        return <NetworkWidget status={system} />;
-      case "volume":
-        return <VolumeWidget />;
-      case "bluetooth":
-        return <BluetoothWidget bluetooth={bluetooth} />;
-      case "battery":
-        return <BatteryWidget status={system} />;
-      case "clock":
-        return <ClockWidget />;
-      case "weather":
-        return <WeatherWidget data={weather} wide={wide} configured={!!config.weatherLocation} />;
-      case "pomodoro":
-        return <PomodoroWidget wide={wide} />;
-      case "system-usage":
-        return <UsageWidget wide={wide} />;
-      case "calendar":
-        return <CalendarWidget data={calendar} wide={wide} />;
-      case "claude-usage":
-        return <ClaudeWidget data={claude} wide={wide} />;
-    }
+  const widgetData: WidgetData = {
+    media,
+    github,
+    system,
+    bluetooth,
+    weather,
+    weatherConfigured: !!config.weatherLocation,
+    calendar,
+    claude,
   };
+  const renderWidget = (w: WidgetConfig) => <WidgetView kind={w.kind} wide={w.size === "wide"} data={widgetData} />;
 
   const pinnedApps = new Map(apps.filter((a) => a.pinned).map((a) => [a.key, a]));
   const unpinnedApps = apps.filter((a) => !a.pinned);

@@ -236,10 +236,6 @@ html[data-view="settings"][data-material="solid"] {
   border-right: 1px solid var(--border-subtle);
 }
 
-.split-list.narrow {
-  width: 420px;
-}
-
 .split-list.form {
   width: 480px;
   gap: 18px;
@@ -353,11 +349,6 @@ button.list-item:is(:hover, [data-hover]),
   padding: 0 6px 0 10px;
 }
 
-.list-item.tall {
-  height: 48px;
-  padding: 0 10px 0 0;
-}
-
 .list-item-select {
   flex: 1;
   min-width: 0;
@@ -427,16 +418,6 @@ button.list-item:is(:hover, [data-hover]),
   width: 56px;
   height: 56px;
   border-radius: 14px;
-}
-
-.widget-glyph {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border-radius: 7px;
-  background: var(--fill-hover);
-  display: grid;
-  place-items: center;
 }
 
 /* Detalhe do item selecionado */
@@ -658,14 +639,6 @@ input[type="range"] {
     radial-gradient(circle at 70% 85%, var(--stage-navy), transparent 50%),
     radial-gradient(circle at 85% 15%, var(--stage-teal), transparent 35%),
     var(--stage-base);
-}
-
-.preview-stage.small {
-  flex: none;
-  height: 120px;
-  min-height: 0;
-  align-items: center;
-  padding: 0;
 }
 
 .preview-label {
@@ -914,4 +887,294 @@ input[type="range"] {
   flex: none;
   width: 72px;
   text-align: right;
+}
+
+/* Galeria de widgets */
+.widget-gallery {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gallery-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px 14px;
+}
+
+.gallery-search {
+  flex: 0 1 320px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: var(--fill);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.gallery-search:focus-within {
+  border-color: var(--accent);
+}
+
+.gallery-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.gallery-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.gallery-hint {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gallery-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 24px 24px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.gallery-empty {
+  padding: 60px 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.widget-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  background: var(--fill-subtle);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.widget-card:focus-within {
+  border-color: var(--border-strong);
+}
+
+.widget-card.off {
+  border-color: var(--border-subtle);
+}
+
+/* O palco imita o papel de parede atrás da dock, com as duas cores de cada widget. */
+.widget-stage {
+  position: relative;
+  height: 104px;
+  display: flex;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 0%, var(--tint-a), transparent 60%),
+    radial-gradient(circle at 90% 110%, var(--tint-b), transparent 60%),
+    var(--stage-base);
+}
+
+.widget-stage.large {
+  height: 150px;
+  margin: 16px 20px 0;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+}
+
+.widget-card.off .widget-stage .fit-scale {
+  opacity: 0.4;
+  filter: grayscale(0.6);
+}
+
+.widget-stage-note {
+  margin: auto;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.fit-scale {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  transition: opacity 0.15s ease;
+}
+
+.widget-stage.large .fit-scale {
+  padding: 28px 24px 16px;
+}
+
+.fit-scale-content {
+  width: max-content;
+  transform-origin: 0 0;
+}
+
+.widget-pills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.widget-pill {
+  height: auto;
+  padding: 4px;
+}
+
+.widget-card-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px 0;
+}
+
+.widget-card-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.widget-card-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.widget-card-group {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.widget-card-summary {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.widget-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 10px 14px;
+}
+
+.widget-card-state {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.widget-card.off .widget-card-state {
+  color: var(--text-secondary);
+}
+
+.widget-card-configure {
+  margin-left: auto;
+}
+
+/* Modal de configuração de um widget */
+.widget-dialog {
+  width: min(600px, calc(100vw - 48px));
+  max-height: min(660px, calc(100vh - 48px));
+  padding: 0;
+  border-radius: var(--radius-window);
+  background: var(--surface-raised);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), 0 40px 100px rgba(0, 0, 0, 0.6);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.widget-dialog[open] {
+  display: flex;
+}
+
+.widget-dialog::backdrop {
+  background: rgba(8, 8, 10, 0.55);
+}
+
+.widget-dialog-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-dialog-header {
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 0 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.widget-dialog-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.widget-dialog-close {
+  margin-left: auto;
+}
+
+.widget-dialog-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px;
+}
+
+.widget-dialog-description {
+  margin: 14px 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.widget-dialog-body > .card {
+  margin: 0 20px;
+}
+
+.widget-dialog-footer {
+  height: 60px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 0 20px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--fill-header);
+  font-size: 13px;
+}
+
+.widget-dialog-footer .btn {
+  margin-left: auto;
 }

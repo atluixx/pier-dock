@@ -1,197 +1,326 @@
-import { useState } from "react";
-import {
-  ArrowDown,
-  ArrowUp,
-  BatteryMedium,
-  Bluetooth,
-  CalendarDays,
-  ChevronUp,
-  Asterisk,
-  Clock,
-  CloudSun,
-  Cpu,
-  GitCommitHorizontal,
-  GitCompare,
-  GitPullRequest,
-  LayoutGrid,
-  Music,
-  Timer,
-  Volume2,
-  Wifi,
-  type LucideIcon,
-} from "lucide-react";
-import type { WidgetConfig, WidgetKind } from "../../lib/ipc";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { ArrowDown, ArrowUp, Search, Settings, X } from "lucide-react";
+import type { BluetoothState, WidgetConfig, WidgetKind } from "../../lib/ipc";
 import { os, widgetSupported } from "../../lib/platform";
 import { moveAmong, widgetKey } from "../../dock/order";
 import { useGithub } from "../../hooks/useGithub";
 import { useMedia } from "../../hooks/useMedia";
 import { useBluetooth, useSystemStatus } from "../../hooks/useSystem";
-import { MediaWidget } from "../../widgets/MediaWidget";
-import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../../widgets/GithubWidgets";
-import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "../../widgets/SystemWidgets";
-import { WeatherWidget } from "../../widgets/WeatherWidget";
-import { PomodoroWidget } from "../../widgets/PomodoroWidget";
-import { UsageWidget } from "../../widgets/UsageWidget";
-import { CalendarWidget } from "../../widgets/CalendarWidget";
-import { ClaudeWidget } from "../../widgets/ClaudeWidget";
 import { useWeather } from "../../hooks/useWeather";
 import { useCalendar } from "../../hooks/useCalendar";
 import { useClaudeUsage } from "../../hooks/useClaudeUsage";
+import { RESIZABLE, WidgetView, type WidgetData } from "../../widgets/WidgetView";
 import { CalendarOptions, PomodoroOptions, WeatherOptions } from "./WidgetOptions";
-import { Card, Row, SectionLabel } from "../../ui/Card";
+import { Card, Row } from "../../ui/Card";
 import { Segmented } from "../../ui/Segmented";
 import { Switch } from "../../ui/Switch";
 import type { TabProps } from "../shared";
-import { useT, type Dict } from "../../i18n";
+import { dict, useT, type Dict } from "../../i18n";
 
 type Group = keyof Dict["widgets"]["groups"];
 
-/** Grupo e ícone de cada widget; nome e descrição vêm do dicionário (`widgets.info`). */
-const WIDGETS: Record<WidgetKind, { group: Group; Icon: LucideIcon }> = {
-  media: { group: "nowPlaying", Icon: Music },
-  "github-mine": { group: "github", Icon: GitPullRequest },
-  "github-review": { group: "github", Icon: GitCompare },
-  "github-commits": { group: "github", Icon: GitCommitHorizontal },
-  "github-contrib": { group: "github", Icon: LayoutGrid },
-  tray: { group: "system", Icon: ChevronUp },
-  network: { group: "system", Icon: Wifi },
-  volume: { group: "system", Icon: Volume2 },
-  bluetooth: { group: "system", Icon: Bluetooth },
-  battery: { group: "system", Icon: BatteryMedium },
-  clock: { group: "system", Icon: Clock },
-  weather: { group: "productivity", Icon: CloudSun },
-  pomodoro: { group: "productivity", Icon: Timer },
-  "system-usage": { group: "system", Icon: Cpu },
-  calendar: { group: "productivity", Icon: CalendarDays },
-  "claude-usage": { group: "productivity", Icon: Asterisk },
+/** Grupo e as duas cores de fundo do palco de cada widget; nome e textos vêm do dicionário. */
+const WIDGETS: Record<WidgetKind, { group: Group; tint: [string, string] }> = {
+  media: { group: "nowPlaying", tint: ["#1F6B3A", "#3A2A12"] },
+  "github-mine": { group: "github", tint: ["#1E2A22", "#20242C"] },
+  "github-review": { group: "github", tint: ["#3A1A1E", "#20242C"] },
+  "github-commits": { group: "github", tint: ["#1E2A3A", "#20242C"] },
+  "github-contrib": { group: "github", tint: ["#14432A", "#20242C"] },
+  tray: { group: "system", tint: ["#2A2A3A", "#1E2A4A"] },
+  network: { group: "system", tint: ["#1E2A4A", "#20242C"] },
+  volume: { group: "system", tint: ["#2A2A3A", "#20242C"] },
+  bluetooth: { group: "system", tint: ["#1E3A6A", "#20242C"] },
+  battery: { group: "system", tint: ["#1E3A2A", "#20242C"] },
+  clock: { group: "system", tint: ["#2A2A3A", "#3A1E2A"] },
+  weather: { group: "productivity", tint: ["#1E3A6A", "#6A4A12"] },
+  pomodoro: { group: "productivity", tint: ["#6A1E22", "#3A1A2A"] },
+  "system-usage": { group: "system", tint: ["#3A1E6A", "#1E2A4A"] },
+  calendar: { group: "productivity", tint: ["#1E2A6A", "#2A1E5A"] },
+  "claude-usage": { group: "productivity", tint: ["#5A2E1E", "#20242C"] },
 };
 
-const RESIZABLE = new Set<WidgetKind>(["media", "github-contrib", "weather", "pomodoro", "system-usage", "calendar", "claude-usage"]);
 const isWidget = (key: string) => key.startsWith("widget:");
 
-/** O widget de verdade, com os dados atuais, mas sem reagir ao mouse. */
-function Preview({ widget, configured }: { widget: WidgetConfig; configured: boolean }) {
-  const media = useMedia();
-  const github = useGithub();
-  const system = useSystemStatus();
-  const [bluetooth] = useBluetooth(widget.kind === "bluetooth");
-  const weather = useWeather();
-  const calendar = useCalendar();
-  const claude = useClaudeUsage();
-  const wide = widget.size === "wide";
-  const t = useT();
-  const content = {
-    media: <MediaWidget media={media} wide={wide} />,
-    "github-mine": <GithubMineWidget data={github} />,
-    "github-review": <GithubReviewWidget data={github} />,
-    "github-commits": <GithubCommitsWidget data={github} />,
-    "github-contrib": <ContributionsWidget data={github} wide={wide} />,
-    tray: <TrayWidget />,
-    network: <NetworkWidget status={system} />,
-    volume: <VolumeWidget />,
-    bluetooth: <BluetoothWidget bluetooth={bluetooth} />,
-    battery: <BatteryWidget status={system} />,
-    clock: <ClockWidget />,
-    weather: <WeatherWidget data={weather} wide={wide} configured={configured} />,
-    pomodoro: <PomodoroWidget wide={wide} />,
-    "system-usage": <UsageWidget wide={wide} />,
-    calendar: <CalendarWidget data={calendar} wide={wide} />,
-    "claude-usage": <ClaudeWidget data={claude} wide={wide} />,
-  }[widget.kind];
+/** Com o widget desligado o Bluetooth não é consultado (no macOS isso pede permissão). */
+const SAMPLE_BLUETOOTH: BluetoothState = { available: true, powered: true, canToggle: false, devices: [] };
+
+const tintStyle = (kind: WidgetKind) => {
+  const [a, b] = WIDGETS[kind].tint;
+  return { "--tint-a": a, "--tint-b": b } as CSSProperties;
+};
+
+/** O widget só aparece onde o sistema tem o recurso (bateria, adaptador Bluetooth). */
+function available(kind: WidgetKind, data: WidgetData): boolean {
+  if (kind === "battery") return data.system?.battery.present ?? true;
+  if (kind === "bluetooth") return data.bluetooth?.available ?? true;
+  return true;
+}
+
+/** Reduz o conteúdo para caber no espaço disponível, sem passar de `max`. */
+function FitScale({ max = 1, children }: { max?: number; children: ReactNode }) {
+  const outer = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState({ scale: 1, width: 0, height: 0 });
+  useLayoutEffect(() => {
+    const o = outer.current!;
+    const i = inner.current!;
+    const measure = () => {
+      // offsetWidth/Height ignoram o transform: é o tamanho natural do widget.
+      const width = i.offsetWidth;
+      const height = i.offsetHeight;
+      if (!width || !height) return;
+      const style = getComputedStyle(o);
+      const room = (size: number, a: string, b: string) => size - parseFloat(a) - parseFloat(b);
+      const roomX = room(o.clientWidth, style.paddingLeft, style.paddingRight);
+      const roomY = room(o.clientHeight, style.paddingTop, style.paddingBottom);
+      setFit({ scale: Math.min(max, roomX / width, roomY / height), width, height });
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(o);
+    observer.observe(i);
+    measure();
+    return () => observer.disconnect();
+  }, [max]);
   return (
-    <div className="preview-stage small" aria-hidden>
-      <span className="preview-label">{t.widgets.preview}</span>
-      <div className="preview-bar" data-glass>
-        {content}
+    <div ref={outer} className="fit-scale">
+      <div style={{ width: fit.width * fit.scale, height: fit.height * fit.scale }}>
+        <div ref={inner} className="fit-scale-content" style={{ transform: `scale(${fit.scale})` }}>
+          {children}
+        </div>
       </div>
     </div>
   );
 }
 
-export function WidgetsTab({ config, update }: TabProps) {
-  const [selected, setSelected] = useState<WidgetKind>(config.widgets[0]?.kind ?? "media");
-  const widget = config.widgets.find((w) => w.kind === selected) ?? config.widgets[0];
-  const enabled = config.widgets.filter((w) => w.enabled);
+/** Palco com o widget de verdade, em vidro como na dock, mas inerte (não abre painel nem pega foco). */
+function Stage({ kind, sizes, data, large }: { kind: WidgetKind; sizes: boolean[]; data: WidgetData; large?: boolean }) {
+  const t = useT().widgets;
+  return (
+    <div className={`widget-stage ${large ? "large" : ""}`} style={tintStyle(kind)} aria-hidden ref={(el) => el && (el.inert = true)}>
+      {large && <span className="preview-label">{t.preview}</span>}
+      {available(kind, data) ? (
+        <FitScale max={large ? 1.6 : 1}>
+          <div className="widget-pills">
+            {sizes.map((wide) => (
+              <div key={String(wide)} className="preview-bar widget-pill" data-glass>
+                <WidgetView kind={kind} wide={wide} data={data} />
+              </div>
+            ))}
+          </div>
+        </FitScale>
+      ) : (
+        <span className="widget-stage-note">{t.unavailable}</span>
+      )}
+    </div>
+  );
+}
 
-  const set = (kind: WidgetKind, patch: Partial<WidgetConfig>) =>
-    update((c) => ({ widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, ...patch } : w)) }));
+interface WidgetActions {
+  toggle: (kind: WidgetKind) => void;
+  set: (kind: WidgetKind, patch: Partial<WidgetConfig>) => void;
+}
+
+function WidgetCard({ widget, data, actions, onConfigure }: { widget: WidgetConfig; data: WidgetData; actions: WidgetActions; onConfigure: () => void }) {
+  const t = useT().widgets;
+  const info = t.info[widget.kind];
+  const sizes = RESIZABLE.has(widget.kind) ? [true, false] : [widget.size === "wide"];
+  return (
+    <article className={`widget-card ${widget.enabled ? "" : "off"}`} data-kind={widget.kind} aria-label={info.name}>
+      <Stage kind={widget.kind} sizes={sizes} data={data} />
+      <div className="widget-card-text">
+        <span className="widget-card-title">
+          <span className="widget-card-name">{info.name}</span>
+          <span className="widget-card-group">{t.groups[WIDGETS[widget.kind].group]}</span>
+        </span>
+        <span className="widget-card-summary">{info.summary}</span>
+      </div>
+      <div className="widget-card-actions">
+        <Switch checked={widget.enabled} label={t.show(info.name)} onChange={() => actions.toggle(widget.kind)} />
+        <span className="widget-card-state" aria-hidden>
+          {widget.enabled ? t.stateOn : t.stateOff}
+        </span>
+        <button className="icon-button bordered widget-card-configure" aria-label={t.configure(info.name)} onClick={onConfigure}>
+          <Settings size={15} />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function WidgetDialog({
+  widget,
+  data,
+  actions,
+  config,
+  update,
+  onClose,
+}: { widget: WidgetConfig; data: WidgetData; actions: WidgetActions; onClose: () => void } & Pick<TabProps, "config" | "update">) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const { widgets: t, common } = useT();
+  const info = t.info[widget.kind];
+  useEffect(() => {
+    if (!ref.current?.open) ref.current?.showModal();
+  }, []);
+
+  const enabled = config.widgets.filter((w) => w.enabled && widgetSupported(w.kind));
+  const position = enabled.findIndex((w) => w.kind === widget.kind) + 1;
   const move = (delta: -1 | 1) => {
     const patch = moveAmong(config, widgetKey(widget.kind), delta, isWidget);
     if (patch) update(patch);
   };
-  const position = enabled.findIndex((w) => w.kind === widget.kind) + 1;
-  const { widgets: t, common } = useT();
-  const info = t.info[widget.kind];
+  const close = () => ref.current?.close();
 
   return (
-    <div className="split">
-      <div className="split-list narrow">
-        <div className="list-scroll">
-          <SectionLabel>Widgets</SectionLabel>
-          {config.widgets.filter((w) => widgetSupported(w.kind)).map((w) => {
-            const { group, Icon } = WIDGETS[w.kind];
-            const { name } = t.info[w.kind];
-            return (
-              <div key={w.kind} className="list-item tall" aria-current={w.kind === widget.kind}>
-                <button className="list-item-select" onClick={() => setSelected(w.kind)}>
-                  <span className="widget-glyph" aria-hidden>
-                    <Icon size={16} strokeWidth={1.8} />
-                  </span>
-                  <span className="list-item-text">
-                    <span className="list-item-name">{name}</span>
-                    <span className="list-item-sub">{t.groups[group]}</span>
-                  </span>
+    <dialog
+      ref={ref}
+      className="widget-dialog"
+      aria-labelledby="widget-dialog-title"
+      onClose={onClose}
+      // O clique fora do conteúdo cai no próprio <dialog> (o fundo escurecido).
+      onClick={(e) => e.target === ref.current && close()}
+    >
+      <div className="widget-dialog-content">
+        <header className="widget-dialog-header">
+          <span id="widget-dialog-title" className="widget-dialog-name">
+            {info.name}
+          </span>
+          <span className="widget-card-group">{t.groups[WIDGETS[widget.kind].group]}</span>
+          <button className="icon-button widget-dialog-close" aria-label={t.close} onClick={close}>
+            <X size={16} />
+          </button>
+        </header>
+        <div className="widget-dialog-body">
+          <Stage kind={widget.kind} sizes={[widget.size === "wide"]} data={data} large />
+          <p className="widget-dialog-description">{info.description}</p>
+          <Card>
+            {RESIZABLE.has(widget.kind) && (
+              <Row label={t.format}>
+                <Segmented
+                  label={t.format}
+                  value={widget.size}
+                  onChange={(size) => actions.set(widget.kind, { size })}
+                  options={[
+                    { value: "wide", label: t.formatWide },
+                    { value: "small", label: t.formatSquare },
+                  ]}
+                />
+              </Row>
+            )}
+            {widget.kind === "media" && (
+              <Row label={t.source} description={t.mediaSource[os]}>
+                <span className="row-value">{t.automatic}</span>
+              </Row>
+            )}
+            {widget.kind === "weather" && <WeatherOptions config={config} update={update} />}
+            {widget.kind === "pomodoro" && <PomodoroOptions config={config} update={update} />}
+            {widget.kind === "calendar" && <CalendarOptions />}
+            {widget.enabled && (
+              <Row label={t.position} description={common.dragInDock}>
+                <span className="row-value">{common.positionOf(position, enabled.length)}</span>
+                <button className="icon-button bordered" aria-label={common.moveUp} disabled={position <= 1} onClick={() => move(-1)}>
+                  <ArrowUp size={16} />
                 </button>
-                <Switch checked={w.enabled} label={t.show(name)} onChange={(on) => set(w.kind, { enabled: on })} />
-              </div>
-            );
-          })}
+                <button className="icon-button bordered" aria-label={common.moveDown} disabled={position >= enabled.length} onClick={() => move(1)}>
+                  <ArrowDown size={16} />
+                </button>
+              </Row>
+            )}
+          </Card>
         </div>
+        <footer className="widget-dialog-footer">
+          <Switch checked={widget.enabled} label={t.show(info.name)} onChange={() => actions.toggle(widget.kind)} />
+          <span aria-hidden>{t.showInDock}</span>
+          <button className="btn btn-primary" onClick={close}>
+            {t.done}
+          </button>
+        </footer>
       </div>
-      <div className="split-detail">
-        <div className="detail-title">
-          <span className="detail-name">{info.name}</span>
-          <span className="detail-description">{info.description}</span>
-        </div>
-        <Preview widget={widget} configured={!!config.weatherLocation} />
-        <Card>
-          <Row label={t.showInDock}>
-            <Switch checked={widget.enabled} label={t.show(info.name)} onChange={(on) => set(widget.kind, { enabled: on })} />
-          </Row>
-          {widget.kind === "media" && (
-            <Row label={t.source} description={t.mediaSource[os]}>
-              <span className="row-value">{t.automatic}</span>
-            </Row>
-          )}
-          {widget.kind === "weather" && <WeatherOptions config={config} update={update} />}
-          {widget.kind === "pomodoro" && <PomodoroOptions config={config} update={update} />}
-          {widget.kind === "calendar" && <CalendarOptions />}
-          {RESIZABLE.has(widget.kind) && (
-            <Row label={t.width}>
-              <Segmented
-                label={t.width}
-                value={widget.size}
-                onChange={(size) => set(widget.kind, { size })}
-                options={[
-                  { value: "small", label: t.compact },
-                  { value: "wide", label: t.wide },
-                ]}
-              />
-            </Row>
-          )}
-          {widget.enabled && (
-            <Row label={t.position} description={common.dragInDock}>
-              <span className="row-value">{common.positionOf(position, enabled.length)}</span>
-              <button className="icon-button bordered" aria-label={common.moveUp} disabled={position <= 1} onClick={() => move(-1)}>
-                <ArrowUp size={16} />
-              </button>
-              <button className="icon-button bordered" aria-label={common.moveDown} disabled={position >= enabled.length} onClick={() => move(1)}>
-                <ArrowDown size={16} />
-              </button>
-            </Row>
-          )}
-        </Card>
+    </dialog>
+  );
+}
+
+/** Roda `f` com o widget do card que está com o foco do teclado, para os atalhos do rodapé. */
+function withFocused(f: (kind: WidgetKind) => void) {
+  const kind = document.activeElement?.closest<HTMLElement>(".widget-card")?.dataset.kind;
+  if (kind) f(kind as WidgetKind);
+}
+
+export function WidgetsTab({ config, update, setFooter }: TabProps) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState<WidgetKind | null>(null);
+  const t = useT().widgets;
+
+  const enabled = (kind: WidgetKind) => config.widgets.some((w) => w.kind === kind && w.enabled);
+  const [bluetooth] = useBluetooth(enabled("bluetooth"));
+  const data: WidgetData = {
+    media: useMedia(),
+    github: useGithub(),
+    system: useSystemStatus(),
+    bluetooth: enabled("bluetooth") ? bluetooth : SAMPLE_BLUETOOTH,
+    weather: useWeather(),
+    weatherConfigured: !!config.weatherLocation,
+    calendar: useCalendar(),
+    claude: useClaudeUsage(),
+  };
+
+  const actions: WidgetActions = {
+    toggle: (kind) => update((c) => ({ widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, enabled: !w.enabled } : w)) })),
+    set: (kind, patch) => update((c) => ({ widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, ...patch } : w)) })),
+  };
+
+  const supported = config.widgets.filter((w) => widgetSupported(w.kind));
+  const active = supported.filter((w) => w.enabled).length;
+  const q = query.trim().toLowerCase();
+  const visible = supported.filter((w) => {
+    if (!q) return true;
+    const info = t.info[w.kind];
+    return `${info.name} ${t.groups[WIDGETS[w.kind].group]}`.toLowerCase().includes(q);
+  });
+
+  useEffect(() => {
+    const context = t.footer(supported.length, active);
+    if (open) {
+      setFooter({ context, actions: [] });
+      return;
+    }
+    setFooter({
+      context,
+      actions: [
+        { label: t.toggleAction, keys: dict().keys.space, onClick: () => withFocused(actions.toggle) },
+        { label: t.configureAction, keys: "↵", onClick: () => withFocused(setOpen) },
+      ],
+    });
+    // `actions` só repassa ao `update` do store, que não muda; o rodapé depende só destes valores.
+  }, [open, supported.length, active, t]);
+  useEffect(() => () => setFooter(null), [setFooter]);
+
+  const openWidget = open && config.widgets.find((w) => w.kind === open);
+
+  return (
+    <div className="widget-gallery">
+      <div className="gallery-toolbar">
+        <label className="gallery-search">
+          <Search size={15} aria-hidden />
+          <span className="visually-hidden">{t.search}</span>
+          <input placeholder={t.searchPlaceholder} value={query} onChange={(e) => setQuery(e.target.value)} />
+        </label>
+        <span className="gallery-count">{t.inDock(active, supported.length)}</span>
+        <span className="gallery-hint">{t.dragHint}</span>
       </div>
+      <div className="gallery-scroll">
+        {visible.length ? (
+          <div className="gallery-grid">
+            {visible.map((w) => (
+              <WidgetCard key={w.kind} widget={w} data={data} actions={actions} onConfigure={() => setOpen(w.kind)} />
+            ))}
+          </div>
+        ) : (
+          <p className="gallery-empty">{t.empty(query.trim())}</p>
+        )}
+      </div>
+      {openWidget && (
+        <WidgetDialog widget={openWidget} data={data} actions={actions} config={config} update={update} onClose={() => setOpen(null)} />
+      )}
     </div>
   );
 }
