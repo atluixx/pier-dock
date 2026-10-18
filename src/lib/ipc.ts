@@ -59,6 +59,8 @@ export interface Config {
   showRunningUnpinned: boolean;
   hideTaskbar: boolean;
   autoHide: "never" | "smart" | "always";
+  /** "fit" (barra do tamanho do conteúdo) ou "full" (ponta a ponta, como um painel). */
+  dockWidth: "fit" | "full";
   githubPollMinutes: number;
   claudePollMinutes: number;
   /** Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. */

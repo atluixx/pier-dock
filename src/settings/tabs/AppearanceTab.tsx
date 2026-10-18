@@ -146,6 +146,19 @@ export function AppearanceTab({ config, update, platform }: TabProps) {
             {config.autoHide === "never" ? labels().autoHideNever : t.autoHideHint}
           </p>
         </div>
+        <div className="field">
+          <span className="field-label">{t.dockWidth}</span>
+          <Segmented
+            label={t.dockWidth}
+            value={config.dockWidth}
+            onChange={(dockWidth) => update({ dockWidth })}
+            options={[
+              { value: "fit", label: t.dockWidthFit },
+              { value: "full", label: t.dockWidthFull },
+            ]}
+          />
+          <p className="field-hint">{t.dockWidthHint}</p>
+        </div>
         <Card>
           <Row label={t.magnify}>
             <Switch checked={magnify} label={t.magnify} onChange={(on) => update({ magnification: on ? DEFAULT_MAGNIFICATION : 1 })} />
