@@ -1041,3 +1041,66 @@
   font-variant-numeric: tabular-nums;
   color: var(--text-tertiary);
 }
+
+/* Lançador de apps: mesma janela de painel dos widgets (ver `popovers/Launcher.tsx`). */
+.launcher-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 2px;
+  align-content: start;
+  padding: 6px;
+}
+
+.launcher-app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: default;
+}
+
+.launcher-app:is(:hover, [aria-selected="true"]) {
+  background: var(--fill-selected);
+}
+
+.launcher-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.launcher-icon.fallback {
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface-icon);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.launcher-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.launcher-pin {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: var(--text-secondary);
+}

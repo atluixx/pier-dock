@@ -71,6 +71,8 @@ export interface Config {
   /** Ordem dos itens na dock: `start`, `app:<id>`, `widget:<kind>` e `divider:<id>`. */
   dockOrder: string[];
   showStartButton: boolean;
+  /** Botão do lançador de apps do próprio Pier (a lista de todos os instalados). */
+  showLauncher: boolean;
   weatherLocation: WeatherLocation | null;
   pomodoro: PomodoroConfig;
   language: LanguageSetting;
