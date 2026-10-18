@@ -1,10 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod ai_usage;
 mod apps;
 mod audio;
 mod backdrop;
 mod calendar;
-mod claude;
 mod config;
 mod dock_window;
 mod github;
@@ -220,8 +220,9 @@ fn main() {
             calendar::calendar_fetch,
             calendar::calendar_cached,
             calendar::calendar_set_url,
-            claude::claude_usage,
-            claude::claude_usage_cached,
+            ai_usage::ai_usage,
+            ai_usage::ai_usage_cached,
+            ai_usage::ai_providers,
             panels::open_panel,
             panels::close_panel,
             panels::focus_panel,

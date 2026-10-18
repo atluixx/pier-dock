@@ -26,7 +26,7 @@ O Pier substitui a barra de tarefas ou a dock do sistema por uma barra única co
 - **Player de mídia:** mostra o que está tocando no Spotify, no YouTube Music e em outros players, com os controles de reprodução.
 - **Widgets do GitHub:** pull requests aguardando a sua revisão, os seus pull requests abertos, commits recentes e o gráfico de contribuições.
 - **Widgets do sistema:** rede (com as redes Wi-Fi por perto), volume (com a saída de áudio e o volume por app), Bluetooth (com os dispositivos conectados), bateria, relógio, uso do sistema (CPU e memória com o histórico do último minuto) e, no Windows, a seta da bandeja que abre os ícones ocultos.
-- **Widgets de produtividade:** clima, timer Pomodoro e o próximo compromisso da agenda, com botão para entrar na videochamada.
+- **Widgets de produtividade:** clima, timer Pomodoro, o próximo compromisso da agenda, com botão para entrar na videochamada, e o uso das suas IAs de linha de comando.
 - **Atalhos de teclado:** abra ou foque o app da posição 1 a 9 de qualquer lugar.
 - **Atualização automática:** o Pier procura versões novas e as instala com um clique.
 - **Português e inglês:** a interface segue o idioma do sistema. Para trocar, vá em **Configurações** > **Geral** > **Idioma**.
@@ -76,6 +76,17 @@ O Pier usa automaticamente o login do [GitHub CLI](https://cli.github.com) (`gh 
 
 - **Clima:** escolha a cidade em **Configurações** > **Widgets** > **Clima**. A previsão vem do [Open-Meteo](https://open-meteo.com) e não precisa de chave de API.
 - **Agenda:** cole o endereço secreto iCal da sua agenda em **Configurações** > **Widgets** > **Agenda**. O Google Agenda, o Outlook e o iCloud publicam esse endereço. O Pier guarda o endereço no chaveiro do sistema.
+
+### Widget de uso de IA
+
+Um anel mostra quanto do limite da sua IA de linha de comando já foi usado — a mais apertada das duas janelas do Claude Code (a sessão de 5h e a semana) ou a janela do plano no Codex CLI — e o painel detalha cada uma com o tempo até o reset, mais os tokens do dia.
+
+Ele lê o Claude Code e o Codex CLI, e **Configurações** > **Widgets** > **Uso de IA** escolhe qual delas: **Automática** (o padrão) usa a IA cuja leitura de limites é a mais recente; sem leitura em nenhuma, a que gastou tokens hoje. Não há nada para configurar e nada sai para a rede — o Pier lê arquivos que os próprios CLIs mantêm em disco:
+
+- **Claude Code:** `~/.claude.json`, campo `cachedUsageUtilization`, para os percentuais de limite. É a mesma fonte do comando `/usage`, então os números batem com o terminal. Os tokens vêm de `~/.claude/projects/**/*.jsonl`, os transcripts das sessões.
+- **Codex CLI:** `~/.codex/sessions/**/rollout-*.jsonl`. A linha `rate_limits` é a mesma fonte do comando `/status`, com as janelas `primary` e `secondary` do plano, e os tokens vêm do `last_token_usage` de cada turno.
+
+Só os campos numéricos de `usage`, o nome do modelo e o timestamp são lidos — nunca o conteúdo das conversas, os comandos executados ou os diffs. Os CLIs só renovam os percentuais enquanto estão abertos, então com eles fechados o número congela: o widget esmaece e diz há quanto tempo foi a leitura em vez de passar um valor velho por atual.
 
 ## Particularidades de cada plataforma
 

@@ -7,7 +7,7 @@
  * chama `listen` ao ser carregado. Dentro do Tauri ele não faz nada.
  */
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
-import type { AppEntry, BluetoothState, CalendarData, ClaudeUsage, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
+import type { AiUsage, AppEntry, BluetoothState, CalendarData, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
 import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
 
 const insideTauri = "__TAURI_INTERNALS__" in window;
@@ -57,7 +57,7 @@ const config: Config = {
     { kind: "pomodoro", enabled: params.has("new"), size: "wide" },
     { kind: "system-usage", enabled: params.has("new"), size: "wide" },
     { kind: "calendar", enabled: params.has("new"), size: "wide" },
-    { kind: "claude-usage", enabled: params.has("new"), size: "wide" },
+    { kind: "ai-usage", enabled: params.has("new"), size: "wide" },
   ],
   material: "glass",
   glassOpacity: 0.4,
@@ -70,7 +70,8 @@ const config: Config = {
   dockWidth: "fit",
   dockHeight: null,
   githubPollMinutes: 3,
-  claudePollMinutes: 1,
+  aiPollMinutes: 1,
+  aiProvider: "auto",
   dockOrder: [],
   showStartButton: true,
   showLauncher: false,
@@ -241,17 +242,31 @@ const calendar: CalendarData = {
   fetchedAt: Date.now() - MINUTE,
 };
 
-const claudeUsage: ClaudeUsage = {
-  sessionPercent: 42,
-  sessionResetsIn: 229,
-  weeklyPercent: 78,
-  weeklyResetsIn: 3_128,
+const claudeUsage: AiUsage = {
+  provider: "claude",
+  windows: [
+    { id: "session", minutes: 300, percent: 42, resetsIn: 229 },
+    { id: "weekly", minutes: 10080, percent: 78, resetsIn: 3_128 },
+  ],
   ageMin: 4,
   stale: false,
   todayTokens: 12_400_000,
   todayMessages: 210,
   blockTokens: 3_100_000,
   topModel: "claude-opus-5",
+  fetchedAt: Date.now(),
+};
+
+/** Uma conta Plus: uma janela só, a da semana, e o modelo do Codex. */
+const codexUsage: AiUsage = {
+  provider: "codex",
+  windows: [{ id: "primary", minutes: 10080, percent: 12, resetsIn: 9_545 }],
+  ageMin: 35,
+  stale: true,
+  todayTokens: 1_240_000,
+  todayMessages: 48,
+  blockTokens: 420_000,
+  topModel: "gpt-5.6-luna",
   fetchedAt: Date.now(),
 };
 
@@ -323,8 +338,13 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   ],
   calendar_cached: () => calendar,
   calendar_fetch: () => calendar,
-  claude_usage: () => claudeUsage,
-  claude_usage_cached: () => claudeUsage,
+  // O preview da escolha nas configurações pede cada IA pelo nome.
+  ai_usage: (args) => (args.provider === "codex" ? codexUsage : claudeUsage),
+  ai_usage_cached: () => claudeUsage,
+  ai_providers: () => [
+    { id: "claude", detected: true },
+    { id: "codex", detected: true },
+  ],
   system_language: () => (navigator.language.toLowerCase().startsWith("pt") ? "pt" : "en"),
   platform_info: () => ({ os: "macos", windowList: "needs-accessibility", hideNative: true, shortcuts: true, glass: true }),
   "plugin:autostart|is_enabled": () => true,
