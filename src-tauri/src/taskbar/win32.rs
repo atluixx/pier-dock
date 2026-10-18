@@ -12,7 +12,7 @@ use windows::core::{w, PCWSTR};
 use windows::Win32::Foundation::{BOOL, HWND, LPARAM};
 use windows::Win32::System::Console::SetConsoleCtrlHandler;
 use windows::Win32::UI::Shell::{SHAppBarMessage, ABM_GETSTATE, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA};
-use windows::Win32::UI::WindowsAndMessaging::{FindWindowExW, FindWindowW, IsWindowVisible, ShowWindow, SW_HIDE, SW_SHOW, SW_SHOWNA};
+use windows::Win32::UI::WindowsAndMessaging::{FindWindowExW, FindWindowW, IsWindowVisible, SetForegroundWindow, ShowWindow, SW_HIDE, SW_SHOW, SW_SHOWNA};
 
 use crate::util::data_dir;
 
@@ -108,20 +108,30 @@ fn is_hidden() -> bool {
     HIDDEN.load(Ordering::SeqCst)
 }
 
-/// Com a taskbar escondida a seta da bandeja pode não abrir a gaveta de ícones ocultos. Aqui ela
-/// volta a ficar visível (em "ocultar automaticamente", só uma faixa fora da dock) enquanto a gaveta
-/// estiver aberta; o watchdog a esconde de novo quando `shown` vira `false`.
+/// Escondida (`SW_HIDE`) ou recolhida, a taskbar não expõe a seta da bandeja à UI Automation. Aqui
+/// ela sobe só enquanto a seta é acionada: com a gaveta aberta o Windows revela a taskbar
+/// inteira, então ela é escondida de novo assim que a gaveta aparece.
 pub fn show_for_tray(shown: bool) {
     if !is_hidden() {
         return;
     }
     SHOWN_FOR_TRAY.store(shown, Ordering::SeqCst);
     if shown {
-        for h in taskbar_windows() {
+        let windows = taskbar_windows();
+        for &h in &windows {
             unsafe {
                 let _ = ShowWindow(h, SW_SHOWNA);
             }
         }
+        // Recolhida (ocultar automaticamente), a taskbar não monta os botões da bandeja; ativá-la
+        // faz ela subir, como o mouse no fim da tela.
+        if let Some(&primary) = windows.first() {
+            unsafe {
+                let _ = SetForegroundWindow(primary);
+            }
+        }
+    } else {
+        set_visible(false);
     }
 }
 

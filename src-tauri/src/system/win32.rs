@@ -1,6 +1,7 @@
 //! Bandeja no Windows: bateria, rede (WinRT), volume (Core Audio), Bluetooth (WinRT), flyouts
 //! nativos via teclado e a gaveta de ícones ocultos.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
@@ -174,8 +175,11 @@ pub fn open_shell(kind: &str) {
     }
 }
 
-/// Quando a gaveta de ícones ocultos fechou pela última vez.
+/// Quando a gaveta de ícones ocultos fechou sozinha (clique fora) pela última vez.
 static TRAY_CLOSED_AT: Mutex<Option<Instant>> = Mutex::new(None);
+/// A gaveta está sendo fechada pela seta da dock: esse fechamento não conta para `TRAY_CLOSED_AT`.
+static TRAY_CLOSING: AtomicBool = AtomicBool::new(false);
+static TRAY_BUSY: AtomicBool = AtomicBool::new(false);
 
 /// A gaveta de ícones ocultos aberta: a do Windows 11 (XAML) ou a do Windows 10.
 fn tray_overflow() -> Option<HWND> {
@@ -219,42 +223,76 @@ fn invoke(element: &IUIAutomationElement) -> windows::core::Result<()> {
     unsafe { element.GetCurrentPatternAs::<IUIAutomationInvokePattern>(UIA_InvokePatternId)?.Invoke() }
 }
 
-/// Windows 10: a seta é um `Button` Win32 dentro da área de notificação.
-fn click_tray_chevron_win10() -> windows::core::Result<()> {
+/// Windows 10: a seta é um `Button` Win32 dentro da área de notificação. No Windows 11 ele não
+/// existe.
+fn tray_chevron_win10() -> Option<HWND> {
     unsafe {
-        let taskbar = FindWindowW(w!("Shell_TrayWnd"), PCWSTR::null())?;
-        let notify = FindWindowExW(taskbar, HWND::default(), w!("TrayNotifyWnd"), PCWSTR::null())?;
-        let button = FindWindowExW(notify, HWND::default(), w!("Button"), PCWSTR::null())?;
-        SendMessageW(button, BM_CLICK, WPARAM(0), LPARAM(0));
+        let taskbar = FindWindowW(w!("Shell_TrayWnd"), PCWSTR::null()).ok()?;
+        let notify = FindWindowExW(taskbar, HWND::default(), w!("TrayNotifyWnd"), PCWSTR::null()).ok()?;
+        FindWindowExW(notify, HWND::default(), w!("Button"), PCWSTR::null()).ok().filter(|h| !h.is_invalid())
     }
-    Ok(())
 }
 
-fn click_tray_chevron() -> windows::core::Result<()> {
-    find_tray_chevron().and_then(|chevron| invoke(&chevron)).or_else(|_| click_tray_chevron_win10())
+fn click_win10(button: HWND) {
+    unsafe {
+        SendMessageW(button, BM_CLICK, WPARAM(0), LPARAM(0));
+    }
+}
+
+/// A taskbar que passou um tempo recolhida só monta os botões XAML depois de subir: a seta pode
+/// levar mais de 400 ms para aparecer na árvore de UI Automation.
+fn wait_tray_chevron() -> Option<IUIAutomationElement> {
+    poll(Duration::from_millis(1500), || find_tray_chevron().ok())
+}
+
+fn click_tray_chevron() -> Result<(), String> {
+    if let Some(button) = tray_chevron_win10() {
+        click_win10(button);
+        return Ok(());
+    }
+    let chevron = wait_tray_chevron().ok_or("seta da bandeja não encontrada")?;
+    invoke(&chevron).err_str()
 }
 
 /// Clica na seta e espera a gaveta aparecer.
 fn show_tray_overflow() -> Option<HWND> {
-    // Logo depois de a taskbar reaparecer a árvore de UI Automation ainda está vazia; a seta surge
-    // em poucos milissegundos.
-    if let Some(chevron) = poll(Duration::from_millis(300), || find_tray_chevron().ok()) {
-        invoke(&chevron).ok()?;
-        let overflow = poll(Duration::from_secs(1), tray_overflow);
-        if overflow.is_none() {
-            // Sem ícones ocultos o Windows tira a seta, e o botão encontrado é o indicador de
-            // idioma: o segundo clique fecha o que ele abriu.
-            let _ = invoke(&chevron);
-        }
-        return overflow;
+    if let Some(button) = tray_chevron_win10() {
+        click_win10(button);
+        return poll(Duration::from_secs(1), tray_overflow);
     }
-    click_tray_chevron_win10().ok()?;
-    poll(Duration::from_secs(1), tray_overflow)
+    let chevron = wait_tray_chevron()?;
+    invoke(&chevron).ok()?;
+    let overflow = poll(Duration::from_secs(1), tray_overflow);
+    if overflow.is_none() {
+        // Sem ícones ocultos o Windows tira a seta, e o botão encontrado é o indicador de
+        // idioma: o segundo clique fecha o que ele abriu.
+        let _ = invoke(&chevron);
+    }
+    overflow
+}
+
+/// Escondida pelo Pier (`SW_HIDE`), a taskbar não expõe nenhum elemento à UI Automation: ela
+/// reaparece só durante `f`. A gaveta é uma janela própria e continua aberta depois.
+fn with_taskbar<T>(f: impl FnOnce() -> T) -> T {
+    crate::taskbar::show_for_tray(true);
+    let result = f();
+    crate::taskbar::show_for_tray(false);
+    result
 }
 
 /// Abre a gaveta de ícones ocultos centrada em `anchor_x`, com a base em `bottom` (pixels
 /// físicos de tela). Com ela aberta, fecha: clicar na dock nem sempre a fecha sozinho.
 pub fn open_tray(anchor_x: i32, bottom: i32) -> Result<(), String> {
+    // Abrir leva até ~1,5 s; um clique nesse meio-tempo esconderia a taskbar no meio da busca.
+    if TRAY_BUSY.swap(true, Ordering::SeqCst) {
+        return Ok(());
+    }
+    let result = toggle_tray(anchor_x, bottom);
+    TRAY_BUSY.store(false, Ordering::SeqCst);
+    result
+}
+
+fn toggle_tray(anchor_x: i32, bottom: i32) -> Result<(), String> {
     // A gaveta fecha no mousedown fora dela, antes deste clique chegar: o clique que a fechou não
     // deve reabri-la.
     let just_closed = TRAY_CLOSED_AT.lock().unwrap().is_some_and(|t| t.elapsed() < Duration::from_millis(400));
@@ -262,15 +300,14 @@ pub fn open_tray(anchor_x: i32, bottom: i32) -> Result<(), String> {
         return Ok(());
     }
     if tray_overflow().is_some() {
-        let _ = click_tray_chevron();
+        TRAY_CLOSING.store(true, Ordering::SeqCst);
+        let _ = with_taskbar(click_tray_chevron);
+        if poll(Duration::from_millis(500), || tray_overflow().is_none().then_some(())).is_none() {
+            TRAY_CLOSING.store(false, Ordering::SeqCst);
+        }
         return Ok(());
     }
-    // Escondida pelo Pier (`SW_HIDE`), a taskbar não expõe nenhum elemento à UI Automation.
-    crate::taskbar::show_for_tray(true);
-    let Some(overflow) = show_tray_overflow() else {
-        crate::taskbar::show_for_tray(false);
-        return Err("não foi possível abrir a bandeja".into());
-    };
+    let overflow = with_taskbar(show_tray_overflow).ok_or("não foi possível abrir a bandeja")?;
     unsafe {
         let mut rect = RECT::default();
         if GetWindowRect(overflow, &mut rect).is_ok() {
@@ -285,8 +322,9 @@ pub fn open_tray(anchor_x: i32, bottom: i32) -> Result<(), String> {
         while unsafe { IsWindowVisible(overflow) }.as_bool() {
             std::thread::sleep(Duration::from_millis(50));
         }
-        *TRAY_CLOSED_AT.lock().unwrap() = Some(Instant::now());
-        crate::taskbar::show_for_tray(false);
+        if !TRAY_CLOSING.swap(false, Ordering::SeqCst) {
+            *TRAY_CLOSED_AT.lock().unwrap() = Some(Instant::now());
+        }
     });
     Ok(())
 }
