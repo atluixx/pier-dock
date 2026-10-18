@@ -16,6 +16,7 @@ export type WidgetKind =
   | "github-mine"
   | "github-commits"
   | "github-contrib"
+  | "tray"
   | "network"
   | "volume"
   | "bluetooth"
@@ -283,6 +284,7 @@ export const ipc = {
   setBluetooth: (powered: boolean) => invoke<void>("set_bluetooth", { powered }),
   getVolume: () => invoke<Volume>("get_volume"),
   setVolume: (args: { level?: number; muted?: boolean }) => invoke<void>("set_volume", args),
+  openTray: (anchorX: number) => invoke<void>("open_tray", { anchorX }),
   openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar" | "bluetooth") =>
     invoke<void>("open_shell", { kind }),
 

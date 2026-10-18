@@ -35,7 +35,7 @@ signal-hook = "0.3"
 [target.'cfg(target_os = "linux")'.dependencies]
 keyring = { version = "3", features = ["async-secret-service", "crypto-rust", "async-io"] }
 zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
-x11rb = "0.13"
+x11rb = { version = "0.13", features = ["xtest"] }
 gtk = "0.18"
 gdkx11 = "0.18"
 

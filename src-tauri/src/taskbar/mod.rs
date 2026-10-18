@@ -9,7 +9,7 @@ mod backend;
 
 pub use backend::{hide, restore};
 #[cfg(windows)]
-pub use backend::start_watchdog;
+pub use backend::{show_for_tray, start_watchdog};
 
 /// Garante que a barra nativa volte em pânico e quando o processo é encerrado pelo terminal
 /// (Ctrl+C no `tauri dev`, fechar o console, SIGTERM).

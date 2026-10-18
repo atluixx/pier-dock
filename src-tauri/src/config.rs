@@ -146,6 +146,7 @@ impl Default for Config {
                 widget("github-review", "small"),
                 disabled("github-commits", "small"),
                 widget("github-contrib", "wide"),
+                if cfg!(windows) { widget("tray", "small") } else { disabled("tray", "small") },
                 widget("network", "small"),
                 widget("volume", "small"),
                 widget("bluetooth", "small"),

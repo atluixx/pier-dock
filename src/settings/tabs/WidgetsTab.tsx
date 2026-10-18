@@ -5,6 +5,7 @@ import {
   BatteryMedium,
   Bluetooth,
   CalendarDays,
+  ChevronUp,
   Asterisk,
   Clock,
   CloudSun,
@@ -20,14 +21,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { WidgetConfig, WidgetKind } from "../../lib/ipc";
-import { os } from "../../lib/platform";
+import { os, widgetSupported } from "../../lib/platform";
 import { moveAmong, widgetKey } from "../../dock/order";
 import { useGithub } from "../../hooks/useGithub";
 import { useMedia } from "../../hooks/useMedia";
 import { useBluetooth, useSystemStatus } from "../../hooks/useSystem";
 import { MediaWidget } from "../../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../../widgets/GithubWidgets";
-import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, VolumeWidget } from "../../widgets/SystemWidgets";
+import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "../../widgets/SystemWidgets";
 import { WeatherWidget } from "../../widgets/WeatherWidget";
 import { PomodoroWidget } from "../../widgets/PomodoroWidget";
 import { UsageWidget } from "../../widgets/UsageWidget";
@@ -52,6 +53,7 @@ const WIDGETS: Record<WidgetKind, { group: Group; Icon: LucideIcon }> = {
   "github-review": { group: "github", Icon: GitCompare },
   "github-commits": { group: "github", Icon: GitCommitHorizontal },
   "github-contrib": { group: "github", Icon: LayoutGrid },
+  tray: { group: "system", Icon: ChevronUp },
   network: { group: "system", Icon: Wifi },
   volume: { group: "system", Icon: Volume2 },
   bluetooth: { group: "system", Icon: Bluetooth },
@@ -84,6 +86,7 @@ function Preview({ widget, configured }: { widget: WidgetConfig; configured: boo
     "github-review": <GithubReviewWidget data={github} />,
     "github-commits": <GithubCommitsWidget data={github} />,
     "github-contrib": <ContributionsWidget data={github} wide={wide} />,
+    tray: <TrayWidget />,
     network: <NetworkWidget status={system} />,
     volume: <VolumeWidget />,
     bluetooth: <BluetoothWidget bluetooth={bluetooth} />,
@@ -125,7 +128,7 @@ export function WidgetsTab({ config, update }: TabProps) {
       <div className="split-list narrow">
         <div className="list-scroll">
           <SectionLabel>Widgets</SectionLabel>
-          {config.widgets.map((w) => {
+          {config.widgets.filter((w) => widgetSupported(w.kind)).map((w) => {
             const { group, Icon } = WIDGETS[w.kind];
             const { name } = t.info[w.kind];
             return (

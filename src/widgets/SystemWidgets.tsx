@@ -6,6 +6,7 @@ import {
   Bluetooth,
   BluetoothConnected,
   BluetoothOff,
+  ChevronUp,
   Globe,
   Volume1,
   Volume2,
@@ -20,6 +21,19 @@ import { useNow, useVolume } from "../hooks/useSystem";
 import { shortDate } from "../lib/format";
 import { Tile } from "./Tile";
 import { locale, useT } from "../i18n";
+
+export function TrayWidget() {
+  const t = useT().system;
+  const open = (el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    ipc.openTray(rect.left + rect.width / 2).catch(console.error);
+  };
+  return (
+    <Tile kind="tray" label={t.trayShow} className="sys-tile" onClick={open}>
+      <ChevronUp size={17} />
+    </Tile>
+  );
+}
 
 export function NetworkWidget({ status }: { status: SystemStatus | null }) {
   const net = status?.network;

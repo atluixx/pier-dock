@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion, useAnimationControls } from "framer-motion";
+import { useContext, useState } from "react";
+import { motion, useAnimationControls, useMotionValueEvent } from "framer-motion";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Menu } from "@tauri-apps/api/menu";
@@ -8,7 +8,7 @@ import { keys } from "../lib/platform";
 import { useIcon } from "../hooks/useIcon";
 import { useConfig } from "../store/config";
 import { Tooltip } from "../ui/Tooltip";
-import { Magnify } from "./Magnify";
+import { Magnify, MagnifyCtx } from "./Magnify";
 import { toPinned, type DockApp } from "./apps";
 import { useT } from "../i18n";
 
@@ -24,6 +24,9 @@ export function AppIcon({ app, active, sortable, shortcut }: Props) {
   const src = useIcon(app.iconKey);
   const bounce = useAnimationControls();
   const [hover, setHover] = useState(false);
+  // Quando o Rust liga o click-through ou a dock se esconde, o WebView não recebe mouseleave; a
+  // dock sinaliza a saída do cursor zerando o mouseX.
+  useMotionValueEvent(useContext(MagnifyCtx)!.mouseX, "change", (x) => x === Infinity && setHover(false));
   const update = useConfig((s) => s.update);
   const t = useT().dock;
   const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -88,7 +91,7 @@ export function AppIcon({ app, active, sortable, shortcut }: Props) {
     >
       {hover && !isDragging && <Tooltip label={app.name} keys={shortcut ? `${keys.appShortcut} ${shortcut}` : undefined} />}
       <button
-        className="app-button"
+        className={`app-button ${hover && !isDragging ? "hovered" : ""}`}
         aria-label={state ? `${app.name} (${state})` : app.name}
         onClick={onClick}
         onContextMenu={onContextMenu}

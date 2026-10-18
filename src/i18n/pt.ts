@@ -168,6 +168,7 @@ export const pt = {
     quitDone: (name: string) => `${name} foi encerrado.`,
     usageTile: (cpu: string, cpuHot: boolean, mem: string, memHot: boolean) =>
       `CPU ${cpu}${cpuHot ? ", uso alto" : ""}; memória ${mem}${memHot ? ", uso alto" : ""}`,
+    trayShow: "Mostrar ícones ocultos",
     offline: "Sem conexão",
     connected: "Conectado",
     noInternet: " (sem internet)",
@@ -327,6 +328,7 @@ export const pt = {
       "github-review": { name: "Revisões", description: "Pull requests aguardando a sua revisão, com contador." },
       "github-commits": { name: "Commits", description: "Seus commits recentes e quantos foram feitos hoje." },
       "github-contrib": { name: "Contribuições", description: "Total do ano e o mapa das últimas 20 semanas." },
+      tray: { name: "Bandeja", description: "A seta que abre os ícones ocultos da bandeja do Windows, logo acima da dock." },
       network: { name: "Wi-Fi", description: "Rede atual. O clique abre as configurações rápidas do sistema." },
       volume: { name: "Volume", description: "Role sobre o ícone para ajustar; o botão direito silencia." },
       bluetooth: { name: "Bluetooth", description: "Se está ligado e quantos dispositivos estão conectados. O clique abre a lista, com a bateria de cada um quando o sistema informa." },

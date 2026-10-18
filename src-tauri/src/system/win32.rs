@@ -1,5 +1,8 @@
-//! Bandeja no Windows: bateria, rede (WinRT), volume (Core Audio), Bluetooth (WinRT) e flyouts
-//! nativos via teclado.
+//! Bandeja no Windows: bateria, rede (WinRT), volume (Core Audio), Bluetooth (WinRT), flyouts
+//! nativos via teclado e a gaveta de ícones ocultos.
+
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
 
 use windows::Devices::Bluetooth::{BluetoothConnectionStatus, BluetoothDevice as BtDevice, BluetoothLEDevice};
 use windows::Devices::Enumeration::DeviceInformation;
@@ -7,11 +10,18 @@ use windows::Devices::Radios::{Radio, RadioKind, RadioState};
 use windows::Networking::Connectivity::{NetworkConnectivityLevel, NetworkInformation};
 use windows::Win32::Media::Audio::Endpoints::IAudioEndpointVolume;
 use windows::Win32::Media::Audio::{eConsole, eRender, IMMDeviceEnumerator, MMDeviceEnumerator};
-use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
-use windows::core::{HSTRING, PCWSTR};
+use windows::Win32::Foundation::{HWND, LPARAM, RECT, WPARAM};
+use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL, CLSCTX_INPROC_SERVER};
+use windows::Win32::UI::Accessibility::{
+    CUIAutomation, IUIAutomation, IUIAutomationInvokePattern, TreeScope_Descendants, UIA_AutomationIdPropertyId, UIA_InvokePatternId,
+};
+use windows::core::{w, HSTRING, PCWSTR, VARIANT};
 use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
 use windows::Win32::UI::Shell::ShellExecuteW;
-use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+use windows::Win32::UI::WindowsAndMessaging::{
+    FindWindowExW, FindWindowW, GetWindowRect, IsWindowVisible, SendMessageW, SetWindowPos, BM_CLICK, SWP_NOACTIVATE, SWP_NOSIZE,
+    SWP_NOZORDER, SW_SHOWNORMAL,
+};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_A, VK_LWIN, VK_N,
 };
@@ -161,4 +171,94 @@ pub fn open_shell(kind: &str) {
         "bluetooth" => shell_open("ms-settings:bluetooth"),
         _ => {}
     }
+}
+
+/// Quando a gaveta de ícones ocultos fechou pela última vez.
+static TRAY_CLOSED_AT: Mutex<Option<Instant>> = Mutex::new(None);
+
+/// A gaveta de ícones ocultos aberta: a do Windows 11 (XAML) ou a do Windows 10.
+fn tray_overflow() -> Option<HWND> {
+    [w!("TopLevelWindowForOverflowXamlIsland"), w!("NotifyIconOverflowWindow")]
+        .into_iter()
+        .filter_map(|class| unsafe { FindWindowW(class, PCWSTR::null()) }.ok())
+        .find(|&h| !h.is_invalid() && unsafe { IsWindowVisible(h) }.as_bool())
+}
+
+fn wait_tray_overflow() -> Option<HWND> {
+    for _ in 0..20 {
+        if let Some(h) = tray_overflow() {
+            return Some(h);
+        }
+        std::thread::sleep(Duration::from_millis(25));
+    }
+    None
+}
+
+/// Windows 11: a seta é um botão XAML da taskbar, só alcançável pela UI Automation.
+fn invoke_tray_chevron() -> windows::core::Result<()> {
+    com_init();
+    unsafe {
+        let taskbar = FindWindowW(w!("Shell_TrayWnd"), PCWSTR::null())?;
+        let automation: IUIAutomation = CoCreateInstance(&CUIAutomation, None, CLSCTX_INPROC_SERVER)?;
+        let condition = automation.CreatePropertyCondition(UIA_AutomationIdPropertyId, &VARIANT::from("SystemTrayIcon"))?;
+        let chevron = automation.ElementFromHandle(taskbar)?.FindFirst(TreeScope_Descendants, &condition)?;
+        chevron.GetCurrentPatternAs::<IUIAutomationInvokePattern>(UIA_InvokePatternId)?.Invoke()
+    }
+}
+
+/// Windows 10: a seta é um `Button` Win32 dentro da área de notificação.
+fn click_tray_chevron_win10() -> windows::core::Result<()> {
+    unsafe {
+        let taskbar = FindWindowW(w!("Shell_TrayWnd"), PCWSTR::null())?;
+        let notify = FindWindowExW(taskbar, HWND::default(), w!("TrayNotifyWnd"), PCWSTR::null())?;
+        let button = FindWindowExW(notify, HWND::default(), w!("Button"), PCWSTR::null())?;
+        SendMessageW(button, BM_CLICK, WPARAM(0), LPARAM(0));
+    }
+    Ok(())
+}
+
+fn click_tray_chevron() -> bool {
+    invoke_tray_chevron().is_ok() || click_tray_chevron_win10().is_ok()
+}
+
+/// Abre a gaveta de ícones ocultos centrada em `anchor_x`, com a base em `bottom` (pixels
+/// físicos de tela). Com ela aberta, fecha: clicar na dock nem sempre a fecha sozinho.
+pub fn open_tray(anchor_x: i32, bottom: i32) -> Result<(), String> {
+    // A gaveta fecha no mousedown fora dela, antes deste clique chegar: o clique que a fechou não
+    // deve reabri-la.
+    let just_closed = TRAY_CLOSED_AT.lock().unwrap().is_some_and(|t| t.elapsed() < Duration::from_millis(400));
+    if just_closed {
+        return Ok(());
+    }
+    if tray_overflow().is_some() {
+        click_tray_chevron();
+        return Ok(());
+    }
+    let mut overflow = if click_tray_chevron() { wait_tray_overflow() } else { None };
+    if overflow.is_none() {
+        crate::taskbar::show_for_tray(true);
+        overflow = if click_tray_chevron() { wait_tray_overflow() } else { None };
+    }
+    let Some(overflow) = overflow else {
+        crate::taskbar::show_for_tray(false);
+        return Err("não foi possível abrir a bandeja".into());
+    };
+    unsafe {
+        let mut rect = RECT::default();
+        if GetWindowRect(overflow, &mut rect).is_ok() {
+            let (width, height) = (rect.right - rect.left, rect.bottom - rect.top);
+            let flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE;
+            let _ = SetWindowPos(overflow, HWND::default(), anchor_x - width / 2, bottom - height, 0, 0, flags);
+        }
+    }
+    let handle = overflow.0 as isize;
+    std::thread::spawn(move || {
+        let overflow = HWND(handle as _);
+        while unsafe { IsWindowVisible(overflow) }.as_bool() {
+            std::thread::sleep(Duration::from_millis(50));
+        }
+        *TRAY_CLOSED_AT.lock().unwrap() = Some(Instant::now());
+        crate::taskbar::show_for_tray(false);
+    });
+    Ok(())
 }

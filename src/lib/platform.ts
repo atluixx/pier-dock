@@ -6,6 +6,9 @@ export type Os = "windows" | "linux" | "macos";
 const ua = navigator.userAgent;
 export const os: Os = /Windows/i.test(ua) ? "windows" : /Macintosh|Mac OS X/i.test(ua) ? "macos" : "linux";
 
+/** A bandeja (ícones ocultos) só existe no Windows. */
+export const widgetSupported = (kind: string) => kind !== "tray" || os === "windows";
+
 /** Teclas dos atalhos como aparecem nos chips (`Kbd`), com os símbolos do Mac no macOS. */
 export const keys = {
   /** Modificadores do atalho global que abre o app N da dock (Ctrl+Alt+N, ⌃⌥N no Mac). */

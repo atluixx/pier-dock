@@ -7,7 +7,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { Menu } from "@tauri-apps/api/menu";
 import { ipc, type AppEntry, type Config, type WidgetConfig } from "../lib/ipc";
-import { labels, os } from "../lib/platform";
+import { labels, os, widgetSupported } from "../lib/platform";
 import { dict } from "../i18n";
 import { useConfig } from "../store/config";
 import { useWindows } from "../hooks/useWindows";
@@ -22,7 +22,7 @@ import { SortableItem } from "./SortableItem";
 import { addDivider, applyOrder, isDivider, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
 import { MediaWidget } from "../widgets/MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "../widgets/GithubWidgets";
-import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, VolumeWidget } from "../widgets/SystemWidgets";
+import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, TrayWidget, VolumeWidget } from "../widgets/SystemWidgets";
 import { WeatherWidget } from "../widgets/WeatherWidget";
 import { PomodoroWidget } from "../widgets/PomodoroWidget";
 import { UsageWidget } from "../widgets/UsageWidget";
@@ -140,25 +140,31 @@ export function Dock({ config }: { config: Config }) {
   const [visible, setVisible] = useState(true);
   useEffect(() => {
     ipc.dockVisible().then(setVisible);
-    const unlisten = listen<boolean>("dock-visibility", (e) => setVisible(e.payload));
+    const unlisten = listen<boolean>("dock-visibility", (e) => {
+      setVisible(e.payload);
+      if (!e.payload) mouseX.set(Infinity);
+    });
     return () => {
       unlisten.then((f) => f());
     };
-  }, []);
+  }, [mouseX]);
 
   // Linux: o click-through recorta a região de input da janela, e o Rust só sabe do hover por aqui.
   useEffect(() => {
     if (os !== "linux") return;
     const root = document.documentElement;
     const enter = () => ipc.setDockHover(true);
-    const leave = () => ipc.setDockHover(false);
+    const leave = () => {
+      ipc.setDockHover(false);
+      mouseX.set(Infinity);
+    };
     root.addEventListener("mouseenter", enter);
     root.addEventListener("mouseleave", leave);
     return () => {
       root.removeEventListener("mouseenter", enter);
       root.removeEventListener("mouseleave", leave);
     };
-  }, []);
+  }, [mouseX]);
 
   useEffect(() => {
     const subs = [
@@ -228,6 +234,8 @@ export function Dock({ config }: { config: Config }) {
         return <GithubCommitsWidget data={github} />;
       case "github-contrib":
         return <ContributionsWidget data={github} wide={wide} />;
+      case "tray":
+        return <TrayWidget />;
       case "network":
         return <NetworkWidget status={system} />;
       case "volume":
@@ -253,7 +261,7 @@ export function Dock({ config }: { config: Config }) {
 
   const pinnedApps = new Map(apps.filter((a) => a.pinned).map((a) => [a.key, a]));
   const unpinnedApps = apps.filter((a) => !a.pinned);
-  const widgets = new Map(config.widgets.filter((w) => w.enabled).map((w) => [widgetKey(w.kind), w]));
+  const widgets = new Map(config.widgets.filter((w) => w.enabled && widgetSupported(w.kind)).map((w) => [widgetKey(w.kind), w]));
   const activeKey = apps.find((a) => a.windows.some((w) => w.id === snapshot.foreground))?.key;
   const shortcutFor = (app: DockApp) => {
     const n = apps.indexOf(app) + 1;
