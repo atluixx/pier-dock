@@ -442,6 +442,7 @@ export const en: Dict = {
       "needs-accessibility": "Accessibility pending",
       "needs-extension": "GNOME extension not installed",
       "needs-relogin": "Extension installed; log in again",
+      "x11-only": "X11 apps only",
       unsupported: "This environment doesn't allow seeing windows",
     },
     checking: "Checking for updates…",
@@ -465,6 +466,8 @@ export const en: Dict = {
       "Install the Pier GNOME Shell extension so the dock can see and focus windows, reserve screen space, hide the Dash and register shortcuts.",
     installExtension: "Install extension",
     needsRelogin: "The Pier extension is installed, but GNOME only loads it on the next login. Log out and back in.",
+    x11Only:
+      "In a Wayland session the dock lists the windows of X11 apps. Windows of native Wayland apps aren't listed yet. Pinned apps and widgets work normally.",
     needsAccessibility: "Accessibility permission is required to list, focus, minimize and close windows.",
     grant: "Grant permission",
     unsupported: "This environment doesn't let the dock see open windows (GNOME or X11 sessions only). Pinned apps and widgets work normally.",

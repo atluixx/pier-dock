@@ -5,7 +5,7 @@
 <h1 align="center">Pier</h1>
 
 <p align="center">
-  Uma dock personalizável para Windows, macOS e Linux (GNOME).
+  Uma dock personalizável para Windows, macOS e Linux (GNOME e KDE Plasma).
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@ Baixe o instalador da sua plataforma na [versão mais recente](https://github.co
 | --- | --- | --- |
 | Windows 10 e 11 | `Pier_x.y.z_x64-setup.exe` | Instala em `%LOCALAPPDATA%\Pier`, sem pedir administrador. |
 | macOS 12 ou mais recente | `Pier_x.y.z_universal.dmg` | Roda nativamente em Macs com Apple Silicon e Intel. |
-| Linux (GNOME 45 a 49) | `Pier_x.y.z_amd64.deb` ou `Pier_x.y.z_amd64.AppImage` | Instale o `.deb` com `sudo apt install ./Pier_x.y.z_amd64.deb`, ou torne o AppImage executável com `chmod +x` e rode-o. |
+| Linux (GNOME 45 a 49, KDE Plasma 6) | `Pier_x.y.z_amd64.deb` ou `Pier_x.y.z_amd64.AppImage` | Instale o `.deb` com `sudo apt install ./Pier_x.y.z_amd64.deb`, ou torne o AppImage executável com `chmod +x` e rode-o. No KDE Plasma não é preciso mais nada; no GNOME, instale a extensão pelas configurações do Pier. |
 
 ### Primeira abertura
 
@@ -47,7 +47,7 @@ Os instaladores ainda não têm assinatura de código, então o sistema avisa na
 
 - **Windows:** quando o SmartScreen aparecer, clique em **Mais informações** e depois em **Executar assim mesmo**.
 - **macOS:** arraste o Pier para **Aplicativos** e abra. Quando o macOS disser que não pôde verificar o app, vá em **Ajustes do Sistema** > **Privacidade e Segurança** e clique em **Abrir Mesmo Assim**. Se preferir, rode `xattr -dr com.apple.quarantine /Applications/Pier.app` no Terminal.
-- **Linux:** no GNOME, abra as configurações do Pier, clique em **Instalar extensão** e depois encerre a sessão e entre de novo. A extensão permite que o Pier veja e foque janelas, reserve espaço na tela, esconda o Dash e registre os atalhos.
+- **Linux:** no GNOME, abra as configurações do Pier, clique em **Instalar extensão** e depois encerre a sessão e entre de novo. A extensão permite que o Pier veja e foque janelas, reserve espaço na tela, esconda o Dash e registre os atalhos. No KDE Plasma não há nada para instalar: numa sessão X11 a dock lista as janelas, reserva o espaço na tela e aplica o blur do KWin.
 
 ### Atualizações
 
@@ -98,7 +98,9 @@ O macOS tem algumas limitações em relação ao Windows:
 
 ### Linux
 
-O Pier tem suporte completo ao GNOME 45 a 49, em Wayland e X11, pela extensão do GNOME Shell. Em outros ambientes de desktop, o Pier só lista janelas em sessões X11 e não consegue esconder o painel nativo. Apps fixados e widgets funcionam em todos.
+O Pier tem suporte completo ao GNOME 45 a 49, em Wayland e X11, pela extensão do GNOME Shell. No KDE Plasma 6 a dock não precisa de extensão: numa sessão X11 ela lista as janelas, reserva o espaço na tela e desenha o vidro com o blur do KWin, e no Wayland lista as janelas dos apps X11 (as janelas dos apps nativos do Wayland ainda não aparecem). Em outros ambientes de desktop, o Pier só lista janelas em sessões X11 e não consegue esconder o painel nativo. Apps fixados e widgets funcionam em todos.
+
+Rodando como AppImage, o Pier cadastra a própria entrada de menu e os ícones em `~/.local/share` na primeira execução, então a dock aparece no menu de aplicativos sem nenhum ajuste manual.
 
 ## Configuração
 

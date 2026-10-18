@@ -242,7 +242,7 @@ export interface Volume {
 
 export interface PlatformInfo {
   os: "windows" | "linux" | "macos";
-  windowList: "ok" | "needs-extension" | "needs-relogin" | "needs-accessibility" | "unsupported";
+  windowList: "ok" | "needs-extension" | "needs-relogin" | "needs-accessibility" | "x11-only" | "unsupported";
   hideNative: boolean;
   shortcuts: boolean;
   /** O sistema desenha o vidro; sem ele o material é sempre sólido. */

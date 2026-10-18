@@ -5,7 +5,7 @@
 <h1 align="center">Pier</h1>
 
 <p align="center">
-  A customizable dock for Windows, macOS, and Linux (GNOME).
+  A customizable dock for Windows, macOS, and Linux (GNOME and KDE Plasma).
 </p>
 
 <p align="center">
@@ -42,7 +42,7 @@ Download the installer for your platform from the [latest release](https://githu
 | --- | --- | --- |
 | Windows 10 and 11 | `Pier_x.y.z_x64-setup.exe` | Installs to `%LOCALAPPDATA%\Pier` without admin rights. |
 | macOS 12 or later | `Pier_x.y.z_universal.dmg` | Runs natively on Apple silicon and Intel Macs. |
-| Linux (GNOME 45 to 49) | `Pier_x.y.z_amd64.deb` or `Pier_x.y.z_amd64.AppImage` | Install the `.deb` with `sudo apt install ./Pier_x.y.z_amd64.deb`, or make the AppImage executable with `chmod +x` and run it. |
+| Linux (GNOME 45 to 49, KDE Plasma 6) | `Pier_x.y.z_amd64.deb` or `Pier_x.y.z_amd64.AppImage` | Install the `.deb` with `sudo apt install ./Pier_x.y.z_amd64.deb`, or make the AppImage executable with `chmod +x` and run it. On KDE Plasma nothing else is needed; on GNOME, install the extension from Pier's settings. |
 
 ### First launch
 
@@ -50,7 +50,7 @@ The installers aren't code-signed yet, so your system warns you the first time y
 
 - **Windows:** When SmartScreen appears, select **More info**, and then select **Run anyway**.
 - **macOS:** Drag Pier to **Applications** and open it. When macOS says it can't verify the app, go to **System Settings** > **Privacy & Security** and select **Open Anyway**. Alternatively, run `xattr -dr com.apple.quarantine /Applications/Pier.app` in Terminal.
-- **Linux:** On GNOME, open Pier's settings and select **Install extension**, and then log out and log back in. The extension lets Pier see and focus windows, reserve screen space, hide the Dash, and register shortcuts.
+- **Linux:** On GNOME, open Pier's settings and select **Install extension**, and then log out and log back in. The extension lets Pier see and focus windows, reserve screen space, hide the Dash, and register shortcuts. On KDE Plasma there is nothing to install: in an X11 session the dock lists windows, reserves screen space and blurs with KWin.
 
 ### Updates
 
@@ -110,7 +110,9 @@ macOS has some limitations compared to Windows:
 
 ### Linux
 
-Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
+Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On KDE Plasma 6 the dock needs no extension: in an X11 session it lists windows, reserves screen space and draws glass with KWin's blur, and on Wayland it lists the windows of X11 apps (windows of native Wayland apps aren't listed yet). On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
+
+Running as an AppImage, Pier adds its own menu entry and icons to `~/.local/share` on the first launch, so the dock shows up in the application menu without any manual setup.
 
 ## Configuration
 
