@@ -47,8 +47,12 @@ export function dockMetrics(
   // mais espaço, e o mesmo espaço nos dois casos evita a janela mudar de tamanho quando a faixa
   // abre e fecha.
   const tooltipSpace = vertical ? PREVIEW_WIDTH + PREVIEW_GAP : 48;
-  const base = Math.max(0, iconSize * (magnification - 1)) + tooltipSpace;
-  const hoverHeadroom = Math.max(base, previewSpace);
+  const magnified = Math.max(0, Math.round(iconSize * (magnification - 1)));
+  // As dicas só precisam caber na janela: não são clicáveis, então não seguram a dock aberta depois
+  // que o mouse sai dos ícones. A faixa de prévias, sim: sem ela na área clicável o Rust a
+  // recortaria antes de o cursor alcançá-la.
+  const windowHeadroom = Math.max(magnified + tooltipSpace, previewSpace);
+  const hoverHeadroom = Math.max(magnified, previewSpace);
   return {
     padding,
     margin,
@@ -59,7 +63,7 @@ export function dockMetrics(
     itemOffset: 3 + (barThickness - autoThickness) / 2,
     reserved,
     hoverHeadroom,
-    windowSize: reserved + hoverHeadroom,
+    windowSize: reserved + windowHeadroom,
   };
 }
 

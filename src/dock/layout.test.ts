@@ -13,17 +13,25 @@ test("nas bordas laterais a espessura é a largura da barra", () => {
   const right = dockMetrics(40, 1.6, false, null, 0, "right");
   assert.equal(left.barThickness, 64);
   assert.equal(right.reserved, 80);
-  // A dica ao lado da barra pede mais espaço que a dica acima dela.
-  assert.ok(left.hoverHeadroom > dockMetrics(40, 1.6).hoverHeadroom);
+  // A dica ao lado da barra pede mais espaço na janela que a dica acima dela, mas não segura o hover.
+  assert.ok(left.windowSize > dockMetrics(40, 1.6).windowSize);
+  assert.equal(left.hoverHeadroom, dockMetrics(40, 1.6).hoverHeadroom);
 });
 
 test("de ponta a ponta a área reservada é a própria barra", () => {
   const metrics = dockMetrics(40, 1.6, true);
   assert.equal(metrics.reserved, metrics.barThickness);
   // A janela da dock ainda cobre a folga da magnificação e das dicas ao lado da barra.
-  assert.equal(metrics.windowSize, metrics.barThickness + metrics.hoverHeadroom);
+  assert.equal(metrics.windowSize, metrics.barThickness + 72);
   // Na vertical, de ponta a ponta, a reserva é a largura da barra.
   assert.equal(dockMetrics(40, 1.6, true, null, 0, "right").reserved, 64);
+});
+
+test("as dicas cabem na janela mas não seguram o hover", () => {
+  const metrics = dockMetrics(40, 1.6);
+  assert.equal(metrics.hoverHeadroom, 24);
+  assert.equal(metrics.windowSize, metrics.reserved + 72);
+  assert.equal(dockMetrics(40, 1).hoverHeadroom, 0);
 });
 
 test("a faixa de prévias aumenta a folga e o tamanho da janela", () => {
@@ -31,7 +39,7 @@ test("a faixa de prévias aumenta a folga e o tamanho da janela", () => {
   const space = previewSpace("bottom", true);
   assert.equal(space, PREVIEW_HEIGHT + PREVIEW_GAP);
   const withPreview = dockMetrics(40, 1.6, false, null, space);
-  assert.equal(base.hoverHeadroom, 72);
+  assert.equal(base.hoverHeadroom, 24);
   assert.equal(withPreview.hoverHeadroom, space);
   assert.equal(withPreview.windowSize, withPreview.reserved + space);
   // Uma folga menor que a da magnificação não pode encolher a janela.
@@ -43,8 +51,10 @@ test("nas laterais a faixa de prévias cabe na janela desde o começo", () => {
   const open = dockMetrics(40, 1.6, false, null, previewSpace("left", true), "left");
   // A folga com a faixa fechada já é a que a faixa aberta precisa: abrir não redimensiona a janela.
   assert.equal(open.windowSize, closed.windowSize);
-  assert.ok(closed.hoverHeadroom >= previewSpace("left", true));
-  assert.ok(closed.hoverHeadroom > dockMetrics(40, 1.6).hoverHeadroom);
+  assert.ok(closed.windowSize - closed.reserved >= previewSpace("left", true));
+  // Só a faixa aberta entra na área de hover.
+  assert.equal(open.hoverHeadroom, previewSpace("left", true));
+  assert.equal(closed.hoverHeadroom, dockMetrics(40, 1.6).hoverHeadroom);
 });
 
 test("a faixa de prévias fica centrada no ícone", () => {
