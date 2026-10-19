@@ -2,6 +2,11 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.8.1
+
+### Fixes
+- **Windows:** after moving the pointer over the dock icons for a while, the dock could stop reacting and let the mouse reach the window behind it. Pier now notices when this happens and makes the dock respond again right away.
+
 ## 0.8.0
 
 ### Choose where the dock sits

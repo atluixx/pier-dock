@@ -2,6 +2,11 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.8.1
+
+### Correções
+- **Windows:** depois de passar o mouse pelos ícones da dock por um tempo, ela podia parar de responder e deixar o mouse chegar à janela de trás. Agora o Pier percebe quando isso acontece e faz a dock voltar a responder na hora.
+
 ## 0.8.0
 
 ### Escolha onde a dock fica
