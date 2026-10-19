@@ -43,16 +43,18 @@ export function dockMetrics(
   // espessura dela: as janelas maximizadas encostam na dock. Sem isso sobram as duas margens (16px)
   // entre a janela e a dock.
   const reserved = fullWidth ? barThickness : barThickness + margin * 2;
-  // As dicas e a faixa de prévias saem da barra para dentro da tela. Nas laterais elas precisam de
-  // mais espaço, e o mesmo espaço nos dois casos evita a janela mudar de tamanho quando a faixa
-  // abre e fecha.
+  // As dicas e a faixa de prévias saem da barra para dentro da tela; nas laterais elas precisam de
+  // mais espaço.
   const tooltipSpace = vertical ? PREVIEW_WIDTH + PREVIEW_GAP : 48;
   const magnified = Math.max(0, Math.round(iconSize * (magnification - 1)));
   // As dicas só precisam caber na janela: não são clicáveis, então não seguram a dock aberta depois
   // que o mouse sai dos ícones. A faixa de prévias, sim: sem ela na área clicável o Rust a
   // recortaria antes de o cursor alcançá-la.
-  const windowHeadroom = Math.max(magnified + tooltipSpace, previewSpace);
   const hoverHeadroom = Math.max(magnified, previewSpace);
+  // A janela já nasce com espaço para a faixa: redimensioná-la ao abrir e fechar a faixa faz a
+  // barra piscar no macOS, porque o WebView leva um quadro para se reposicionar.
+  const previewRoom = (vertical ? PREVIEW_WIDTH : PREVIEW_HEIGHT) + PREVIEW_GAP;
+  const windowHeadroom = Math.max(magnified + tooltipSpace, previewRoom);
   return {
     padding,
     margin,

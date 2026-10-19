@@ -19,6 +19,7 @@ interface Props {
   anchor: { x: number; y: number };
   position: DockPosition;
   onClose: () => void;
+  onHoverChange: (inside: boolean) => void;
 }
 
 interface CardProps {
@@ -66,7 +67,7 @@ function PreviewCard({ info, thumbnail, icon, onActivate, onClose }: CardProps) 
  * Faixa de prévias das janelas de um app, ao lado da barra da dock: acima ou abaixo dela nas bordas
  * de cima e de baixo, e à direita ou à esquerda nas laterais.
  */
-export function WindowPreview({ app, anchor, position, onClose }: Props) {
+export function WindowPreview({ app, anchor, position, onClose, onHoverChange }: Props) {
   const t = useT().preview;
   const icon = useIcon(app.iconKey);
   const stripRef = useRef<HTMLDivElement>(null);
@@ -127,18 +128,39 @@ export function WindowPreview({ app, anchor, position, onClose }: Props) {
 
   // A faixa sai da barra para dentro da tela (`--preview-offset`) e fica centrada no ícone, presa
   // às bordas da tela.
+  const offset = previewAlong(vertical ? anchor.y : anchor.x, viewport, along);
   const style: React.CSSProperties = {};
   if (vertical) {
     style[position === "left" ? "left" : "right"] = "var(--preview-offset)";
-    style.top = previewAlong(anchor.y, viewport, along);
+    style.top = offset;
   } else {
     style[position === "top" ? "top" : "bottom"] = "var(--preview-offset)";
-    style.left = previewAlong(anchor.x, viewport, along);
+    style.left = offset;
     style.height = PREVIEW_HEIGHT;
   }
 
+  // A faixa fica fora do retângulo da barra: o vidro nativo atrás dela é um segundo, que segue a
+  // posição e o tamanho medidos e some junto com ela.
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    if (!strip || !box.width) return;
+    const r = strip.getBoundingClientRect();
+    const radius = parseFloat(getComputedStyle(strip).borderTopLeftRadius) || 0;
+    ipc.setPreviewGlass({ x: r.left, y: r.top, width: r.width, height: r.height, radius }).catch(console.error);
+  }, [offset, box.width, box.height, position]);
+
+  useEffect(() => () => void ipc.setPreviewGlass(null).catch(console.error), []);
+
   return (
-    <div ref={stripRef} className="preview-strip" role="dialog" aria-label={t.label(app.name)} style={style}>
+    <div
+      ref={stripRef}
+      className="preview-strip"
+      role="dialog"
+      aria-label={t.label(app.name)}
+      style={style}
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
+    >
       {windows.map((w) => (
         <PreviewCard
           key={w.id}

@@ -21,8 +21,8 @@ test("nas bordas laterais a espessura é a largura da barra", () => {
 test("de ponta a ponta a área reservada é a própria barra", () => {
   const metrics = dockMetrics(40, 1.6, true);
   assert.equal(metrics.reserved, metrics.barThickness);
-  // A janela da dock ainda cobre a folga da magnificação e das dicas ao lado da barra.
-  assert.equal(metrics.windowSize, metrics.barThickness + 72);
+  // A janela da dock ainda cobre a faixa de prévias ao lado da barra.
+  assert.equal(metrics.windowSize, metrics.barThickness + PREVIEW_HEIGHT + PREVIEW_GAP);
   // Na vertical, de ponta a ponta, a reserva é a largura da barra.
   assert.equal(dockMetrics(40, 1.6, true, null, 0, "right").reserved, 64);
 });
@@ -30,18 +30,21 @@ test("de ponta a ponta a área reservada é a própria barra", () => {
 test("as dicas cabem na janela mas não seguram o hover", () => {
   const metrics = dockMetrics(40, 1.6);
   assert.equal(metrics.hoverHeadroom, 24);
-  assert.equal(metrics.windowSize, metrics.reserved + 72);
+  assert.ok(metrics.windowSize >= metrics.reserved + 72);
   assert.equal(dockMetrics(40, 1).hoverHeadroom, 0);
 });
 
-test("a faixa de prévias aumenta a folga e o tamanho da janela", () => {
+test("a faixa de prévias aumenta a área de hover, mas não a janela", () => {
   const base = dockMetrics(40, 1.6);
   const space = previewSpace("bottom", true);
   assert.equal(space, PREVIEW_HEIGHT + PREVIEW_GAP);
   const withPreview = dockMetrics(40, 1.6, false, null, space);
   assert.equal(base.hoverHeadroom, 24);
   assert.equal(withPreview.hoverHeadroom, space);
-  assert.equal(withPreview.windowSize, withPreview.reserved + space);
+  assert.equal(withPreview.windowSize, base.windowSize);
+  assert.equal(base.windowSize, base.reserved + space);
+  // Com magnificação grande a folga dela passa a da faixa, e a janela acompanha.
+  assert.ok(dockMetrics(64, 3).windowSize > dockMetrics(64, 3).reserved + space);
   // Uma folga menor que a da magnificação não pode encolher a janela.
   assert.equal(dockMetrics(40, 2.6, false, null, 0).hoverHeadroom, dockMetrics(40, 2.6, false, null, 10).hoverHeadroom);
 });

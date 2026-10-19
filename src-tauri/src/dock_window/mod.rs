@@ -227,6 +227,17 @@ pub fn set_hit_rect(app: AppHandle, rect: HitRect) {
     backend::hit_rect_changed(&app);
 }
 
+/// A faixa de prévias das janelas abriu, mudou de tamanho (`Some`) ou fechou (`None`): o vidro
+/// acompanha, como o da barra.
+#[tauri::command]
+pub fn set_preview_glass(app: AppHandle, rect: Option<HitRect>) {
+    let Some(window) = app.get_webview_window(DOCK_LABEL) else { return };
+    match rect {
+        Some(r) => crate::backdrop::set_named_frame(&window, "preview", crate::backdrop::Rect { x: r.x, y: r.y, width: r.width, height: r.height }, r.radius),
+        None => crate::backdrop::remove_named(&window, "preview"),
+    }
+}
+
 /// Faixa de `reserved` pixels na borda escolhida do monitor. Na borda de cima a faixa começa
 /// depois do que não pertence às janelas (a barra de menus do macOS).
 fn reserved_band(monitor: Band, reserved: i32) -> Band {

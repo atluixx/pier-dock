@@ -37,9 +37,11 @@ interface Props {
   shortcut?: number;
   /** Abre a faixa de prévias das janelas depois de um instante de hover. */
   onPreview?: (app: DockApp, anchor: { x: number; y: number }) => void;
+  /** O cursor entrou ou saiu do ícone: a faixa aberta para este app fecha quando ele sai dos dois. */
+  onHoverChange?: (app: DockApp, inside: boolean) => void;
 }
 
-export function AppIcon({ app, active, sortable, shortcut, onPreview }: Props) {
+export function AppIcon({ app, active, sortable, shortcut, onPreview, onHoverChange }: Props) {
   const src = useIcon(app.iconKey);
   const bounce = useAnimationControls();
   const { mouse, position } = useContext(MagnifyCtx)!;
@@ -115,6 +117,7 @@ export function AppIcon({ app, active, sortable, shortcut, onPreview }: Props) {
 
   const onMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
     setHover(true);
+    onHoverChange?.(app, true);
     if (!onPreview || app.windows.length < 2 || isDragging) return;
     const el = e.currentTarget;
     previewTimer.current = window.setTimeout(() => {
@@ -127,6 +130,7 @@ export function AppIcon({ app, active, sortable, shortcut, onPreview }: Props) {
   const onMouseLeave = () => {
     setHover(false);
     cancelPreview();
+    onHoverChange?.(app, false);
   };
 
   return (
