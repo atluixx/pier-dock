@@ -2,6 +2,35 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.8.0
+
+### Escolha onde a dock fica
+**Configurações** > **Aparência** > **Posição** coloca a dock na borda **Embaixo** (como antes), **Em cima**, **À esquerda** ou **À direita** da tela.
+- Nas laterais a barra fica em pé, como uma coluna. Os widgets largos passam para o tamanho compacto, e as dicas e as prévias das janelas abrem para o lado.
+- No Windows, no Linux com X11 e no GNOME, as janelas maximizadas abrem espaço para a dock em qualquer borda. No macOS a dock muda de lugar, mas o sistema continua não deixando os apps reservarem espaço na tela.
+
+> **GNOME:** as bordas de cima e laterais precisam da versão nova da extensão do Pier. Abra as **Configurações**, reinstale a extensão e depois saia e entre de novo na sessão. Com a antiga, só a borda de baixo reserva espaço.
+
+### Prévias das janelas melhores
+Ao passar o mouse num app com mais de uma janela, a faixa de prévias agora combina com o resto da dock.
+- Ela tem o mesmo vidro dos popovers.
+- No macOS os cartões se destacam ao passar o mouse e mostram o botão de fechar.
+- Cada cartão mostra uma imagem da janela no macOS (14 ou mais novo) e no Windows, e não só o ícone do app. No macOS isso precisa da permissão de **Gravação de Tela**, que o Pier pede na primeira vez que as prévias abrem. Janelas minimizadas continuam com o ícone do app.
+- A faixa fecha assim que o mouse sai dela e do ícone do app, por exemplo ao passar para outro ícone.
+- A dock não pisca mais quando a faixa abre ou fecha.
+
+### Dispositivos Bluetooth pareados
+O popover de Bluetooth agora lista todos os dispositivos pareados, e não só os conectados, em **Conectados** e **Pareados**.
+- Clique num pareado para conectar, e use **Desconectar** num conectado.
+- No Windows, o clique num dispositivo abre as configurações de Bluetooth, porque o Windows não deixa os apps conectarem fones e teclados.
+
+### Novidades depois de atualizar
+Depois que o Pier se atualiza, uma janela mostra o que mudou na versão nova, uma vez só. Abra de novo quando quiser em **Configurações** > **Geral** > **Ver novidades**.
+
+### Correções
+- **macOS:** o botão **Permitir** do popover de Wi-Fi agora mostra o pedido de Localização, e as redes por perto aparecem. Antes, o clique não fazia nada.
+- Com **Ocultar automaticamente** ligado, a dock se esconde assim que o mouse passa dos ícones, e não bem acima deles, e espera um pouco menos para esconder.
+
 ## 0.7.0
 
 ### Suporte ao KDE Plasma

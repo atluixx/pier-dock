@@ -2,6 +2,35 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.8.0
+
+### Choose where the dock sits
+**Settings** > **Appearance** > **Position** puts the dock on the **Bottom** (as before), **Top**, **Left** or **Right** edge of the screen.
+- On the sides the bar stands as a column. Wide widgets switch to their compact size, and the tooltips and window previews open to the side.
+- On Windows, on Linux with X11 and on GNOME, maximized windows make room for the dock on any edge. On macOS the dock moves, but the system still doesn't let apps reserve screen space.
+
+> **GNOME:** the top and side edges need the new version of the Pier extension. Open **Settings**, reinstall the extension, and then log out and log back in. With the old one, only the bottom edge reserves space.
+
+### Better window previews
+Hover an app with more than one window and the previews strip now matches the rest of the dock.
+- It has the same glass as the popovers.
+- On macOS the cards highlight on hover and show the close button.
+- Each card shows a picture of the window on macOS (14 or later) and on Windows, not just the app icon. On macOS this needs the **Screen Recording** permission, which Pier asks for the first time the previews open. Minimized windows still show the app icon.
+- The strip closes as soon as the pointer leaves it and the app's icon, for example when you move to another icon.
+- The dock no longer flickers when the strip opens or closes.
+
+### Paired Bluetooth devices
+The Bluetooth popover now lists every paired device, not just the connected ones, under **Connected** and **Paired**.
+- Click a paired device to connect it, and use **Disconnect** on a connected one.
+- On Windows, clicking a device opens the Bluetooth settings, because Windows doesn't let apps connect to headphones and keyboards.
+
+### What's new after updating
+After Pier updates, a window shows what changed in the new version, once. Open it again any time in **Settings** > **General** > **What's new**.
+
+### Fixes
+- **macOS:** the **Allow** button in the Wi-Fi popover now shows the Location prompt, so the networks nearby show up. Before, clicking it did nothing.
+- With **Hide automatically** on, the dock hides as soon as the pointer moves past the icons, instead of a long way above them, and waits a little less before hiding.
+
 ## 0.7.0
 
 ### KDE Plasma support
