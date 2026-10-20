@@ -27,7 +27,8 @@ export type WidgetKind =
   | "pomodoro"
   | "system-usage"
   | "calendar"
-  | "ai-usage";
+  | "ai-usage"
+  | "claude-agents";
 
 export interface WidgetConfig {
   kind: WidgetKind;
@@ -90,6 +91,8 @@ export interface Config {
   language: LanguageSetting;
   /** Instala sozinho a atualização encontrada logo depois de abrir. */
   autoUpdate: boolean;
+  /** Mascote decorativo que anda sobre a borda da dock, reagindo às sessões do Claude Code. */
+  claudePetEnabled: boolean;
 }
 
 export interface WindowInfo {
@@ -99,6 +102,8 @@ export interface WindowInfo {
   exe: string;
   aumid?: string | null;
   minimized: boolean;
+  /** Pid do processo dono da janela. */
+  pid: number;
 }
 
 export interface WindowsSnapshot {
@@ -280,6 +285,19 @@ export interface AiProvider {
   detected: boolean;
 }
 
+/** Estado de uma sessão do Claude Code, visto pelos hooks instalados em `~/.claude/settings.json`. */
+export type ClaudeAgentState = "running" | "permission" | "error" | "done";
+
+export interface ClaudeAgent {
+  sessionId: string;
+  status: ClaudeAgentState;
+  cwd: string;
+  project: string;
+  updatedAt: number;
+  /** Janela do terminal/IDE que lançou a sessão, se o Pier conseguiu resolvê-la. */
+  windowId: number | null;
+}
+
 export interface Volume {
   level: number;
   muted: boolean;
@@ -390,6 +408,8 @@ export const ipc = {
     invoke<void>("set_dock_layout", { layout }),
   setHitRect: (rect: { x: number; y: number; width: number; height: number; radius: number }) =>
     invoke<void>("set_hit_rect", { rect }),
+  setPetRect: (rect: { x: number; y: number; width: number; height: number; radius: number } | null) =>
+    invoke<void>("set_pet_rect", { rect }),
   setPreviewGlass: (rect: { x: number; y: number; width: number; height: number; radius: number } | null) =>
     invoke<void>("set_preview_glass", { rect }),
   dockVisible: () => invoke<boolean>("dock_visible"),
@@ -456,6 +476,12 @@ export const ipc = {
   aiUsage: (provider: AiProviderChoice) => invoke<AiUsage>("ai_usage", { provider }),
   aiUsageCached: () => invoke<AiUsage | null>("ai_usage_cached"),
   aiProviders: () => invoke<AiProvider[]>("ai_providers"),
+
+  getClaudeAgents: () => invoke<ClaudeAgent[]>("get_claude_agents"),
+  focusClaudeAgent: (sessionId: string) => invoke<void>("focus_claude_agent", { sessionId }),
+  claudeHooksInstalled: () => invoke<boolean>("claude_hooks_installed"),
+  installClaudeHooks: () => invoke<void>("install_claude_hooks"),
+  uninstallClaudeHooks: () => invoke<void>("uninstall_claude_hooks"),
 
   openPanel: (kind: string, anchorX: number, anchorY: number, width: number, height: number) =>
     invoke<void>("open_panel", { kind, anchorX, anchorY, width, height }),

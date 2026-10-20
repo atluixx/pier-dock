@@ -158,6 +158,62 @@ export function AiUsageOptions({ config, update }: OptionsProps) {
   );
 }
 
+type ClaudeDisplay = "icon" | "both" | "pet";
+
+/** Hooks do Claude Code que alimentam o widget de agents — instalados em `~/.claude/settings.json`. */
+export function ClaudeAgentsOptions({ config, update }: OptionsProps) {
+  const [installed, setInstalled] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const { widgetOptions: t, common } = useT();
+
+  useEffect(() => {
+    ipc.claudeHooksInstalled().then(setInstalled).catch(() => setInstalled(false));
+  }, []);
+
+  // "Só o Clawd" é o widget desligado com o Clawd ligado: os dois já funcionam separados, aqui só
+  // ficam numa escolha só.
+  const iconShown = config.widgets.some((w) => w.kind === "claude-agents" && w.enabled);
+  const display: ClaudeDisplay = config.claudePetEnabled ? (iconShown ? "both" : "pet") : "icon";
+  const setDisplay = (next: ClaudeDisplay) =>
+    update((c) => ({
+      claudePetEnabled: next !== "icon",
+      widgets: c.widgets.map((w) => (w.kind === "claude-agents" ? { ...w, enabled: next !== "pet" } : w)),
+    }));
+
+  const run = (action: () => Promise<void>, next: boolean) => async () => {
+    try {
+      await action();
+      setInstalled(next);
+      setStatus(null);
+    } catch (e) {
+      setStatus(common.error(String(e)));
+    }
+  };
+
+  return (
+    <>
+      <Row label={t.claudeHooksLabel} description={status ?? (installed ? t.claudeHooksOnHint : t.claudeHooksOffHint)}>
+        {installed && (
+          <button className="btn btn-danger" onClick={run(ipc.uninstallClaudeHooks, false)}>
+            {t.claudeHooksRemove}
+          </button>
+        )}
+        <button className="btn" disabled={installed === null} onClick={run(ipc.installClaudeHooks, true)}>
+          {installed ? t.claudeHooksReinstall : t.claudeHooksInstall}
+        </button>
+      </Row>
+      <Row label={t.claudeDisplayLabel} description={t.claudePetHint}>
+        <Segmented
+          label={t.claudeDisplayLabel}
+          value={display}
+          onChange={setDisplay}
+          options={(["icon", "both", "pet"] as const).map((value) => ({ value, label: t.claudeDisplay[value] }))}
+        />
+      </Row>
+    </>
+  );
+}
+
 export function CalendarOptions() {
   const data = useCalendar(true);
   const [editing, setEditing] = useState(false);
