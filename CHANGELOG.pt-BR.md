@@ -2,15 +2,6 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
-## 0.12.0
-
-### Um widget para todas as suas IAs de linha de comando
-O widget **Claude Agents** virou **Agentes de IA** e agora mostra sessões do Claude Code, Codex, opencode e Gemini CLI: rodando, pedindo permissão, com erro ou concluídas.
-- Cada CLI tem a própria integração em **Configurações** > **Widgets** > opções do widget. **Ativar** instala os hooks (ou o plugin do opencode) e **Desativar** remove.
-- O Codex pede para confiar nos hooks do Pier com `/hooks`; o opencode precisa ser reiniciado para carregar o plugin.
-- A lista mostra a qual CLI cada sessão pertence, e clicar numa linha continua levando ao terminal ou à IDE que a iniciou. Sua configuração atual do Claude Code continua funcionando, e **Reinstalar** a move para o hook compartilhado.
-- O widget compartilha só o provedor, o status, a pasta do projeto e o horário — nunca o conteúdo da conversa.
-
 ## 0.11.0
 
 ### Claude Code na dock
