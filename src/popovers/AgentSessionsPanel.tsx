@@ -1,13 +1,13 @@
 import { ipc } from "../lib/ipc";
-import { useClaudeAgents } from "../hooks/useClaudeAgents";
+import { useAgentSessions } from "../hooks/useAgentSessions";
 import { timeAgo } from "../lib/format";
 import { useT } from "../i18n";
 import { ClaudeMascotIcon } from "../dock/ClaudeMascotIcon";
 
 /** Lista das sessões ativas; clicar numa foca a janela do terminal/IDE que a lançou. */
-export function ClaudeAgentsPanel() {
-  const agents = useClaudeAgents();
-  const t = useT().claudeAgents;
+export function AgentSessionsPanel() {
+  const agents = useAgentSessions();
+  const t = useT().agentSessions;
 
   return (
     <>
@@ -25,18 +25,19 @@ export function ClaudeAgentsPanel() {
         ) : (
           <ul className="list">
             {agents.map((a) => (
-              <li key={a.sessionId}>
+              <li key={`${a.provider}:${a.sessionId}`}>
                 <button
                   className="list-row claude-row"
                   disabled={a.windowId === null}
                   title={a.windowId === null ? t.focusFailed : undefined}
-                  onClick={() => ipc.focusClaudeAgent(a.sessionId).catch(console.error)}
+                  onClick={() => ipc.focusAgentSession(a.provider, a.sessionId).catch(console.error)}
                 >
                   <span className={`claude-dot claude-dot-${a.status}`} aria-hidden />
                   <span className="list-main">
                     <span className="list-title">{a.project || a.cwd}</span>
                     <span className="list-sub">
-                      {t.status[a.status]} · {timeAgo(a.updatedAt)}
+                      <span className="agent-provider">{t.providers[a.provider]}</span> · {t.status[a.status]} ·{" "}
+                      {timeAgo(a.updatedAt)}
                     </span>
                   </span>
                 </button>

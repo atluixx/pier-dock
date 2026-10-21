@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { ipc, type ClaudeAgent, type DockPosition } from "../lib/ipc";
-import { useClaudeAgents } from "../hooks/useClaudeAgents";
+import { ipc, type AgentSession, type DockPosition } from "../lib/ipc";
+import { useAgentSessions } from "../hooks/useAgentSessions";
 import { useT } from "../i18n";
-import { leadStatus, openClaudeAgents } from "../widgets/ClaudeAgentsWidget";
+import { leadStatus, openAgentSessions } from "../widgets/AgentSessionsWidget";
 import { barRect, isVertical } from "./layout";
 import { ClaudeMascotIcon } from "./ClaudeMascotIcon";
 
@@ -20,7 +20,7 @@ const SPEED = 46;
  * volta dele: andando, ele nunca sai da área informada. */
 const HIT_STEP = 4;
 
-function moodOf(agents: ClaudeAgent[]): Mood {
+function moodOf(agents: AgentSession[]): Mood {
   if (agents.some((a) => a.status === "permission")) return "waiting";
   if (agents.some((a) => a.status === "running")) return "walking";
   return "idle";
@@ -34,15 +34,15 @@ interface Props {
   barRef: React.RefObject<HTMLDivElement>;
 }
 
-/** Mascote que anda sobre a borda da dock, reagindo às sessões do Claude Code (ver
- * `useClaudeAgents`). Com alguma sessão, clicar nele faz o mesmo que o widget; como ele fica fora
+/** Mascote que anda sobre a borda da dock, reagindo às sessões dos CLIs de IA (ver
+ * `useAgentSessions`). Com alguma sessão, clicar nele faz o mesmo que o widget; como ele fica fora
  * da barra, informa a própria área ao Rust (`set_pet_rect`), senão o clique atravessa a janela. */
 export function ClawdPet({ position, full, margin, visible, barRef }: Props) {
-  const agents = useClaudeAgents();
+  const agents = useAgentSessions();
   const vertical = isVertical(position);
   const mood = moodOf(agents);
   const lead = leadStatus(agents);
-  const t = useT().claudeAgents;
+  const t = useT().agentSessions;
   const clickable = visible && agents.length > 0;
   const clickableRef = useRef(clickable);
   clickableRef.current = clickable;
@@ -63,7 +63,7 @@ export function ClawdPet({ position, full, margin, visible, barRef }: Props) {
   useEffect(() => {
     const subs = [
       listen("dock-pointer-left", () => setHovered(false)),
-      listen<string | null>("panel-changed", (e) => setPanelOpen(e.payload === "claude-agents")),
+      listen<string | null>("panel-changed", (e) => setPanelOpen(e.payload === "ai-agents")),
     ];
     return () => subs.forEach((s) => s.then((unlisten) => unlisten()));
   }, []);
@@ -166,7 +166,7 @@ export function ClawdPet({ position, full, margin, visible, barRef }: Props) {
       role={clickable ? "button" : undefined}
       aria-label={clickable ? t.tile(agents.length, t.status[lead ?? "running"]) : undefined}
       aria-hidden={!clickable}
-      onClick={(e) => clickable && openClaudeAgents(agents, e.currentTarget)}
+      onClick={(e) => clickable && openAgentSessions(agents, e.currentTarget)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

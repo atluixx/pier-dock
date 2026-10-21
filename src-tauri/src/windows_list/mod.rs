@@ -31,8 +31,8 @@ pub struct WindowInfo {
     pub exe: String,
     pub aumid: Option<String>,
     pub minimized: bool,
-    /// Pid do processo dono da janela — usado para casar uma sessão do Claude Code com a janela de
-    /// terminal/IDE que a lançou (ver `claude_agents`).
+    /// Pid do processo dono da janela — usado para casar uma sessão de CLI de IA com a janela de
+    /// terminal/IDE que a lançou (ver `agent_sessions`).
     pub pid: u32,
 }
 
