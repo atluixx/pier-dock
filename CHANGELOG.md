@@ -2,6 +2,15 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.12.0
+
+### One widget for all your AI CLIs
+The **Claude Agents** widget became **AI Agents** and now shows sessions from Claude Code, Codex, opencode, and Gemini CLI: running, asking for permission, with an error, or done.
+- Each CLI has its own integration in **Settings** > **Widgets** > the widget's options. **Enable** installs the hooks (or the opencode plugin) and **Disable** removes them.
+- Codex asks you to trust Pier's hooks with `/hooks`; opencode needs a restart to load the plugin.
+- The list shows which CLI each session belongs to, and clicking a row still jumps to the terminal or IDE that started it. Your existing Claude Code setup keeps working, and **Reinstall** moves it to the shared hook.
+- The widget only shares the provider, status, project folder, and time — never the conversation content.
+
 ## 0.11.0
 
 ### Claude Code on the dock
