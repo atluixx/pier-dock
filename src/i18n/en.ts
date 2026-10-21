@@ -158,10 +158,10 @@ export const en: Dict = {
       `${provider} · ${name}: ${percent} of the limit, resets in ${resetsIn}`,
     tileTokensToday: (tokens: string) => `${tokens} tokens today`,
   },
-  claudeAgents: {
-    title: "Claude Code",
-    idle: "Claude Code: no active session",
-    tile: (n: number, status: string) => `Claude Code: ${n} ${n === 1 ? "session" : "sessions"} · ${status}`,
+  agentSessions: {
+    title: "AI sessions",
+    idle: "No active AI session",
+    tile: (n: number, status: string) => `AI: ${n} ${n === 1 ? "session" : "sessions"} · ${status}`,
     empty: "No active session",
     focusFailed: "Couldn't find this session's window.",
     status: {
@@ -169,6 +169,12 @@ export const en: Dict = {
       permission: "Needs permission",
       error: "Error",
       done: "Done",
+    },
+    providers: {
+      claude: "Claude Code",
+      codex: "Codex CLI",
+      opencode: "opencode",
+      gemini: "Gemini CLI",
     },
   },
   system: {
@@ -313,7 +319,7 @@ export const en: Dict = {
       "system-usage": "System usage",
       calendar: "Calendar",
       "ai-usage": "AI usage",
-      "claude-agents": "Claude Code",
+      "ai-agents": "AI sessions",
       bluetooth: "Bluetooth",
       launcher: "App launcher",
       volume: "Sound",
@@ -463,11 +469,11 @@ export const en: Dict = {
         description:
           "How much of the limit has been used in the 5h session and the week (Claude Code) or in the plan's window (Codex CLI), plus today's tokens. Reads the AIs' local files; nothing goes over the network.",
       },
-      "claude-agents": {
-        summary: "Claude Code walking the dock, with each active session.",
-        name: "Claude Agents",
+      "ai-agents": {
+        summary: "AI CLI sessions walking the dock.",
+        name: "AI agents",
         description:
-          "Shows Claude Code sessions that are running, asking for permission, erroring, or done. Needs the Claude Code hooks enabled (see below). Click to focus the terminal or IDE window that launched the session; with more than one active, it opens a list to choose from.",
+          "Shows Claude Code, Codex, opencode and Gemini CLI sessions that are running, asking for permission, erroring, or done. Enable each CLI's integration (see below). Click to focus the terminal or IDE window that launched the session; with more than one active, it opens a list to choose from.",
       },
     },
     preview: "Preview",
@@ -523,15 +529,23 @@ export const en: Dict = {
     icalAddress: "iCal address",
     calendarHint: (keychain) =>
       `Google Calendar: Calendar settings → Secret address in iCal format. Outlook: Calendar → Shared calendars → Publish a calendar (ICS link). The address is stored ${keychain}.`,
-    claudeHooksLabel: "Claude Code hooks",
-    claudeHooksOnHint: "Installed in ~/.claude/settings.json — sessions show up here automatically.",
-    claudeHooksOffHint: "Without them Pier can't tell when a Claude Code session is running, asked for permission, or finished.",
-    claudeHooksInstall: "Enable",
-    claudeHooksReinstall: "Reinstall",
-    claudeHooksRemove: "Disable",
-    claudeDisplayLabel: "Show in dock",
-    claudeDisplay: { icon: "Icon", both: "Icon and Clawd", pet: "Clawd only" },
-    claudePetHint: "A small mascot that walks the dock while a session runs, jumps when one needs permission, and rests when idle.",
+    agentIntegrationLabel: "AI integrations",
+    agentIntegrationHint:
+      "Install each CLI's hooks or plugin. Pier only reads the session status — never the conversation content.",
+    agentInstalled: {
+      claude: "Hooks installed in ~/.claude/settings.json.",
+      codex: "Hooks installed in ~/.codex/hooks.json. In Codex, run /hooks to trust Pier's hooks.",
+      opencode: "Plugin installed in ~/.config/opencode/plugins. Restart opencode to load it.",
+      gemini: "Hooks installed in ~/.gemini/settings.json.",
+    },
+    agentAvailable: "CLI found on this computer. Enable it to follow its sessions.",
+    agentNotDetected: "CLI not found on this computer. You can still enable it and install the CLI later.",
+    agentInstall: "Enable",
+    agentReinstall: "Reinstall",
+    agentRemove: "Disable",
+    agentDisplayLabel: "Show in dock",
+    agentDisplay: { icon: "Icon", both: "Icon and Clawd", pet: "Clawd only" },
+    petHint: "A small mascot that walks the dock while a session runs, jumps when one needs permission, and rests when idle.",
   },
   githubTab: {
     widgets: {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ipc, type AiProvider, type WeatherLocation } from "../../lib/ipc";
+import { ipc, type AgentIntegration, type AgentProviderId, type AiProvider, type WeatherLocation } from "../../lib/ipc";
 import { AI_PROVIDERS, providerName } from "../../lib/aiUsage";
 import { labels } from "../../lib/platform";
 import { useCalendar } from "../../hooks/useCalendar";
@@ -158,56 +158,87 @@ export function AiUsageOptions({ config, update }: OptionsProps) {
   );
 }
 
-type ClaudeDisplay = "icon" | "both" | "pet";
+type AgentDisplay = "icon" | "both" | "pet";
 
-/** Hooks do Claude Code que alimentam o widget de agents — instalados em `~/.claude/settings.json`. */
-export function ClaudeAgentsOptions({ config, update }: OptionsProps) {
-  const [installed, setInstalled] = useState<boolean | null>(null);
+const AGENT_PROVIDERS: AgentProviderId[] = ["claude", "codex", "opencode", "gemini"];
+
+/** Hooks/plugin de cada CLI que alimentam o widget de agents. */
+export function AgentSessionsOptions({ config, update }: OptionsProps) {
+  const [integrations, setIntegrations] = useState<AgentIntegration[] | null>(null);
+  const [busy, setBusy] = useState<AgentProviderId | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const { widgetOptions: t, common } = useT();
+  const { widgetOptions: t, common, agentSessions } = useT();
 
+  const refresh = () => ipc.agentIntegrations().then(setIntegrations).catch(() => setIntegrations([]));
   useEffect(() => {
-    ipc.claudeHooksInstalled().then(setInstalled).catch(() => setInstalled(false));
+    refresh();
   }, []);
 
   // "Só o Clawd" é o widget desligado com o Clawd ligado: os dois já funcionam separados, aqui só
   // ficam numa escolha só.
-  const iconShown = config.widgets.some((w) => w.kind === "claude-agents" && w.enabled);
-  const display: ClaudeDisplay = config.claudePetEnabled ? (iconShown ? "both" : "pet") : "icon";
-  const setDisplay = (next: ClaudeDisplay) =>
+  const iconShown = config.widgets.some((w) => w.kind === "ai-agents" && w.enabled);
+  const display: AgentDisplay = config.claudePetEnabled ? (iconShown ? "both" : "pet") : "icon";
+  const setDisplay = (next: AgentDisplay) =>
     update((c) => ({
       claudePetEnabled: next !== "icon",
-      widgets: c.widgets.map((w) => (w.kind === "claude-agents" ? { ...w, enabled: next !== "pet" } : w)),
+      widgets: c.widgets.map((w) => (w.kind === "ai-agents" ? { ...w, enabled: next !== "pet" } : w)),
     }));
 
-  const run = (action: () => Promise<void>, next: boolean) => async () => {
+  const run = (provider: AgentProviderId, action: (id: AgentProviderId) => Promise<void>) => async () => {
+    setBusy(provider);
     try {
-      await action();
-      setInstalled(next);
+      await action(provider);
+      await refresh();
       setStatus(null);
     } catch (e) {
       setStatus(common.error(String(e)));
+    } finally {
+      setBusy(null);
     }
   };
 
+  const info = (provider: AgentProviderId) => integrations?.find((i) => i.id === provider);
+
   return (
     <>
-      <Row label={t.claudeHooksLabel} description={status ?? (installed ? t.claudeHooksOnHint : t.claudeHooksOffHint)}>
-        {installed && (
-          <button className="btn btn-danger" onClick={run(ipc.uninstallClaudeHooks, false)}>
-            {t.claudeHooksRemove}
-          </button>
-        )}
-        <button className="btn" disabled={installed === null} onClick={run(ipc.installClaudeHooks, true)}>
-          {installed ? t.claudeHooksReinstall : t.claudeHooksInstall}
-        </button>
-      </Row>
-      <Row label={t.claudeDisplayLabel} description={t.claudePetHint}>
+      <Row label={t.agentIntegrationLabel} description={t.agentIntegrationHint} />
+      {AGENT_PROVIDERS.map((provider) => {
+        const integration = info(provider);
+        const installed = integration?.installed ?? false;
+        const detected = integration?.detected ?? true;
+        const description = installed
+          ? t.agentInstalled[provider]
+          : detected
+            ? t.agentAvailable
+            : t.agentNotDetected;
+        return (
+          <Row key={provider} label={agentSessions.providers[provider]} description={description}>
+            {installed && (
+              <button
+                className="btn btn-danger"
+                disabled={busy !== null}
+                onClick={run(provider, ipc.uninstallAgentIntegration)}
+              >
+                {t.agentRemove}
+              </button>
+            )}
+            <button className="btn" disabled={busy !== null || integrations === null} onClick={run(provider, ipc.installAgentIntegration)}>
+              {busy === provider ? common.syncing : installed ? t.agentReinstall : t.agentInstall}
+            </button>
+          </Row>
+        );
+      })}
+      {status && (
+        <p className="field-hint" role="status">
+          {status}
+        </p>
+      )}
+      <Row label={t.agentDisplayLabel} description={t.petHint}>
         <Segmented
-          label={t.claudeDisplayLabel}
+          label={t.agentDisplayLabel}
           value={display}
           onChange={setDisplay}
-          options={(["icon", "both", "pet"] as const).map((value) => ({ value, label: t.claudeDisplay[value] }))}
+          options={(["icon", "both", "pet"] as const).map((value) => ({ value, label: t.agentDisplay[value] }))}
         />
       </Row>
     </>

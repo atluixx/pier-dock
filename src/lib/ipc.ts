@@ -28,7 +28,7 @@ export type WidgetKind =
   | "system-usage"
   | "calendar"
   | "ai-usage"
-  | "claude-agents";
+  | "ai-agents";
 
 export interface WidgetConfig {
   kind: WidgetKind;
@@ -91,7 +91,7 @@ export interface Config {
   language: LanguageSetting;
   /** Instala sozinho a atualização encontrada logo depois de abrir. */
   autoUpdate: boolean;
-  /** Mascote decorativo que anda sobre a borda da dock, reagindo às sessões do Claude Code. */
+  /** Mascote decorativo que anda sobre a borda da dock, reagindo às sessões dos CLIs de IA. */
   claudePetEnabled: boolean;
 }
 
@@ -285,17 +285,29 @@ export interface AiProvider {
   detected: boolean;
 }
 
-/** Estado de uma sessão do Claude Code, visto pelos hooks instalados em `~/.claude/settings.json`. */
-export type ClaudeAgentState = "running" | "permission" | "error" | "done";
+/** As CLIs cujas sessões o Pier acompanha. */
+export type AgentProviderId = "claude" | "codex" | "opencode" | "gemini";
 
-export interface ClaudeAgent {
+/** Estado de uma sessão, visto pelos hooks/plugin instalados pela integração do provider. */
+export type AgentSessionState = "running" | "permission" | "error" | "done";
+
+export interface AgentSession {
+  provider: AgentProviderId;
   sessionId: string;
-  status: ClaudeAgentState;
+  status: AgentSessionState;
   cwd: string;
   project: string;
   updatedAt: number;
   /** Janela do terminal/IDE que lançou a sessão, se o Pier conseguiu resolvê-la. */
   windowId: number | null;
+}
+
+export interface AgentIntegration {
+  id: AgentProviderId;
+  /** Se a CLI/pasta de configuração existe nesta máquina. */
+  detected: boolean;
+  /** Se os hooks (ou o plugin) do Pier estão instalados. */
+  installed: boolean;
 }
 
 export interface Volume {
@@ -477,11 +489,11 @@ export const ipc = {
   aiUsageCached: () => invoke<AiUsage | null>("ai_usage_cached"),
   aiProviders: () => invoke<AiProvider[]>("ai_providers"),
 
-  getClaudeAgents: () => invoke<ClaudeAgent[]>("get_claude_agents"),
-  focusClaudeAgent: (sessionId: string) => invoke<void>("focus_claude_agent", { sessionId }),
-  claudeHooksInstalled: () => invoke<boolean>("claude_hooks_installed"),
-  installClaudeHooks: () => invoke<void>("install_claude_hooks"),
-  uninstallClaudeHooks: () => invoke<void>("uninstall_claude_hooks"),
+  getAgentSessions: () => invoke<AgentSession[]>("get_agent_sessions"),
+  focusAgentSession: (provider: AgentProviderId, sessionId: string) => invoke<void>("focus_agent_session", { provider, sessionId }),
+  agentIntegrations: () => invoke<AgentIntegration[]>("agent_integrations"),
+  installAgentIntegration: (provider: AgentProviderId) => invoke<void>("install_agent_integration", { provider }),
+  uninstallAgentIntegration: (provider: AgentProviderId) => invoke<void>("uninstall_agent_integration", { provider }),
 
   openPanel: (kind: string, anchorX: number, anchorY: number, width: number, height: number) =>
     invoke<void>("open_panel", { kind, anchorX, anchorY, width, height }),

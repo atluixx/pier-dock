@@ -156,10 +156,10 @@ export const pt = {
       `${provider} · ${name}: ${percent} do limite, reseta em ${resetsIn}`,
     tileTokensToday: (tokens: string) => `${tokens} tokens hoje`,
   },
-  claudeAgents: {
-    title: "Claude Code",
-    idle: "Claude Code: nenhuma sessão ativa",
-    tile: (n: number, status: string) => `Claude Code: ${n} ${n === 1 ? "sessão" : "sessões"} · ${status}`,
+  agentSessions: {
+    title: "Sessões de IA",
+    idle: "Nenhuma sessão de IA ativa",
+    tile: (n: number, status: string) => `IA: ${n} ${n === 1 ? "sessão" : "sessões"} · ${status}`,
     empty: "Nenhuma sessão ativa",
     focusFailed: "Não achei a janela desta sessão.",
     status: {
@@ -168,6 +168,12 @@ export const pt = {
       error: "Erro",
       done: "Concluída",
     } as Record<string, string>,
+    providers: {
+      claude: "Claude Code",
+      codex: "Codex CLI",
+      opencode: "opencode",
+      gemini: "Gemini CLI",
+    },
   },
   system: {
     cpuLast60: "CPU · últimos 60 s",
@@ -313,7 +319,7 @@ export const pt = {
       "system-usage": "Uso do sistema",
       calendar: "Agenda",
       "ai-usage": "Uso de IA",
-      "claude-agents": "Claude Code",
+      "ai-agents": "Sessões de IA",
       bluetooth: "Bluetooth",
       launcher: "Lançador de apps",
       volume: "Som",
@@ -463,11 +469,11 @@ export const pt = {
         description:
           "Quanto do limite já foi usado na sessão de 5h e na semana (Claude Code) ou na janela do plano (Codex CLI), mais os tokens do dia. Lê os arquivos locais das IAs; nada vai para a rede.",
       },
-      "claude-agents": {
-        summary: "O Claude Code andando no dock, com cada sessão ativa.",
-        name: "Claude Agents",
+      "ai-agents": {
+        summary: "As sessões dos CLIs de IA andando no dock.",
+        name: "Agentes de IA",
         description:
-          "Mostra as sessões do Claude Code rodando, pedindo permissão, com erro ou concluídas. Precisa dos hooks do Claude Code ativados (veja abaixo). O clique foca a janela do terminal ou IDE que lançou a sessão; com mais de uma ativa, abre uma lista para escolher.",
+          "Mostra as sessões de Claude Code, Codex, opencode e Gemini CLI rodando, pedindo permissão, com erro ou concluídas. Ative a integração de cada CLI (veja abaixo). O clique foca a janela do terminal ou IDE que lançou a sessão; com mais de uma ativa, abre uma lista para escolher.",
       },
     },
     preview: "Pré-visualização",
@@ -523,15 +529,23 @@ export const pt = {
     icalAddress: "Endereço iCal",
     calendarHint: (keychain: string) =>
       `Google Agenda: Configurações da agenda → Endereço secreto no formato iCal. Outlook: Calendário → Calendários compartilhados → Publicar um calendário (link ICS). O endereço fica guardado ${keychain}.`,
-    claudeHooksLabel: "Hooks do Claude Code",
-    claudeHooksOnHint: "Instalados em ~/.claude/settings.json — as sessões aparecem aqui automaticamente.",
-    claudeHooksOffHint: "Sem eles o Pier não sabe quando uma sessão do Claude Code está rodando, pediu permissão ou terminou.",
-    claudeHooksInstall: "Ativar",
-    claudeHooksReinstall: "Reinstalar",
-    claudeHooksRemove: "Desativar",
-    claudeDisplayLabel: "Mostrar na dock",
-    claudeDisplay: { icon: "Ícone", both: "Ícone e Clawd", pet: "Só o Clawd" },
-    claudePetHint: "Um bichinho que anda pela dock enquanto uma sessão roda, pula quando uma pede permissão, e descansa quando está tudo parado.",
+    agentIntegrationLabel: "Integrações das IAs",
+    agentIntegrationHint:
+      "Instale os hooks ou o plugin de cada CLI. O Pier só lê o status da sessão — nunca o conteúdo das conversas.",
+    agentInstalled: {
+      claude: "Hooks instalados em ~/.claude/settings.json.",
+      codex: "Hooks instalados em ~/.codex/hooks.json. No Codex, rode /hooks para confiar nos hooks do Pier.",
+      opencode: "Plugin instalado em ~/.config/opencode/plugins. Reinicie o opencode para carregá-lo.",
+      gemini: "Hooks instalados em ~/.gemini/settings.json.",
+    },
+    agentAvailable: "CLI encontrada nesta máquina. Ative para acompanhar as sessões.",
+    agentNotDetected: "CLI não encontrada nesta máquina. Você ainda pode ativar e instalar a CLI depois.",
+    agentInstall: "Ativar",
+    agentReinstall: "Reinstalar",
+    agentRemove: "Desativar",
+    agentDisplayLabel: "Mostrar na dock",
+    agentDisplay: { icon: "Ícone", both: "Ícone e Clawd", pet: "Só o Clawd" },
+    petHint: "Um bichinho que anda pela dock enquanto uma sessão roda, pula quando uma pede permissão, e descansa quando está tudo parado.",
   },
   githubTab: {
     widgets: {

@@ -23,7 +23,7 @@ function itemKeys(config: OrderConfig): string[] {
 /** Grupo de um widget na ordem padrão: mídia, GitHub, IA ou sistema. */
 function widgetGroup(kind: string): string {
   if (kind === "media") return "media";
-  if (kind === "ai-usage") return "ai";
+  if (kind === "ai-usage" || kind === "ai-agents") return "ai";
   return kind.startsWith("github-") ? "github" : "system";
 }
 

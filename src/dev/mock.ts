@@ -7,7 +7,7 @@
  * chama `listen` ao ser carregado. Dentro do Tauri ele não faz nada.
  */
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
-import type { AiUsage, AppEntry, BluetoothState, CalendarData, ClaudeAgent, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
+import type { AgentIntegration, AgentSession, AiUsage, AppEntry, BluetoothState, CalendarData, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
 import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
 
 const insideTauri = "__TAURI_INTERNALS__" in window;
@@ -265,9 +265,17 @@ const claudeUsage: AiUsage = {
   fetchedAt: Date.now(),
 };
 
-const claudeAgents: ClaudeAgent[] = [
-  { sessionId: "a1", status: "running", cwd: "/Users/dev/pier", project: "pier", updatedAt: Date.now() - 30_000, windowId: 1 },
-  { sessionId: "a2", status: "permission", cwd: "/Users/dev/outro-projeto", project: "outro-projeto", updatedAt: Date.now() - 5_000, windowId: null },
+const agentSessions: AgentSession[] = [
+  { provider: "claude", sessionId: "a1", status: "running", cwd: "/Users/dev/pier", project: "pier", updatedAt: Date.now() - 30_000, windowId: 1 },
+  { provider: "codex", sessionId: "a2", status: "permission", cwd: "/Users/dev/outro-projeto", project: "outro-projeto", updatedAt: Date.now() - 5_000, windowId: null },
+  { provider: "opencode", sessionId: "a3", status: "done", cwd: "/Users/dev/pier", project: "pier", updatedAt: Date.now() - 60_000, windowId: 2 },
+];
+
+let agentIntegrations: AgentIntegration[] = [
+  { id: "claude", detected: true, installed: true },
+  { id: "codex", detected: true, installed: true },
+  { id: "opencode", detected: true, installed: false },
+  { id: "gemini", detected: false, installed: false },
 ];
 
 /** Uma conta Plus: uma janela só, a da semana, e o modelo do Codex. */
@@ -383,11 +391,15 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     { id: "claude", detected: true },
     { id: "codex", detected: true },
   ],
-  get_claude_agents: () => claudeAgents,
-  focus_claude_agent: () => {},
-  claude_hooks_installed: () => true,
-  install_claude_hooks: () => {},
-  uninstall_claude_hooks: () => {},
+  get_agent_sessions: () => agentSessions,
+  focus_agent_session: () => {},
+  agent_integrations: () => agentIntegrations,
+  install_agent_integration: (args) => {
+    agentIntegrations = agentIntegrations.map((i) => (i.id === args.provider ? { ...i, installed: true } : i));
+  },
+  uninstall_agent_integration: (args) => {
+    agentIntegrations = agentIntegrations.map((i) => (i.id === args.provider ? { ...i, installed: false } : i));
+  },
   system_language: () => (navigator.language.toLowerCase().startsWith("pt") ? "pt" : "en"),
   platform_info: () => ({ os: "macos", windowList: "needs-accessibility", hideNative: true, shortcuts: true, glass: true, followCursor: true, reserveAnyMonitor: true }),
   "plugin:autostart|is_enabled": () => true,

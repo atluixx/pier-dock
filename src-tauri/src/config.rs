@@ -115,8 +115,8 @@ pub struct Config {
     pub language: String,
     /// Instala sozinho a atualização encontrada logo depois de abrir.
     pub auto_update: bool,
-    /// Mascote decorativo que anda sobre a borda da dock, reagindo às sessões do Claude Code (ver
-    /// `claude_agents.rs`). Puramente visual; sem hooks instalados fica só parado.
+    /// Mascote decorativo que anda sobre a borda da dock, reagindo às sessões dos CLIs de IA (ver
+    /// `agent_sessions.rs`). Puramente visual; sem hooks instalados fica só parado.
     pub claude_pet_enabled: bool,
 }
 
@@ -177,7 +177,7 @@ impl Default for Config {
                 disabled("system-usage", "wide"),
                 disabled("calendar", "wide"),
                 disabled("ai-usage", "small"),
-                disabled("claude-agents", "small"),
+                disabled("ai-agents", "small"),
                 disabled("show-desktop", "small"),
             ],
             material: "glass".into(),
@@ -255,6 +255,7 @@ fn add_missing_widgets(mut config: Config) -> Config {
 ///   opacos e ficam sólidos, com o destaque mais próximo da cor do tema;
 /// - o widget "claude-usage" virou "ai-usage" quando ele passou a ler mais de uma IA, na lista de
 ///   widgets e na ordem da dock, e `claudePollMinutes` virou `aiPollMinutes`;
+/// - o widget "claude-agents" virou "ai-agents" quando passou a mostrar sessões de outros CLIs;
 /// - o "theme" já aplicado é removido sem tocar no resto.
 fn migrate(mut value: serde_json::Value) -> serde_json::Value {
     let Some(obj) = value.as_object_mut() else { return value };
@@ -280,15 +281,19 @@ fn migrate(mut value: serde_json::Value) -> serde_json::Value {
 
     if let Some(widgets) = obj.get_mut("widgets").and_then(serde_json::Value::as_array_mut) {
         for widget in widgets {
-            if widget.get("kind").and_then(serde_json::Value::as_str) == Some("claude-usage") {
-                widget["kind"] = "ai-usage".into();
+            match widget.get("kind").and_then(serde_json::Value::as_str) {
+                Some("claude-usage") => widget["kind"] = "ai-usage".into(),
+                Some("claude-agents") => widget["kind"] = "ai-agents".into(),
+                _ => {}
             }
         }
     }
     if let Some(order) = obj.get_mut("dockOrder").and_then(serde_json::Value::as_array_mut) {
         for key in order {
-            if key.as_str() == Some("widget:claude-usage") {
-                *key = "widget:ai-usage".into();
+            match key.as_str() {
+                Some("widget:claude-usage") => *key = "widget:ai-usage".into(),
+                Some("widget:claude-agents") => *key = "widget:ai-agents".into(),
+                _ => {}
             }
         }
     }
@@ -451,6 +456,21 @@ mod tests {
     fn migration_keeps_new_configs() {
         let config = migrated(r#"{"material":"solid","accent":"blue"}"#);
         assert_eq!((config.material.as_str(), config.accent.as_str()), ("solid", "blue"));
+    }
+
+    #[test]
+    fn claude_agents_widget_becomes_ai_agents() {
+        let config = migrated(
+            r#"{
+                "widgets": [
+                    { "kind": "claude-agents", "enabled": true, "size": "small" },
+                    { "kind": "clock", "enabled": true, "size": "small" }
+                ],
+                "dockOrder": ["widget:claude-agents", "divider:sistema", "widget:clock"]
+            }"#,
+        );
+        assert_eq!(config.widgets.iter().map(|w| w.kind.as_str()).collect::<Vec<_>>(), vec!["ai-agents", "clock"]);
+        assert_eq!(config.dock_order, vec!["widget:ai-agents", "divider:sistema", "widget:clock"]);
     }
 
     #[test]
