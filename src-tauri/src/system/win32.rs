@@ -21,8 +21,8 @@ use windows::core::{w, HSTRING, PCWSTR, VARIANT};
 use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
 use windows::Win32::UI::Shell::ShellExecuteW;
 use windows::Win32::UI::WindowsAndMessaging::{
-    FindWindowExW, FindWindowW, GetWindowRect, IsWindowVisible, SendMessageW, SetWindowPos, BM_CLICK, SWP_NOACTIVATE, SWP_NOSIZE,
-    SWP_NOZORDER, SW_SHOWNORMAL,
+    FindWindowExW, FindWindowW, GetWindowRect, IsWindowVisible, SendMessageW, SetForegroundWindow, SetWindowPos, ShowWindowAsync, BM_CLICK,
+    SWP_NOACTIVATE, SWP_NOSIZE, SWP_NOZORDER, SW_HIDE, SW_SHOWNORMAL,
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_A, VK_LWIN, VK_N,
@@ -296,6 +296,20 @@ fn with_taskbar<T>(f: impl FnOnce() -> T) -> T {
     result
 }
 
+fn close_tray_overflow(overflow: HWND) -> Result<(), String> {
+    let _ = with_taskbar(click_tray_chevron);
+    let closed = || (!unsafe { IsWindowVisible(overflow) }.as_bool()).then_some(());
+    if poll(Duration::from_millis(500), closed).is_some() {
+        return Ok(());
+    }
+    // No Windows 10, BM_CLICK pode não fechar a gaveta com a taskbar oculta/inativa.
+    // Esconde a janela existente sem destruir a janela que pertence ao Explorer.
+    unsafe {
+        let _ = ShowWindowAsync(overflow, SW_HIDE);
+    }
+    poll(Duration::from_millis(500), closed).ok_or_else(|| "não foi possível fechar a bandeja".into())
+}
+
 /// Abre a gaveta de ícones ocultos ancorada em `(anchor_x, anchor_y)` (pixels físicos de tela).
 /// A gaveta cresce para dentro da tela a partir da borda `edge`: com a base em cima/embaixo da
 /// dock, ou com a lateral nas laterais. Com ela aberta, fecha: clicar na dock nem sempre a fecha
@@ -317,13 +331,13 @@ fn toggle_tray(anchor_x: i32, anchor_y: i32, edge: u8) -> Result<(), String> {
     if just_closed {
         return Ok(());
     }
-    if tray_overflow().is_some() {
+    if let Some(overflow) = tray_overflow() {
         TRAY_CLOSING.store(true, Ordering::SeqCst);
-        let _ = with_taskbar(click_tray_chevron);
-        if poll(Duration::from_millis(500), || tray_overflow().is_none().then_some(())).is_none() {
+        let result = close_tray_overflow(overflow);
+        if result.is_err() {
             TRAY_CLOSING.store(false, Ordering::SeqCst);
         }
-        return Ok(());
+        return result;
     }
     let overflow = with_taskbar(show_tray_overflow).ok_or("não foi possível abrir a bandeja")?;
     unsafe {
@@ -339,6 +353,9 @@ fn toggle_tray(anchor_x: i32, anchor_y: i32, edge: u8) -> Result<(), String> {
             };
             let _ = SetWindowPos(overflow, HWND::default(), x, y, 0, 0, flags);
         }
+        // BM_CLICK não ativa a gaveta do Windows 10. Depois de esconder a taskbar e mover a
+        // gaveta, dá o foco a ela para que o Explorer a feche ao clicar fora ou apertar Escape.
+        let _ = SetForegroundWindow(overflow);
     }
     let handle = overflow.0 as isize;
     std::thread::spawn(move || {
@@ -351,4 +368,34 @@ fn toggle_tray(anchor_x: i32, anchor_y: i32, edge: u8) -> Result<(), String> {
         }
     });
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use windows::Win32::UI::Input::KeyboardAndMouse::VK_ESCAPE;
+    use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+
+    #[test]
+    #[ignore = "smoke test: requer uma sessão Windows interativa com ícones ocultos na bandeja"]
+    fn tray_dismisses_and_reopens() {
+        assert!(tray_overflow().is_none(), "feche a bandeja antes do teste");
+        for _ in 0..2 {
+            open_tray(500, 500, crate::dock_window::BOTTOM).unwrap();
+            let overflow = tray_overflow().expect("a bandeja deve abrir");
+            assert_eq!(unsafe { GetForegroundWindow() }, overflow);
+            press(&[VK_ESCAPE]);
+            assert!(poll(Duration::from_secs(1), || tray_overflow().is_none().then_some(())).is_some());
+            // Espera o observador registrar o fechamento e passar o debounce do clique fora.
+            assert!(poll(Duration::from_secs(1), || {
+                TRAY_CLOSED_AT.lock().unwrap().filter(|t| t.elapsed() >= Duration::from_millis(400)).map(|_| ())
+            })
+            .is_some());
+            open_tray(500, 500, crate::dock_window::BOTTOM).unwrap();
+            assert!(tray_overflow().is_some(), "a bandeja deve reabrir");
+            open_tray(500, 500, crate::dock_window::BOTTOM).unwrap();
+            assert!(tray_overflow().is_none(), "o segundo clique deve fechar a bandeja");
+            assert!(poll(Duration::from_secs(1), || (!TRAY_CLOSING.load(Ordering::SeqCst)).then_some(())).is_some());
+        }
+    }
 }
