@@ -1,7 +1,7 @@
 import type { AppEntry, WindowInfo } from "../lib/ipc";
-import { prettyExeName } from "../lib/format";
-import { os } from "../lib/platform";
-import { appKey } from "./order";
+import { prettyExeName } from "../lib/format.ts";
+import { os } from "../lib/platform.ts";
+import { appKey } from "./order.ts";
 
 export interface DockApp {
   key: string;
