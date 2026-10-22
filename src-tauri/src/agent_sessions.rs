@@ -27,6 +27,7 @@ use crate::util::{data_dir, ErrStr};
 use crate::windows_list;
 
 mod codex;
+mod t3;
 
 /// O script de hook, embutido no binário — como os ícones da bandeja (`include_bytes!` em
 /// `main.rs`). A instalação o escreve em disco.
@@ -261,6 +262,11 @@ fn collect(codex: &mut codex::Sessions) -> Vec<AgentSession> {
         }
         merge_status(&mut merged, raw);
     }
+    // T3 owns the run lifecycle for every provider, including ACP providers without CLI hooks.
+    // Native session IDs match the hook/rollout IDs, so a T3 session is counted only once.
+    for raw in t3::read(now) {
+        merge_t3_status(&mut merged, raw);
+    }
     let mut result: Vec<AgentSession> = merged
         .into_iter()
         .filter_map(|raw| {
@@ -283,6 +289,16 @@ fn collect(codex: &mut codex::Sessions) -> Vec<AgentSession> {
     result.sort_by(|a, b| a.updated_at.partial_cmp(&b.updated_at).unwrap_or(std::cmp::Ordering::Equal)
         .then_with(|| a.provider.cmp(&b.provider)).then_with(|| a.session_id.cmp(&b.session_id)));
     result
+}
+
+fn merge_t3_status(sessions: &mut Vec<RawStatus>, raw: RawStatus) {
+    if let Some(current) = sessions.iter_mut().find(|s| s.provider == raw.provider && s.session_id == raw.session_id) {
+        // A conversation can be resumed in the CLI after its T3 run ends. Old T3 state must
+        // neither hide that fresh activity nor replace its terminal's process ancestry.
+        if raw.updated_at >= current.updated_at { *current = raw; }
+    } else {
+        sessions.push(raw);
+    }
 }
 
 /// Hooks supply permission requests and accurate process ancestry; rollouts supply turns when
@@ -580,6 +596,21 @@ mod tests {
         merge_status(&mut sessions, hook);
         assert_eq!(sessions[0].status, "done");
         assert_eq!(sessions[0].pid_chain, vec![123]);
+    }
+
+    #[test]
+    fn old_t3_completion_does_not_hide_a_resumed_cli_session() {
+        let mut cli = raw("codex", "a", "running", 30.0);
+        cli.pid_chain = vec![123];
+        let mut sessions = vec![cli];
+        let mut old_t3 = raw("codex", "a", "done", 20.0);
+        old_t3.pid_chain = vec![456];
+        merge_t3_status(&mut sessions, old_t3);
+        assert_eq!(sessions.len(), 1);
+        assert_eq!(sessions[0].status, "running");
+        assert_eq!(sessions[0].pid_chain, vec![123]);
+        merge_t3_status(&mut sessions, raw("codex", "a", "done", 40.0));
+        assert_eq!(sessions[0].status, "done");
     }
 
     #[test]
