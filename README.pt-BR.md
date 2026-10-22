@@ -59,6 +59,8 @@ A atualização automática funciona com o instalador do Windows, com o app do m
 
 ## Uso
 
+A ampliação dos ícones usa escala visual, preservando o espaçamento e a área clicável de cada app. As medições são compartilhadas pela dock quando o layout muda.
+
 - **Clique** num app para abri-lo ou focá-lo. Clique no app ativo para minimizá-lo. Se o app tiver várias janelas, cada clique alterna entre elas.
 - **Shift+clique** num app abre uma nova instância.
 - **Clique com o botão direito** num app para ver as janelas dele, fixá-lo, desafixá-lo ou fechá-lo.

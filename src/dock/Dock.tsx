@@ -18,7 +18,7 @@ import { buildDockApps, type DockApp } from "./apps";
 import { PREVIEW_GAP, barRect, dockMetrics, isVertical, previewSpace } from "./layout";
 import { WindowPreview } from "./WindowPreview";
 import { ClawdPet } from "./ClawdPet";
-import { MagnifyCtx } from "./Magnify";
+import { MagnifyProvider } from "./Magnify";
 import { resetDockHover } from "./hoverReset";
 import { AppIcon } from "./AppIcon";
 import { SortableItem } from "./SortableItem";
@@ -425,7 +425,7 @@ export function Dock({ config }: { config: Config }) {
         onPointerDown={onPointerDown}
         onContextMenu={onBackgroundMenu}
       >
-        <MagnifyCtx.Provider value={{ mouse, base: config.iconSize, scale: Math.max(1, config.magnification), position }}>
+        <MagnifyProvider value={{ mouse, base: config.iconSize, scale: Math.max(1, config.magnification), position }}>
           <DndContext sensors={sensors} onDragStart={() => mouse.set(Infinity)} onDragEnd={onDragEnd}>
             <SortableContext items={order} strategy={vertical ? verticalListSortingStrategy : horizontalListSortingStrategy}>
               {order.map(renderItem)}
@@ -442,7 +442,7 @@ export function Dock({ config }: { config: Config }) {
               onHoverChange={onIconHover}
             />
           ))}
-        </MagnifyCtx.Provider>
+        </MagnifyProvider>
       </div>
       {config.claudePetEnabled && <ClawdPet position={position} full={full} margin={metrics.margin} visible={visible} barRef={barRef} />}
       {previewApp && preview && (

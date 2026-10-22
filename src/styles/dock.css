@@ -218,9 +218,20 @@
 }
 
 .magnify {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+}
+
+/* Keep the bitmap and badges at their natural size; magnification scales one layer.
+   The surrounding slot still participates in layout to preserve packed spacing. */
+.magnify-artwork {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: calc(var(--icon) / -2);
+  margin-top: calc(var(--icon) / -2);
 }
 
 .app-icon {
