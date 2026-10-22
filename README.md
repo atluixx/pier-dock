@@ -59,6 +59,8 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 
 ## Usage
 
+Hover highlights and labels respond quickly, and icon magnification follows the system’s reduced-motion preference. Window previews still wait briefly to avoid opening while you move across apps.
+
 - **Click** an app to open or focus it. Click the active app to minimize it. If the app has several windows, clicking cycles through them.
 - **Shift+click** an app to open a new instance.
 - **Right-click** an app to see its windows, pin or unpin it, or close it.

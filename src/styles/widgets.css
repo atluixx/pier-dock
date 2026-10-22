@@ -16,7 +16,7 @@
   height: 44px;
   padding: 0 10px;
   border-radius: 10px;
-  transition: background 0.15s ease;
+  transition: background 0.08s ease;
 }
 
 .tile:is(:hover, [data-hover]),
@@ -140,7 +140,7 @@
   padding: 0 6px;
   border-radius: var(--radius-card);
   text-align: left;
-  transition: background 0.15s ease;
+  transition: background 0.08s ease;
 }
 
 .media-tile.compact .media-open {
@@ -210,7 +210,7 @@
   border-radius: var(--radius-control);
   display: grid;
   place-items: center;
-  transition: background 0.15s ease;
+  transition: background 0.08s ease;
 }
 
 .media-control:is(:hover, [data-hover]) {
@@ -519,7 +519,7 @@
   padding: 0 7px;
   border-radius: var(--radius-control);
   text-align: left;
-  transition: background 0.15s ease;
+  transition: background 0.08s ease;
 }
 
 .pomo-open:is(:hover, [data-hover]),
@@ -726,7 +726,7 @@
   padding: 0 6px 0 10px;
   border-radius: var(--radius-card);
   text-align: left;
-  transition: background 0.15s ease;
+  transition: background 0.08s ease;
 }
 
 .cal-text {

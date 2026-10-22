@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef } from "react";
 
-type Reset = () => void;
+import { createHoverOwner } from "./hoverOwner";
 
-const listeners = new Set<Reset>();
+type Reset = () => void;
+const owner = createHoverOwner();
 
 /**
  * Avisa os itens da dock que o cursor saiu dela. Com a dock escondida ou com o click-through
@@ -10,9 +11,7 @@ const listeners = new Set<Reset>();
  * aparecer de novo.
  */
 export function resetDockHover(except?: Reset) {
-  listeners.forEach((reset) => {
-    if (reset !== except) reset();
-  });
+  owner.reset(except);
 }
 
 /**
@@ -29,10 +28,9 @@ export function useDockHoverReset(reset: Reset) {
   const self = useRef<Reset>(() => latest.current());
   useEffect(() => {
     const run = self.current;
-    listeners.add(run);
     return () => {
-      listeners.delete(run);
+      owner.release(run);
     };
   }, []);
-  return useCallback(() => resetDockHover(self.current), []);
+  return useCallback(() => owner.claim(self.current), []);
 }
