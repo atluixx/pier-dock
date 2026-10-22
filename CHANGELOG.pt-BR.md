@@ -2,6 +2,25 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.13.0
+
+### Contador de notificações na dock
+Os ícones dos apps agora mostram um selo vermelho com as notificações não lidas que os apps e sites colocam no início do título da janela, como "(3) WhatsApp" ou "[12] Caixa de entrada".
+- A contagem soma as janelas do app e para em **99+**.
+- O tooltip menciona as notificações, e leitores de tela leem a contagem junto com o estado do app.
+
+### Um calendário mais claro
+O popover do calendário agora tem um foco só: seu próximo evento.
+- O cabeçalho mostra o dia da semana, a data e quantos eventos faltam.
+- O próximo evento fica num cartão neutro com a cor do evento como barra de destaque, o status, o título, o horário e o local na mesma linha, e uma barra de progresso enquanto acontece. **Entrar** ocupa a largura toda, e **Copiar link** virou um botão de ícone.
+- O resto do dia é uma linha do tempo com um trilho colorido, dividida em **Mais tarde hoje** e **Amanhã** (esmaecido). Um dia livre mostra um estado vazio centralizado.
+
+### Correções
+- **Agentes de IA:** no opencode V2, o plugin não carregava e as sessões do opencode nunca apareciam. Reinstale o plugin nas opções do widget e reinicie o opencode.
+- **Agentes de IA:** sessões do Codex iniciadas por um app server, como o T3 Code, são detectadas automaticamente pelos eventos de ciclo de vida locais, sem hooks nem reinício. Hooks opcionais ainda adicionam o status de permissão.
+- **Windows:** apps da Microsoft Store, como o WhatsApp, mostram o ícone real em vez do ícone genérico do Windows. Um ícone que falha ao carregar agora é tentado de novo em vez de ficar em cache para sempre.
+- **Linux:** clicar num app no AppImage volta a funcionar no NixOS; os apps iniciados não herdam mais as bibliotecas empacotadas no AppImage.
+
 ## 0.12.0
 
 ### Um widget para todas as suas IAs de linha de comando

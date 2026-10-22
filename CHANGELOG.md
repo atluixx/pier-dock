@@ -2,6 +2,25 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.13.0
+
+### Unread counts on the dock
+App icons now show a red badge with the unread count that apps and sites put at the start of the window title, like "(3) WhatsApp" or "[12] Inbox".
+- The count adds up across the app's windows and stops at **99+**.
+- The tooltip mentions the notifications, and screen readers read the count along with the app state.
+
+### A clearer calendar
+The calendar popover now has one focal point: your next event.
+- The header shows the weekday, the date, and how many events are left.
+- The next event is a neutral card with the event color as an accent bar, the status, title, time, and place on one line, and a progress bar while it is happening. **Join** takes the full width, and **Copy link** is an icon button.
+- The rest of the day is a timeline with a colored rail, split into **Later today** and **Tomorrow** (dimmed). A free day shows a centered empty state.
+
+### Fixes
+- **AI Agents:** with opencode V2, the plugin failed to load and opencode sessions never showed up. Reinstall the plugin in the widget's options and restart opencode.
+- **AI Agents:** Codex sessions started by an app server, such as T3 Code, are detected automatically from local lifecycle events, without hooks or a restart. Optional hooks still add the permission status.
+- **Windows:** apps from the Microsoft Store, like WhatsApp, show their real icon instead of the generic Windows one. An icon that fails to load is now retried instead of cached forever.
+- **Linux:** clicking an app in the AppImage works on NixOS again; launched apps no longer inherit the AppImage's bundled libraries.
+
 ## 0.12.0
 
 ### One widget for all your AI CLIs
