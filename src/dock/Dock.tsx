@@ -5,6 +5,7 @@ import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } f
 import { arrayMove, horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { latestSender, sameHitRect } from "./hitRect";
 import { Menu } from "@tauri-apps/api/menu";
 import { ipc, type AppEntry, type Config, type WidgetConfig } from "../lib/ipc";
 import { labels, os, widgetSupported } from "../lib/platform";
@@ -19,7 +20,6 @@ import { PREVIEW_GAP, barRect, dockMetrics, isVertical, previewSpace } from "./l
 import { WindowPreview } from "./WindowPreview";
 import { ClawdPet } from "./ClawdPet";
 import { MagnifyCtx } from "./Magnify";
-import { latestSender, sameHitRect } from "./hitRect";
 import { resetDockHover } from "./hoverReset";
 import { AppIcon } from "./AppIcon";
 import { SortableItem } from "./SortableItem";
