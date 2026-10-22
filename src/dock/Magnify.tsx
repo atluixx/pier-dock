@@ -53,11 +53,21 @@ export function MagnifyProvider({ value, children }: { value: MagnifyContext; ch
   useLayoutEffect(() => {
     const bar = document.querySelector(".dock-bar");
     const observer = new ResizeObserver(geometry.measure);
+    const settled = (event: TransitionEvent) => {
+      if (event.target === bar && event.propertyName === "transform") geometry.measure();
+    };
+    bar?.addEventListener("transitionend", settled);
+    bar?.addEventListener("transitioncancel", settled);
     // App slot resizes are accounted for algebraically. Watch other items for
     // independent changes (clock text, media metadata, battery state, etc.).
     bar?.querySelectorAll(":scope > .widget-slot, :scope > .divider-item").forEach((element) => observer.observe(element));
     window.addEventListener("resize", geometry.measure);
-    return () => { observer.disconnect(); window.removeEventListener("resize", geometry.measure); };
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", geometry.measure);
+      bar?.removeEventListener("transitionend", settled);
+      bar?.removeEventListener("transitioncancel", settled);
+    };
   });
   const outside = useRef(true);
   useMotionValueEvent(value.mouse, "change", (cursor) => {
