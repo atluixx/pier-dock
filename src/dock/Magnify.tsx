@@ -1,8 +1,9 @@
 import { createContext, useContext, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
-import { motion, useMotionValue, useMotionValueEvent, useSpring, useTransform, type MotionValue } from "framer-motion";
+import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useSpring, useTransform, type MotionValue } from "framer-motion";
 import { magnifiedSize, measureCenters, projectedCenters } from "./magnifyGeometry";
 import type { DockPosition } from "../lib/ipc";
 import { isVertical } from "./layout";
+import { HOVER_SPRING } from "./hoverSpring";
 
 interface MagnifyContext {
   mouse: MotionValue<number>;
@@ -84,7 +85,8 @@ export function Magnify({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const center = useMotionValue(Infinity);
   const size = useTransform([ctx.mouse, center], ([cursor, midpoint]: number[]) => magnifiedSize(cursor, midpoint, ctx.base, ctx.scale));
-  const spring = useSpring(size, { mass: 0.1, stiffness: 170, damping: 14 });
+  const reducedMotion = useReducedMotion();
+  const spring = useSpring(size, reducedMotion ? { duration: 0 } : HOVER_SPRING);
   useLayoutEffect(() => geometry.register(ref.current!, center, spring), [geometry, center, spring]);
   const scale = useTransform(spring, (value) => value / ctx.base);
   return (
