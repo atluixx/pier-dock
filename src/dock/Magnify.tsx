@@ -18,8 +18,7 @@ export const MagnifyCtx = createContext<MagnifyContext | null>(null);
 const GeometryCtx = createContext<Geometry | null>(null);
 
 /** Geometry changes with layout, not every pointer event. One observer serves the whole dock. */
-export function MagnifyGeometry({ children }: { children: ReactNode }) {
-  const value = useContext(MagnifyCtx)!;
+export function MagnifyGeometry({ mouse, position, children }: Pick<MagnifyContext, "mouse" | "position"> & { children: ReactNode }) {
   const geometry = useMemo(() => {
     type Item = { center: MotionValue<number>; size: MotionValue<number>; anchor: number; length: number };
     const items = new Map<HTMLElement, Item>();
@@ -33,8 +32,8 @@ export function MagnifyGeometry({ children }: { children: ReactNode }) {
       measureCenters(items.keys(), (element) => {
         const rect = element.getBoundingClientRect();
         const item = items.get(element)!;
-        item.length = isVertical(value.position) ? rect.height : rect.width;
-        return isVertical(value.position) ? rect.top + rect.height / 2 : rect.left + rect.width / 2;
+        item.length = isVertical(position) ? rect.height : rect.width;
+        return isVertical(position) ? rect.top + rect.height / 2 : rect.left + rect.width / 2;
       }, (element, center) => { items.get(element)!.anchor = center; });
       project();
     };
@@ -48,7 +47,7 @@ export function MagnifyGeometry({ children }: { children: ReactNode }) {
         return () => { unsubscribe(); items.delete(element); };
       },
     };
-  }, [value.position]);
+  }, [position]);
   // Reordering, widget changes and configuration updates can move an unchanged-size icon.
   useLayoutEffect(() => geometry.measure());
   useLayoutEffect(() => {
@@ -71,7 +70,7 @@ export function MagnifyGeometry({ children }: { children: ReactNode }) {
     };
   });
   const outside = useRef(true);
-  useMotionValueEvent(value.mouse, "change", (cursor) => {
+  useMotionValueEvent(mouse, "change", (cursor) => {
     if (Number.isFinite(cursor) && outside.current) geometry.measure();
     outside.current = !Number.isFinite(cursor);
   });

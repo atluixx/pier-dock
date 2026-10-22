@@ -407,6 +407,7 @@ export function Dock({ config }: { config: Config }) {
   }
 
   return (
+    <MagnifyGeometry mouse={mouse} position={position}>
     <div
       className="dock-root"
       data-pos={position}
@@ -426,7 +427,6 @@ export function Dock({ config }: { config: Config }) {
         onContextMenu={onBackgroundMenu}
       >
         <MagnifyCtx.Provider value={{ mouse, base: config.iconSize, scale: Math.max(1, config.magnification), position }}>
-          <MagnifyGeometry>
           <DndContext sensors={sensors} onDragStart={() => mouse.set(Infinity)} onDragEnd={onDragEnd}>
             <SortableContext items={order} strategy={vertical ? verticalListSortingStrategy : horizontalListSortingStrategy}>
               {order.map(renderItem)}
@@ -443,7 +443,6 @@ export function Dock({ config }: { config: Config }) {
               onHoverChange={onIconHover}
             />
           ))}
-          </MagnifyGeometry>
         </MagnifyCtx.Provider>
       </div>
       {config.claudePetEnabled && <ClawdPet position={position} full={full} margin={metrics.margin} visible={visible} barRef={barRef} />}
@@ -451,5 +450,6 @@ export function Dock({ config }: { config: Config }) {
         <WindowPreview app={previewApp} anchor={preview} position={position} onClose={() => setPreview(null)} onHoverChange={onPreviewHover} />
       )}
     </div>
+    </MagnifyGeometry>
   );
 }
