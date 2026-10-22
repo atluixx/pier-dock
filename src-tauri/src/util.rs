@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+#[cfg(target_os = "linux")]
+mod appimage_env;
+
 /// Nome antigo do app, para migrar o que ele deixou (pasta de dados, token, autostart).
 pub const LEGACY_NAME: &str = "win-dock";
 
@@ -42,7 +45,10 @@ pub fn windows_dir() -> String {
 #[cfg(unix)]
 pub fn spawn_detached(program: impl AsRef<std::ffi::OsStr>, args: &[&str]) -> Result<(), String> {
     use std::process::{Command, Stdio};
-    let mut child = Command::new(program)
+    let mut command = Command::new(program);
+    #[cfg(target_os = "linux")]
+    appimage_env::configure(&mut command);
+    let mut child = command
         .args(args)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
