@@ -22,7 +22,7 @@ O Pier substitui a barra de tarefas ou a dock do sistema por uma barra única co
 
 ## Recursos
 
-- **Apps:** apps fixados e abertos, com ampliação, reordenação por arrastar, lista de janelas, separadores e uma bolinha com a contagem exibida no título da janela, como "(3) WhatsApp".
+- **Apps:** apps fixados e abertos, com ampliação, reordenação por arrastar, lista de janelas, separadores e uma bolinha com a contagem exibida no título da janela, como "(3) WhatsApp". A ampliação usa escala visual, preservando o espaçamento e as áreas clicáveis, com medições compartilhadas do layout.
 - **Barra personalizável:** coloque a dock na borda de baixo, de cima, da esquerda ou da direita da tela (nas laterais ela fica em pé), deixe-a no tamanho dos ícones ou de ponta a ponta e escolha o tamanho dos ícones, a altura do painel, o material e a cor de destaque.
 - **Player de mídia:** mostra o que está tocando no Spotify, no YouTube Music e em outros players, com os controles de reprodução.
 - **Widgets do GitHub:** pull requests aguardando a sua revisão, os seus pull requests abertos, commits recentes e o gráfico de contribuições.
@@ -58,8 +58,6 @@ O Pier procura atualizações logo depois de abrir e a cada 12 horas. Quando hou
 A atualização automática funciona com o instalador do Windows, com o app do macOS e com o AppImage. Se você instalou o pacote `.deb`, baixe e instale cada versão nova pela página de releases.
 
 ## Uso
-
-A ampliação dos ícones usa escala visual, preservando o espaçamento e a área clicável de cada app. As medições são compartilhadas pela dock quando o layout muda.
 
 - **Clique** num app para abri-lo ou focá-lo. Clique no app ativo para minimizá-lo. Se o app tiver várias janelas, cada clique alterna entre elas.
 - **Shift+clique** num app abre uma nova instância.

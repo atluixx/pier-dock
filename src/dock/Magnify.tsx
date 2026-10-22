@@ -1,8 +1,8 @@
 import { createContext, useContext, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
 import { motion, useMotionValue, useMotionValueEvent, useSpring, useTransform, type MotionValue } from "framer-motion";
+import { magnifiedSize, measureCenters, projectedCenters } from "./magnifyGeometry";
 import type { DockPosition } from "../lib/ipc";
 import { isVertical } from "./layout";
-import { magnifiedSize, measureCenters, projectedCenters } from "./magnifyGeometry";
 
 interface MagnifyContext {
   mouse: MotionValue<number>;
@@ -18,7 +18,8 @@ export const MagnifyCtx = createContext<MagnifyContext | null>(null);
 const GeometryCtx = createContext<Geometry | null>(null);
 
 /** Geometry changes with layout, not every pointer event. One observer serves the whole dock. */
-export function MagnifyProvider({ value, children }: { value: MagnifyContext; children: ReactNode }) {
+export function MagnifyGeometry({ children }: { children: ReactNode }) {
+  const value = useContext(MagnifyCtx)!;
   const geometry = useMemo(() => {
     type Item = { center: MotionValue<number>; size: MotionValue<number>; anchor: number; length: number };
     const items = new Map<HTMLElement, Item>();
@@ -74,7 +75,7 @@ export function MagnifyProvider({ value, children }: { value: MagnifyContext; ch
     if (Number.isFinite(cursor) && outside.current) geometry.measure();
     outside.current = !Number.isFinite(cursor);
   });
-  return <MagnifyCtx.Provider value={value}><GeometryCtx.Provider value={geometry}>{children}</GeometryCtx.Provider></MagnifyCtx.Provider>;
+  return <GeometryCtx.Provider value={geometry}>{children}</GeometryCtx.Provider>;
 }
 
 /** The slot preserves spacing, tooltips and hit targets; only the artwork is scaled. */
