@@ -392,6 +392,8 @@ export const en: Dict = {
     unpin: "Unpin from launcher",
   },
   appearance: {
+    reducedEffects: "Reduce visual effects",
+    reducedEffectsHint: "Use a solid background and remove dock and icon shadows. Turning this off restores your material choice.",
     material: "Material",
     glass: "Liquid glass",
     solid: "Solid",

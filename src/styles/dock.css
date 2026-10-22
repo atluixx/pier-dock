@@ -639,3 +639,9 @@
   background: var(--danger);
   color: var(--text-on-accent);
 }
+
+/* Optional lower-cost rendering; retain the border/highlight for separation. */
+html[data-reduced-effects="true"] .dock-bar {
+  --shadow-icon: none;
+  box-shadow: var(--glass-highlight);
+}

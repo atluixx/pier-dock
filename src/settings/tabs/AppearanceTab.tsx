@@ -92,6 +92,11 @@ export function AppearanceTab({ config, update, platform }: TabProps) {
   return (
     <div className="split">
       <div className="split-list form">
+        <Card>
+          <Row label={t.reducedEffects} description={t.reducedEffectsHint}>
+            <Switch checked={config.reducedEffects} onChange={(reducedEffects) => update({ reducedEffects })} label={t.reducedEffects} />
+          </Row>
+        </Card>
         <div className="field">
           <SectionLabel>{t.material}</SectionLabel>
           <Segmented
@@ -102,7 +107,7 @@ export function AppearanceTab({ config, update, platform }: TabProps) {
           />
           {!glassAvailable && <p className="field-hint">{t.noGlass}</p>}
         </div>
-        {glass && (
+        {glass && !config.reducedEffects && (
           <Slider
             id="opacity"
             label={t.opacity}

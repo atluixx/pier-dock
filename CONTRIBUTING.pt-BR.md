@@ -55,6 +55,22 @@ cargo test -- --ignored --nocapture    # smoke tests contra o sistema real
 
 Os smoke tests usam janelas, apps, sessões de mídia e a API do GitHub de verdade, na máquina em que rodam.
 
+### Perfil de hover e efeitos gráficos
+
+Avalie o desempenho nativo com uma build de release, mantendo monitor, escala, quantidade de ícones e widgets iguais. Em **Configurações > Aparência**, **Reduzir efeitos visuais** usa um fundo sólido e remove as sombras decorativas da dock e dos ícones sem perder o material escolhido. Mantenha o mascote e a reprodução de mídia nas mesmas condições e não compile durante a captura.
+
+Para um diagnóstico repetível do frontend, rode `npm run dev`, abra `http://localhost:1420/?view=dock&profile=1` e execute no console:
+
+```js
+await pierPerformance.measure({ label: "baseline", durationMs: 5000, sweep: true })
+```
+
+A varredura sintética repete o mesmo percurso e inclui o custo dos eventos e do teste de posição. Para medir o mouse real, omita `sweep` e mova o cursor pela dock durante a captura. Após aquecer a interface, repita cada caso pelo menos três vezes: vidro com sombras, material sólido com sombras, efeitos visuais reduzidos e ampliação desativada. Mude uma opção por vez. Confira o material ativo no resultado: um compositor sem suporte a vidro já usa sólido. Para isolar a sombra dos ícones, use temporariamente `document.querySelector('.dock-bar').style.setProperty('--shadow-icon', 'none')` e remova essa propriedade ao terminar.
+
+O resultado traz mediana, percentil 95 e máximo do intervalo entre quadros, contagens acima de 16,7ms e 33,3ms, medições dos ícones, requisições `set_hit_rect` e tarefas longas quando suportadas. Esses limites não são uma contagem de quadros perdidos independente da taxa de atualização. Descarte capturas com `hiddenDuringRun` e anote build, sistema/compositor, GPU, taxa de atualização e configurações junto ao JSON. `pierPerformance.cancel()` encerra a captura. Só uma captura roda por vez, e a instrumentação é restaurada ao terminar.
+
+Para analisar uma build nativa, cole `scripts/profile-hover.js` no inspetor do WebView e use a mesma API; a disponibilidade do inspetor depende do empacotamento. O script não envia dados nem altera configurações persistentes. O navegador com IPC falso não mede o blur nativo, o processamento do IPC ou o custo do compositor/GPU. Para isso, use também o profiler nativo do sistema/WebView e compare os rastros antes de afirmar um ganho de desempenho.
+
 ### Ícones
 
 Os ícones de todas as plataformas saem de `app-icon.svg` e `src-tauri/icons/source/`. Para gerá-los de novo, rode `./scripts/icons.sh` no macOS (o script precisa do `iconutil`).

@@ -5,7 +5,13 @@ import react from "@vitejs/plugin-react";
 const devMock: Plugin = {
   name: "dev-mock",
   apply: "serve",
-  transformIndexHtml: () => [{ tag: "script", attrs: { type: "module", src: "/src/dev/mock.ts" }, injectTo: "head" }],
+  transformIndexHtml: (_html, ctx) => {
+    const scripts = [{ tag: "script", attrs: { type: "module", src: "/src/dev/mock.ts" }, injectTo: "head" as const }];
+    if (new URL(ctx.originalUrl ?? "/", "http://localhost").searchParams.has("profile")) {
+      scripts.push({ tag: "script", attrs: { type: "module", src: "/scripts/profile-hover.js" }, injectTo: "head" });
+    }
+    return scripts;
+  },
 };
 
 export default defineConfig({

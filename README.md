@@ -59,6 +59,8 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 
 ## Usage
 
+If hover animation feels sluggish, try **Settings > Appearance > Reduce visual effects**. It disables blur and decorative dock/icon shadows while keeping your widgets and animations. Turning it off restores your chosen material.
+
 - **Click** an app to open or focus it. Click the active app to minimize it. If the app has several windows, clicking cycles through them.
 - **Shift+click** an app to open a new instance.
 - **Right-click** an app to see its windows, pin or unpin it, or close it.
