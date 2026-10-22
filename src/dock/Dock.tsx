@@ -262,8 +262,9 @@ const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
     return () => subs.forEach((s) => s.then((unlisten) => unlisten()));
   }, [mouse, update]);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const order = resolveOrder(config);
+  const sensorOptions = useMemo(() => ({ activationConstraint: { distance: 8 } }), []);
+  const sensors = useSensors(useSensor(PointerSensor, sensorOptions));
+  const order = useMemo(() => resolveOrder(config), [config]);
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
