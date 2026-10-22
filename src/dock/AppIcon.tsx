@@ -10,6 +10,7 @@ import { useConfig } from "../store/config";
 import { Tooltip } from "../ui/Tooltip";
 import { useDockHoverReset } from "./hoverReset";
 import { Magnify, MagnifyCtx } from "./Magnify";
+import { formatBadge } from "./badge";
 import { toPinned, type DockApp } from "./apps";
 import { useT } from "../i18n";
 
@@ -120,7 +121,8 @@ export function AppIcon({ app, active, sortable, shortcut, onPreview, onHoverCha
   };
 
   const windows = app.windows.length;
-  const state = active ? t.focused : windows > 1 ? t.windows(windows) : windows ? t.running : "";
+  const baseState = active ? t.focused : windows > 1 ? t.windows(windows) : windows ? t.running : "";
+  const state = app.badge ? [baseState, t.notifications(app.badge)].filter(Boolean).join(", ") : baseState;
 
   const onMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
     setHover(true);
@@ -160,6 +162,7 @@ export function AppIcon({ app, active, sortable, shortcut, onPreview, onHoverCha
         <Magnify>
           <motion.span className="app-icon" animate={bounce}>
             {src ? <img src={src} alt="" draggable={false} /> : <span className="app-icon-fallback">{app.name[0]}</span>}
+            {app.badge > 0 && <span className="app-badge">{formatBadge(app.badge)}</span>}
           </motion.span>
         </Magnify>
         <span className="indicators" aria-hidden>
