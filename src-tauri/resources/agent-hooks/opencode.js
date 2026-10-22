@@ -2,6 +2,10 @@
 // eventos da sessão e grava o mesmo JSON dos hooks dos outros CLIs em
 // <pasta de dados do Pier>/pier-dock/agents/. Só metadados: provider, status, cwd, projeto e hora.
 //
+// Alvo: API de plugins do opencode V2, que exige um export default com `id` e `setup` (ou `effect`).
+// No V2 o evento chega como { type, data, location, ... }; no V1 o payload vinha em `properties`,
+// então `payloadOf` aceita os dois formatos de propósito.
+//
 // Nunca deve travar nem falhar visivelmente: um plugin quebrado não pode atrapalhar o opencode.
 
 import { readFileSync, writeFileSync, mkdirSync, renameSync, unlinkSync } from "node:fs";
@@ -10,6 +14,7 @@ import { join, basename } from "node:path";
 import { homedir } from "node:os";
 
 const PROVIDER = "opencode";
+const PLUGIN_ID = "pier-status";
 const directories = new Map();
 let pidChain = null;
 
@@ -78,12 +83,24 @@ function chain() {
   return out;
 }
 
-function sessionIdOf(properties) {
-  return properties.sessionID || properties.session_id || properties.info?.id || properties.id;
+/** V2 entrega o payload em `data`; mantemos `properties` para não quebrar no V1. */
+function payloadOf(event) {
+  return event?.data ?? event?.properties ?? event?.payload?.properties ?? {};
 }
 
-function cwdOf(properties, fallback) {
-  return properties.info?.directory || properties.directory || directories.get(sessionIdOf(properties)) || fallback || "";
+function sessionIdOf(data) {
+  return data.sessionID || data.session_id || data.info?.id || data.id;
+}
+
+function cwdOf(data, fallback) {
+  return (
+    data.info?.directory ||
+    data.directory ||
+    data.location?.directory ||
+    directories.get(sessionIdOf(data)) ||
+    fallback ||
+    ""
+  );
 }
 
 function removeStatus(sessionId) {
@@ -113,13 +130,13 @@ function writeStatus(sessionId, status, cwd) {
   renameSync(tmp, path);
 }
 
-function statusOf(type, properties) {
+function statusOf(type, data) {
   if (type === "permission.asked") return "permission";
   if (type === "permission.replied") return "running";
   if (type === "session.error") return "error";
   if (type === "session.idle") return "done";
   if (type === "session.status") {
-    const status = properties.status;
+    const status = data.status;
     if (status?.type === "idle") return "done";
     if (status?.type === "busy" || status?.type === "retry") return "running";
   }
@@ -127,32 +144,46 @@ function statusOf(type, properties) {
   return null;
 }
 
-export const PierStatus = async ({ directory, worktree }) => {
-  const defaultDirectory = directory || worktree || "";
-  return {
-    event: async ({ event }) => {
+function handleEvent(event, defaultDirectory) {
+  const type = event?.type;
+  if (!type) return;
+
+  const data = payloadOf(event);
+  const sessionId = sessionIdOf(data);
+  if (!sessionId) return;
+
+  if (type === "session.deleted") {
+    directories.delete(sessionId);
+    removeStatus(sessionId);
+    return;
+  }
+
+  const cwd = cwdOf(data, defaultDirectory);
+  if (cwd) directories.set(sessionId, cwd);
+  const status = statusOf(type, data);
+  if (status) writeStatus(sessionId, status, cwd);
+}
+
+export default {
+  id: PLUGIN_ID,
+  async setup(ctx) {
+    const defaultDirectory = ctx?.location?.directory || "";
+    const controller = new AbortController();
+
+    void (async () => {
       try {
-        const raw = event || {};
-        const type = raw.type || raw.payload?.type;
-        const properties = raw.properties || raw.payload?.properties || {};
-        if (!type) return;
-
-        const sessionId = sessionIdOf(properties);
-        if (!sessionId) return;
-
-        if (type === "session.deleted") {
-          directories.delete(sessionId);
-          removeStatus(sessionId);
-          return;
+        for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
+          try {
+            handleEvent(event, defaultDirectory);
+          } catch {
+            // Silencioso: ver o comentário do topo do arquivo.
+          }
         }
-
-        const cwd = cwdOf(properties, defaultDirectory);
-        if (cwd) directories.set(sessionId, cwd);
-        const status = statusOf(type, properties);
-        if (status) writeStatus(sessionId, status, cwd);
       } catch {
-        // Silencioso: ver o comentário do topo do arquivo.
+        // Assinatura encerrada (plugin descarregado) ou serviço desconectado.
       }
-    },
-  };
+    })();
+
+    return () => controller.abort();
+  },
 };
