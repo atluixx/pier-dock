@@ -344,6 +344,7 @@ export const en: Dict = {
     focused: "focused",
     windows: (n) => `${n} windows`,
     running: "open",
+    notifications: (n) => `${n} notifications`,
   },
   preview: {
     label: (name) => `Windows of ${name}`,

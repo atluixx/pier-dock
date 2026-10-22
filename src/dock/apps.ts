@@ -1,6 +1,7 @@
 import type { AppEntry, WindowInfo } from "../lib/ipc";
 import { prettyExeName } from "../lib/format.ts";
 import { os } from "../lib/platform.ts";
+import { parseTitleCount } from "./badge.ts";
 import { appKey } from "./order.ts";
 
 export interface DockApp {
@@ -13,6 +14,8 @@ export interface DockApp {
   launchTarget: string;
   /** App instalado correspondente, para fixar com os dados certos. */
   installed?: AppEntry;
+  /** Notificações pendentes somadas das janelas do app; 0 quando não há. */
+  badge: number;
 }
 
 const lower = (s?: string | null) => (s ?? "").toLowerCase();
@@ -84,6 +87,7 @@ export function buildDockApps(
     windows: [],
     iconKey: iconKeyForEntry(p),
     launchTarget: p.target,
+    badge: 0,
   }));
   const running = new Map<string, DockApp>();
 
@@ -106,12 +110,15 @@ export function buildDockApps(
         iconKey: match ? iconKeyForEntry(match) : iconKeyForWindow(w),
         launchTarget: match?.target ?? launchTargetForWindow(w, isUwp),
         installed: match,
+        badge: 0,
       };
       running.set(groupKey, app);
     }
     app.windows.push(w);
   }
-  return [...pinnedApps, ...running.values()];
+  const apps = [...pinnedApps, ...running.values()];
+  for (const app of apps) app.badge = app.windows.reduce((sum, w) => sum + parseTitleCount(w.title), 0);
+  return apps;
 }
 
 /** Converte um app aberto (não fixado) em um app fixado. */

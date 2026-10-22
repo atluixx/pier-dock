@@ -344,6 +344,7 @@ export const pt = {
     focused: "em foco",
     windows: (n: number) => `${n} janelas`,
     running: "aberto",
+    notifications: (n: number) => `${n} notificações`,
   },
   preview: {
     label: (name: string) => `Janelas de ${name}`,

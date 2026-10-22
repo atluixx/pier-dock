@@ -89,7 +89,7 @@ const config: Config = {
 };
 
 const windows: WindowsSnapshot = {
-  windows: apps.map((a, i) => ({ id: i + 1, title: a.name, exe: a.target, minimized: false, pid: 1000 + i })),
+  windows: apps.map((a, i) => ({ id: i + 1, title: i === 1 ? `(3) ${a.name}` : i === 2 ? `[120] ${a.name}` : a.name, exe: a.target, minimized: false, pid: 1000 + i })),
   foreground: 4,
 };
 
