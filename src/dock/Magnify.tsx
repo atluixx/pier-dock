@@ -51,7 +51,7 @@ export function MagnifyProvider({ value, children }: { value: MagnifyContext; ch
   // Reordering, widget changes and configuration updates can move an unchanged-size icon.
   useLayoutEffect(() => geometry.measure());
   useLayoutEffect(() => {
-    const bar = document.querySelector(".dock-bar");
+    const bar = document.querySelector<HTMLElement>(".dock-bar");
     const observer = new ResizeObserver(geometry.measure);
     const settled = (event: TransitionEvent) => {
       if (event.target === bar && event.propertyName === "transform") geometry.measure();
