@@ -59,8 +59,6 @@ A atualização automática funciona com o instalador do Windows, com o app do m
 
 ## Uso
 
-Se a animação ao passar o mouse ficar lenta, experimente **Configurações > Aparência > Reduzir efeitos visuais**. A opção desativa o desfoque e as sombras decorativas da dock e dos ícones, mantendo os widgets e as animações. Ao desativá-la, o material escolhido é restaurado.
-
 - **Clique** num app para abri-lo ou focá-lo. Clique no app ativo para minimizá-lo. Se o app tiver várias janelas, cada clique alterna entre elas.
 - **Shift+clique** num app abre uma nova instância.
 - **Clique com o botão direito** num app para ver as janelas dele, fixá-lo, desafixá-lo ou fechá-lo.
@@ -132,6 +130,10 @@ O Pier guarda as configurações em `config.json`:
 Se você usava o Pier quando ele se chamava WinDock, o Pier importa as suas configurações, o token do GitHub e o início automático na primeira execução. No GNOME, reinstale a extensão pelas configurações do Pier.
 
 ## Solução de problemas
+
+### Lentidão ao passar o mouse
+
+Se a animação ao passar o mouse ficar lenta, experimente **Configurações > Aparência > Reduzir efeitos visuais**. A opção desativa o desfoque e as sombras decorativas da dock e dos ícones, mantendo os widgets e as animações. Ao desativá-la, o material escolhido é restaurado.
 
 ### A barra de tarefas ou o Dock não voltou
 
