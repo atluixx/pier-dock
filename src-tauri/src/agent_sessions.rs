@@ -8,7 +8,9 @@
 //! arquivos e casa o `pidChain` de cada um (a cadeia de processo-pai no momento do hook) contra as
 //! janelas abertas, para saber qual terminal ou IDE focar no clique.
 //!
-//! Nada do conteúdo das conversas é lido ou guardado: só provider, status, cwd, projeto e horário.
+//! O Codex também fornece eventos locais de ciclo de vida, inclusive em clientes app-server como
+//! o T3 Code; essa fonte independe dos hooks e é combinada por provider/sessionId.
+//! Só metadados e estado são desserializados; o conteúdo das conversas não é guardado.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -23,6 +25,8 @@ use crate::ai_usage::claude::config_root as claude_config_root;
 use crate::ai_usage::now_ms;
 use crate::util::{data_dir, ErrStr};
 use crate::windows_list;
+
+mod codex;
 
 /// O script de hook, embutido no binário — como os ícones da bandeja (`include_bytes!` em
 /// `main.rs`). A instalação o escreve em disco.
@@ -247,14 +251,21 @@ fn is_expired(status: &str, age_secs: f64) -> bool {
     }
 }
 
-fn collect() -> Vec<AgentSession> {
+fn collect(codex: &mut codex::Sessions) -> Vec<AgentSession> {
     let now = now_ms();
-    let mut result: Vec<AgentSession> = read_all()
+    let mut merged = codex.read(now);
+    for (path, raw) in read_all() {
+        if is_expired(&raw.status, (now - raw.updated_at) / 1000.0) {
+            let _ = fs::remove_file(path);
+            continue;
+        }
+        merge_status(&mut merged, raw);
+    }
+    let mut result: Vec<AgentSession> = merged
         .into_iter()
-        .filter_map(|(path, raw)| {
+        .filter_map(|raw| {
             let age_secs = (now - raw.updated_at) / 1000.0;
             if is_expired(&raw.status, age_secs) {
-                let _ = fs::remove_file(&path);
                 return None;
             }
             let window_id = resolve_window(&raw.pid_chain, &raw.project);
@@ -269,8 +280,24 @@ fn collect() -> Vec<AgentSession> {
             })
         })
         .collect();
-    result.sort_by(|a, b| a.updated_at.partial_cmp(&b.updated_at).unwrap_or(std::cmp::Ordering::Equal));
+    result.sort_by(|a, b| a.updated_at.partial_cmp(&b.updated_at).unwrap_or(std::cmp::Ordering::Equal)
+        .then_with(|| a.provider.cmp(&b.provider)).then_with(|| a.session_id.cmp(&b.session_id)));
     result
+}
+
+/// Hooks supply permission requests and accurate process ancestry; rollouts supply turns when
+/// app-server clients do not dispatch hooks. Count each provider/session only once.
+fn merge_status(sessions: &mut Vec<RawStatus>, hook: RawStatus) {
+    if let Some(current) = sessions.iter_mut().find(|s| s.provider == hook.provider && s.session_id == hook.session_id) {
+        let chain = hook.pid_chain.clone();
+        if hook.updated_at >= current.updated_at || (hook.status == "permission" && current.status == "running") {
+            *current = hook;
+        } else if !chain.is_empty() {
+            current.pid_chain = chain;
+        }
+    } else {
+        sessions.push(hook);
+    }
 }
 
 /// Varre a pasta de status a cada segundo (poucos arquivos pequenos: não precisa de um watcher de
@@ -278,8 +305,9 @@ fn collect() -> Vec<AgentSession> {
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || {
         let mut last: Option<Vec<AgentSession>> = None;
+        let mut codex = codex::Sessions::default();
         loop {
-            let list = collect();
+            let list = collect(&mut codex);
             if last.as_ref() != Some(&list) {
                 *CACHE.lock().unwrap() = list.clone();
                 let _ = app.emit("agent-sessions-changed", &list);
@@ -523,6 +551,35 @@ mod tests {
 
     fn window(id: i64, pid: u32, title: &str) -> windows_list::WindowInfo {
         windows_list::WindowInfo { id, title: title.into(), exe: String::new(), aumid: None, minimized: false, pid }
+    }
+
+    fn raw(provider: &str, id: &str, status: &str, at: f64) -> RawStatus {
+        RawStatus { provider: provider.into(), session_id: id.into(), status: status.into(),
+            cwd: "/project".into(), project: "project".into(), pid_chain: vec![], updated_at: at }
+    }
+
+    #[test]
+    fn hooks_and_rollouts_count_each_session_once_and_preserve_permission() {
+        let mut sessions = vec![raw("codex", "a", "running", 20.0)];
+        let mut hook = raw("codex", "a", "permission", 19.0);
+        hook.pid_chain = vec![123];
+        merge_status(&mut sessions, hook);
+        assert_eq!(sessions.len(), 1);
+        assert_eq!(sessions[0].status, "permission");
+        assert_eq!(sessions[0].pid_chain, vec![123]);
+        merge_status(&mut sessions, raw("codex", "b", "running", 21.0));
+        merge_status(&mut sessions, raw("claude", "a", "running", 21.0));
+        assert_eq!(sessions.len(), 3);
+    }
+
+    #[test]
+    fn completed_rollout_beats_older_hook_but_keeps_its_window_ancestry() {
+        let mut sessions = vec![raw("codex", "a", "done", 20.0)];
+        let mut hook = raw("codex", "a", "permission", 19.0);
+        hook.pid_chain = vec![123];
+        merge_status(&mut sessions, hook);
+        assert_eq!(sessions[0].status, "done");
+        assert_eq!(sessions[0].pid_chain, vec![123]);
     }
 
     #[test]

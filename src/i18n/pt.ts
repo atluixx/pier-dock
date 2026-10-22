@@ -532,13 +532,15 @@ export const pt = {
       `Google Agenda: Configurações da agenda → Endereço secreto no formato iCal. Outlook: Calendário → Calendários compartilhados → Publicar um calendário (link ICS). O endereço fica guardado ${keychain}.`,
     agentIntegrationLabel: "Integrações das IAs",
     agentIntegrationHint:
-      "Instale os hooks ou o plugin de cada CLI. O Pier só lê o status da sessão — nunca o conteúdo das conversas.",
+      "As sessões do Codex, incluindo o T3 Code, são detectadas automaticamente. Os outros CLIs usam hooks ou um plugin. O Pier só usa metadados e status das sessões.",
     agentInstalled: {
       claude: "Hooks instalados em ~/.claude/settings.json.",
-      codex: "Hooks instalados em ~/.codex/hooks.json. No Codex, rode /hooks para confiar nos hooks do Pier.",
+      codex: "A detecção automática de sessões está ativa. Hooks opcionais de permissão estão instalados; rode /hooks no Codex para confiar neles.",
       opencode: "Plugin instalado em ~/.config/opencode/plugins. Reinicie o opencode para carregá-lo.",
       gemini: "Hooks instalados em ~/.gemini/settings.json.",
     },
+    agentCodexAutomatic: "As sessões do Codex são detectadas automaticamente, incluindo o T3 Code. Hooks opcionais adicionam o status de permissão.",
+    agentRemoveHooks: "Remover hooks",
     agentAvailable: "CLI encontrada nesta máquina. Ative para acompanhar as sessões.",
     agentNotDetected: "CLI não encontrada nesta máquina. Você ainda pode ativar e instalar a CLI depois.",
     agentInstall: "Ativar",

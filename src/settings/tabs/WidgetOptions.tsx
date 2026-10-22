@@ -209,7 +209,7 @@ export function AgentSessionsOptions({ config, update }: OptionsProps) {
         const description = installed
           ? t.agentInstalled[provider]
           : detected
-            ? t.agentAvailable
+            ? (provider === "codex" ? t.agentCodexAutomatic : t.agentAvailable)
             : t.agentNotDetected;
         return (
           <Row key={provider} label={agentSessions.providers[provider]} description={description}>
@@ -219,7 +219,7 @@ export function AgentSessionsOptions({ config, update }: OptionsProps) {
                 disabled={busy !== null}
                 onClick={run(provider, ipc.uninstallAgentIntegration)}
               >
-                {t.agentRemove}
+                {provider === "codex" ? t.agentRemoveHooks : t.agentRemove}
               </button>
             )}
             <button className="btn" disabled={busy !== null || integrations === null} onClick={run(provider, ipc.installAgentIntegration)}>

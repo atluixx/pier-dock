@@ -532,13 +532,15 @@ export const en: Dict = {
       `Google Calendar: Calendar settings → Secret address in iCal format. Outlook: Calendar → Shared calendars → Publish a calendar (ICS link). The address is stored ${keychain}.`,
     agentIntegrationLabel: "AI integrations",
     agentIntegrationHint:
-      "Install each CLI's hooks or plugin. Pier only reads the session status — never the conversation content.",
+      "Codex sessions, including T3 Code, are detected automatically. Other CLIs use hooks or a plugin. Pier only uses session metadata and status.",
     agentInstalled: {
       claude: "Hooks installed in ~/.claude/settings.json.",
-      codex: "Hooks installed in ~/.codex/hooks.json. In Codex, run /hooks to trust Pier's hooks.",
+      codex: "Automatic session detection is active. Optional permission hooks are installed; run /hooks in Codex to trust them.",
       opencode: "Plugin installed in ~/.config/opencode/plugins. Restart opencode to load it.",
       gemini: "Hooks installed in ~/.gemini/settings.json.",
     },
+    agentCodexAutomatic: "Codex sessions are detected automatically, including T3 Code. Optional hooks add permission status.",
+    agentRemoveHooks: "Remove hooks",
     agentAvailable: "CLI found on this computer. Enable it to follow its sessions.",
     agentNotDetected: "CLI not found on this computer. You can still enable it and install the CLI later.",
     agentInstall: "Enable",
