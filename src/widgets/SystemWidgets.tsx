@@ -1,22 +1,15 @@
 import {
-  BatteryCharging,
-  BatteryFull,
-  BatteryLow,
-  BatteryMedium,
   Bluetooth,
   BluetoothConnected,
   BluetoothOff,
   ChevronUp,
   Globe,
   Monitor,
-  Volume1,
-  Volume2,
-  VolumeX,
-  Wifi,
   WifiHigh,
   WifiLow,
   WifiOff,
 } from "lucide-react";
+import { Battery, Volume1, Volume2, VolumeX, Wifi } from "../ui/DockIcons";
 import { ipc, type BluetoothState, type SystemStatus } from "../lib/ipc";
 import { useNow, useVolume } from "../hooks/useSystem";
 import { shortDate } from "../lib/format";
@@ -39,11 +32,8 @@ export function TrayWidget() {
 export function NetworkWidget({ status }: { status: SystemStatus | null }) {
   const net = status?.network;
   const t = useT().system;
-  let Icon = WifiOff;
-  if (net?.connected) {
-    const bars = net.signalBars ?? 4;
-    Icon = !net.wifi ? Globe : bars >= 4 ? Wifi : bars >= 2 ? WifiHigh : WifiLow;
-  }
+  const bars = net?.signalBars ?? 4;
+  const Icon = !net?.connected ? WifiOff : !net.wifi ? Globe : bars >= 4 ? Wifi : bars >= 2 ? WifiHigh : WifiLow;
   const label = !net?.connected ? t.offline : `${net.name || t.connected}${net.internet ? "" : t.noInternet}`;
   return (
     <Tile kind="network" label={label} className="sys-tile">
@@ -93,13 +83,6 @@ export function BatteryWidget({ status }: { status: SystemStatus | null }) {
   const battery = status?.battery;
   const t = useT().system;
   if (!battery?.present) return null;
-  const Icon = battery.charging
-    ? BatteryCharging
-    : battery.percent > 70
-      ? BatteryFull
-      : battery.percent > 30
-        ? BatteryMedium
-        : BatteryLow;
   return (
     <Tile
       kind="battery"
@@ -107,7 +90,7 @@ export function BatteryWidget({ status }: { status: SystemStatus | null }) {
       className={`battery-tile ${battery.percent <= 15 && !battery.charging ? "low" : ""}`}
       onClick={() => ipc.openShell("quick-settings")}
     >
-      <Icon size={20} />
+      <Battery percent={battery.percent} charging={battery.charging} />
       <span className="sys-text">{battery.percent}%</span>
     </Tile>
   );

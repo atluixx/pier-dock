@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { Music, Pause, Play, SkipForward } from "lucide-react";
+import { Music } from "lucide-react";
+import { Pause, Play, SkipForward } from "../ui/DockIcons";
 import { ipc, type MediaState } from "../lib/ipc";
 import { pickSession, usePlaybackPosition, useThumbnail } from "../hooks/useMedia";
 import { mediaSourceName } from "../lib/format";
@@ -53,11 +54,11 @@ export function MediaWidget({ media, wide }: { media: MediaState; wide: boolean 
             </span>
           </button>
           <button className="media-control" aria-label={playLabel} onClick={control("toggle")}>
-            <PlayIcon size={16} fill="currentColor" />
+            <PlayIcon size={15} />
           </button>
           {session.canNext && (
             <button className="media-control" aria-label={common.nextTrack} onClick={control("next")}>
-              <SkipForward size={16} />
+              <SkipForward size={15} />
             </button>
           )}
         </>
@@ -69,7 +70,7 @@ export function MediaWidget({ media, wide }: { media: MediaState; wide: boolean 
             </span>
           </button>
           <button className="media-overlay" aria-label={playLabel} onClick={control("toggle")}>
-            <PlayIcon size={14} fill="currentColor" />
+            <PlayIcon size={15} />
           </button>
         </>
       )}
