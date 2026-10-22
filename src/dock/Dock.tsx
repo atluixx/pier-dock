@@ -19,6 +19,7 @@ import { PREVIEW_GAP, barRect, dockMetrics, isVertical, previewSpace } from "./l
 import { WindowPreview } from "./WindowPreview";
 import { ClawdPet } from "./ClawdPet";
 import { MagnifyCtx } from "./Magnify";
+import { latestSender, sameHitRect } from "./hitRect";
 import { resetDockHover } from "./hoverReset";
 import { AppIcon } from "./AppIcon";
 import { SortableItem } from "./SortableItem";
@@ -163,22 +164,29 @@ export function Dock({ config }: { config: Config }) {
     if (!bar) return;
     // Pelo layout, não pelo getBoundingClientRect: o transform da animação de ocultar não pode
     // deslocar a área clicável.
+    const radius = parseFloat(getComputedStyle(bar).borderTopLeftRadius) || 0;
+    const sender = latestSender(ipc.setHitRect, sameHitRect, console.error);
+    let frame: number | null = null;
     const report = () => {
-      const style = getComputedStyle(bar);
+      frame = null;
       const rect = barRect(position, full, metrics.margin, { width: bar.offsetWidth, height: bar.offsetHeight }, {
         width: window.innerWidth,
         height: window.innerHeight,
       });
-      const radius = parseFloat(style.borderTopLeftRadius) || 0;
-      ipc.setHitRect({ x: rect.x, y: rect.y, width: rect.width, height: rect.height, radius });
+      sender.submit({ x: rect.x, y: rect.y, width: rect.width, height: rect.height, radius });
     };
-    const observer = new ResizeObserver(report);
+    const schedule = () => {
+      if (frame === null) frame = requestAnimationFrame(report);
+    };
+    const observer = new ResizeObserver(schedule);
     observer.observe(bar);
-    window.addEventListener("resize", report);
-    report();
+    window.addEventListener("resize", schedule);
+    schedule();
     return () => {
       observer.disconnect();
-      window.removeEventListener("resize", report);
+      window.removeEventListener("resize", schedule);
+      if (frame !== null) cancelAnimationFrame(frame);
+      sender.dispose();
     };
   }, [position, full, metrics.margin]);
 
