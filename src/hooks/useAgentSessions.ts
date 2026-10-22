@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { ipc, type AgentSession } from "../lib/ipc";
 
-/** Sessões dos CLIs de IA ao vivo, lidas dos hooks/plugin instalados pelas integrações. */
+/** Sessões dos CLIs de IA ao vivo, lidas dos hooks/plugins e dos eventos locais do Codex. */
 export function useAgentSessions(): AgentSession[] {
   const [agents, setAgents] = useState<AgentSession[]>([]);
   useEffect(() => {
