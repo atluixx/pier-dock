@@ -11,7 +11,7 @@ export const PANEL_SIZES: Record<string, [number, number]> = {
   weather: [360, 426],
   pomodoro: [360, 406],
   "system-usage": [360, 460],
-  calendar: [360, 372],
+  calendar: [360, 420],
   "ai-usage": [340, 296],
   "ai-agents": [320, 280],
   bluetooth: [340, 340],
