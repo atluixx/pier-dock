@@ -2,8 +2,6 @@ import { createContext, useContext, useRef, type ReactNode } from "react";
 import { motion, useSpring, useTransform, type MotionValue } from "framer-motion";
 import type { DockPosition } from "../lib/ipc";
 import { isVertical } from "./layout";
-import { useReducedMotion } from "framer-motion";
-import { HOVER_SPRING } from "./hoverSpring";
 
 interface MagnifyContext {
   /** Posição do cursor no eixo da barra: x nas bordas de cima e de baixo, y nas laterais. */
@@ -26,8 +24,7 @@ export function Magnify({ children }: { children: ReactNode }) {
     return isVertical(ctx.position) ? value - r.top - r.height / 2 : value - r.left - r.width / 2;
   });
   const size = useTransform(distance, [-range, 0, range], [ctx.base, ctx.base * ctx.scale, ctx.base], { clamp: true });
-  const reducedMotion = useReducedMotion();
-  const spring = useSpring(size, reducedMotion ? { duration: 0 } : HOVER_SPRING);
+  const spring = useSpring(size, { mass: 0.1, stiffness: 170, damping: 14 });
   return (
     <motion.div ref={ref} className="magnify" style={{ width: spring, height: spring }}>
       {children}
