@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { ipc, type AppStream, type AudioState, type BluetoothState, type SystemStatus, type Volume, type WifiState } from "../lib/ipc";
 
-export function useSystemStatus(): SystemStatus | null {
+export function useSystemStatus(enabled = true): SystemStatus | null {
   const [status, setStatus] = useState<SystemStatus | null>(null);
   useEffect(() => {
+    if (!enabled) return;
     const refresh = () => ipc.systemStatus().then(setStatus).catch(() => {});
     refresh();
     const id = setInterval(refresh, 10_000);
     return () => clearInterval(id);
-  }, []);
+  }, [enabled]);
   return status;
 }
 

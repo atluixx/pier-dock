@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { ipc, type MediaSession, type MediaState } from "../lib/ipc";
 
-export function useMedia(): MediaState {
+export function useMedia(enabled = true): MediaState {
   const [state, setState] = useState<MediaState>({ sessions: [] });
   useEffect(() => {
+    if (!enabled) return;
     ipc.mediaState().then(setState);
     const unlisten = listen<MediaState>("media-changed", (e) => setState(e.payload));
     return () => {
       unlisten.then((f) => f());
     };
-  }, []);
+  }, [enabled]);
   return state;
 }
 
