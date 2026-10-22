@@ -17,12 +17,15 @@ export interface DockApp {
 
 const lower = (s?: string | null) => (s ?? "").toLowerCase();
 
+/** Apps da Store (WhatsApp, Spotify…) têm o exe em WindowsApps, sem ícone embutido: o shell devolve o genérico. */
+const isStoreExe = (exe?: string | null) => lower(exe).includes("\\windowsapps\\");
+
 function iconKeyForWindow(w: WindowInfo): string {
   // Linux: o desktop id dá o ícone do tema; macOS: o exe já é o bundle .app.
   if (os === "linux") return w.aumid ?? w.exe;
   if (os === "macos") return w.exe;
   // Janelas UWP pertencem ao ApplicationFrameHost; o ícone certo vem do AUMID.
-  if (w.aumid && (w.aumid.includes("!") || lower(w.exe).endsWith("applicationframehost.exe"))) {
+  if (w.aumid && (w.aumid.includes("!") || isStoreExe(w.exe) || lower(w.exe).endsWith("applicationframehost.exe"))) {
     return `shell:AppsFolder\\${w.aumid}`;
   }
   return w.exe;
@@ -37,7 +40,7 @@ export function iconKeyForEntry(entry: AppEntry): string {
   if (os === "linux") return entry.aumid ?? entry.target;
   if (os === "macos") return entry.target;
   const aumid = lower(entry.aumid);
-  const isPackagedOrPwa = aumid.includes("!") || aumid.includes("_crx_");
+  const isPackagedOrPwa = aumid.includes("!") || aumid.includes("_crx_") || isStoreExe(entry.exe);
   if (entry.exe && !isPackagedOrPwa && lower(entry.exe).endsWith(".exe")) return entry.exe;
   return entry.target;
 }

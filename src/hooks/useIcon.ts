@@ -6,7 +6,11 @@ const cache = new Map<string, Promise<string | null>>();
 function loadIcon(key: string): Promise<string | null> {
   let pending = cache.get(key);
   if (!pending) {
-    pending = ipc.getIcon(key).catch(() => null);
+    // Falha transitória (pacote da Store ainda não registrado no boot) não pode virar null para sempre.
+    pending = ipc.getIcon(key).catch(() => {
+      cache.delete(key);
+      return null;
+    });
     cache.set(key, pending);
   }
   return pending;
