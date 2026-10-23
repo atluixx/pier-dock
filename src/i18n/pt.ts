@@ -308,9 +308,11 @@ export const pt = {
     progress: "Progresso da faixa",
     nowPlayingTile: (label: string) => `Tocando agora: ${label}`,
   },
+  dateCalendar: { previous: "Mês anterior", next: "Próximo mês", today: "Hoje" },
   popover: {
     unknown: "Painel desconhecido.",
     labels: {
+      clock: "Calendário",
       media: "Tocando agora",
       "github-mine": "Seus pull requests",
       "github-review": "Revisões pendentes",

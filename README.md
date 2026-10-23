@@ -78,6 +78,9 @@ Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) auto
 
 ### Weather and calendar widgets
 
+Click the clock/date widget to open a month calendar, browse months, or return to today. This works without a calendar account.
+
+
 - **Weather:** Choose your city in **Settings** > **Widgets** > **Weather**. Forecasts come from [Open-Meteo](https://open-meteo.com) and don't need an API key.
 - **Calendar:** Paste your calendar's secret iCal address in **Settings** > **Widgets** > **Calendar**. Google Calendar, Outlook, and iCloud all publish one. Pier stores the address in your system's keychain.
 

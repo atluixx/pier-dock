@@ -78,6 +78,9 @@ O Pier usa automaticamente o login do [GitHub CLI](https://cli.github.com) (`gh 
 
 ### Widgets de clima e agenda
 
+Clique no relógio/data para abrir um calendário mensal, navegar pelos meses ou voltar para hoje. Não é preciso configurar uma conta de calendário.
+
+
 - **Clima:** escolha a cidade em **Configurações** > **Widgets** > **Clima**. A previsão vem do [Open-Meteo](https://open-meteo.com) e não precisa de chave de API.
 - **Agenda:** cole o endereço secreto iCal da sua agenda em **Configurações** > **Widgets** > **Agenda**. O Google Agenda, o Outlook e o iCloud publicam esse endereço. O Pier guarda o endereço no chaveiro do sistema.
 
