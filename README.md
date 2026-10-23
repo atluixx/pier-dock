@@ -59,6 +59,8 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 
 ## Usage
 
+Network, sound and Bluetooth panels keep connection and device details in the panel body; the footer contains actions.
+
 - **Click** an app to open or focus it. Click the active app to minimize it. If the app has several windows, clicking cycles through them.
 - **Shift+click** an app to open a new instance.
 - **Right-click** an app to see its windows, pin or unpin it, or close it.

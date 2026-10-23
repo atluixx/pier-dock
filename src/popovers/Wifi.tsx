@@ -189,7 +189,6 @@ export function WifiPanel() {
       </>
     );
 
-  const status = !wifi?.available ? "" : !wifi.enabled ? t.offShort : (current?.ssid ?? t.notConnected);
   return (
     <>
       <div className="popover-header">
@@ -197,7 +196,7 @@ export function WifiPanel() {
         {wifi?.available && wifi.canToggle && <Switch checked={wifi.enabled} label="Wi-Fi" onChange={setEnabled} />}
       </div>
       <div className="wifi-body">{body}</div>
-      <ActionFooter context={status} actions={[{ label: t.settings, onClick: () => ipc.openShell("network") }]} />
+      <ActionFooter context="" actions={[{ label: t.settings, onClick: () => ipc.openShell("network") }]} />
     </>
   );
 }

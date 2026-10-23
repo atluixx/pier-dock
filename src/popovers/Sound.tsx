@@ -42,7 +42,6 @@ export function SoundPanel() {
   const t = useT().sound;
   const level = volume?.level ?? 0;
   const muted = volume?.muted ?? false;
-  const current = audio?.outputs.find((o) => o.default);
 
   return (
     <>
@@ -96,7 +95,7 @@ export function SoundPanel() {
           </>
         )}
       </div>
-      <ActionFooter context={current?.name ?? ""} actions={[{ label: t.settings, keys: "↵", onClick: () => ipc.openShell("sound") }]} />
+      <ActionFooter context="" actions={[{ label: t.settings, keys: "↵", onClick: () => ipc.openShell("sound") }]} />
     </>
   );
 }
