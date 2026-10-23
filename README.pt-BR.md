@@ -100,6 +100,10 @@ Ele lê o Claude Code e o Codex CLI, e **Configurações** > **Widgets** > **Uso
 
 Só os campos numéricos de `usage`, o nome do modelo e o timestamp são lidos — nunca o conteúdo das conversas, os comandos executados ou os diffs. Os CLIs só renovam os percentuais enquanto estão abertos, então com eles fechados o número congela: o widget esmaece e diz há quanto tempo foi a leitura em vez de passar um valor velho por atual.
 
+### Bluetooth
+
+O Bluetooth mantém os dispositivos salvos visíveis com o rádio desligado. Ligue-o e clique em um dispositivo salvo para conectar ou use Desconectar nos conectados. Linux e macOS conectam diretamente; Windows abre as configurações de Bluetooth. Falhas ao ler um dispositivo não descartam mais a lista de pareados no Windows.
+
 ## Particularidades de cada plataforma
 
 ### macOS

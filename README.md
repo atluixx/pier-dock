@@ -100,6 +100,10 @@ It reads Claude Code and Codex CLI, and **Settings** > **Widgets** > **AI usage*
 
 Only the numeric `usage` fields, the model name, and the timestamp are read — never the content of your conversations, the commands, or the diffs. The CLIs only refresh the percentages while they run, so with them closed the number freezes: the widget dims and says how old the reading is instead of passing a stale value off as current.
 
+### Bluetooth
+
+Bluetooth keeps saved devices visible while the radio is off. Turn it on, then click a saved device to connect or use Disconnect for a connected device. Linux and macOS connect directly; Windows opens Bluetooth settings. Devices that cannot be read individually no longer discard the Windows paired inventory.
+
 ## Platform notes
 
 ### macOS

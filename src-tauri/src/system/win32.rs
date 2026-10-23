@@ -119,38 +119,48 @@ fn kind_from_appearance(raw: u16) -> &'static str {
     }
 }
 
-fn paired_devices() -> windows::core::Result<Vec<BluetoothDevice>> {
-    let mut devices: Vec<BluetoothDevice> = Vec::new();
-    let classic = DeviceInformation::FindAllAsyncAqsFilter(&BtDevice::GetDeviceSelectorFromPairingState(true)?)?.get()?;
-    for info in classic {
-        let id = info.Id()?;
-        let device = BtDevice::FromIdAsync(&id)?.get()?;
-        let kind = kind_from_class(device.ClassOfDevice()?.RawValue()?);
-        let connected = device.ConnectionStatus()? == BluetoothConnectionStatus::Connected;
-        devices.push(BluetoothDevice { id: id.to_string(), name: device.Name()?.to_string(), kind, battery: None, connected });
-    }
-    let le = DeviceInformation::FindAllAsyncAqsFilter(&BluetoothLEDevice::GetDeviceSelectorFromPairingState(true)?)?.get()?;
-    for info in le {
-        let id = info.Id()?;
-        let device = BluetoothLEDevice::FromIdAsync(&id)?.get()?;
-        let name = device.Name()?.to_string();
-        let connected = device.ConnectionStatus()? == BluetoothConnectionStatus::Connected;
-        // Dispositivos dual-mode (fones, por exemplo) aparecem nas duas listas.
-        if let Some(existing) = devices.iter_mut().find(|d| d.name == name) {
-            existing.connected |= connected;
-            continue;
+fn paired_devices() -> Vec<BluetoothDevice> {
+    // A device can be offline or fail to open without invalidating the saved inventory.
+    let mut devices: Vec<(Option<u64>, BluetoothDevice)> = Vec::new();
+    let classic = BtDevice::GetDeviceSelectorFromPairingState(true)
+        .and_then(|selector| DeviceInformation::FindAllAsyncAqsFilter(&selector)?.get());
+    if let Ok(classic) = classic {
+        for info in classic {
+            let Ok(id) = info.Id() else { continue };
+            let device = BtDevice::FromIdAsync(&id).and_then(|operation| operation.get()).ok();
+            let address = device.as_ref().and_then(|d| d.BluetoothAddress().ok());
+            let kind = device.as_ref().and_then(|d| d.ClassOfDevice().ok()?.RawValue().ok()).map(kind_from_class).unwrap_or("other");
+            let connected = device.as_ref().is_some_and(|d| d.ConnectionStatus().is_ok_and(|s| s == BluetoothConnectionStatus::Connected));
+            let name = info.Name().map(|n| n.to_string()).unwrap_or_else(|_| id.to_string());
+            devices.push((address, BluetoothDevice { id: id.to_string(), name, kind, battery: None, connected }));
         }
-        let kind = kind_from_appearance(device.Appearance()?.RawValue()?);
-        devices.push(BluetoothDevice { id: id.to_string(), name, kind, battery: None, connected });
     }
-    Ok(devices)
+    let le = BluetoothLEDevice::GetDeviceSelectorFromPairingState(true)
+        .and_then(|selector| DeviceInformation::FindAllAsyncAqsFilter(&selector)?.get());
+    if let Ok(le) = le {
+        for info in le {
+            let Ok(id) = info.Id() else { continue };
+            let device = BluetoothLEDevice::FromIdAsync(&id).and_then(|operation| operation.get()).ok();
+            let address = device.as_ref().and_then(|d| d.BluetoothAddress().ok());
+            let connected = device.as_ref().is_some_and(|d| d.ConnectionStatus().is_ok_and(|s| s == BluetoothConnectionStatus::Connected));
+            // Merge dual-mode records by address, never by a non-unique display name.
+            if let Some((_, existing)) = devices.iter_mut().find(|(existing, _)| address.is_some() && *existing == address) {
+                existing.connected |= connected;
+                continue;
+            }
+            let name = info.Name().map(|n| n.to_string()).unwrap_or_else(|_| id.to_string());
+            let kind = device.as_ref().and_then(|d| d.Appearance().ok()?.RawValue().ok()).map(kind_from_appearance).unwrap_or("other");
+            devices.push((address, BluetoothDevice { id: id.to_string(), name, kind, battery: None, connected }));
+        }
+    }
+    devices.into_iter().map(|(_, device)| device).collect()
 }
 
 /// O WinRT não conecta dispositivos clássicos (fones, teclados): o popover abre as configurações.
 pub fn bluetooth() -> Bluetooth {
     let Some(radio) = bluetooth_radio() else { return Bluetooth::absent() };
     let powered = radio.State().is_ok_and(|s| s == RadioState::On);
-    let devices = if powered { paired_devices().unwrap_or_default() } else { Vec::new() };
+    let devices = paired_devices();
     Bluetooth { available: true, powered, can_toggle: true, can_connect: false, devices }
 }
 

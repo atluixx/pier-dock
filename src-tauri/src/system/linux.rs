@@ -143,10 +143,12 @@ fn bluetooth_from_objects(objects: &[(String, Interfaces)]) -> Bluetooth {
     // guardaram a chave sem marcar `Paired`.
     let devices = objects
         .iter()
-        .filter(|(_, i)| flag(i, "Paired") || flag(i, "Bonded") || flag(i, "Connected"))
+        .filter(|(_, i)| flag(i, "Paired") || flag(i, "Bonded") || flag(i, "Trusted") || flag(i, "Connected"))
         .map(|(path, i)| BluetoothDevice {
             id: path.clone(),
-            name: prop::<String>(i, "org.bluez.Device1", "Alias").unwrap_or_default(),
+            name: ["Alias", "Name", "Address"].into_iter()
+                .filter_map(|key| prop::<String>(i, "org.bluez.Device1", key))
+                .find(|name| !name.trim().is_empty()).unwrap_or_else(|| path.clone()),
             kind: kind_from_icon(&prop::<String>(i, "org.bluez.Device1", "Icon").unwrap_or_default()),
             battery: prop::<u8>(i, "org.bluez.Battery1", "Percentage").map(|p| p.min(100)),
             connected: flag(i, "Connected"),
@@ -258,6 +260,26 @@ mod tests {
         assert_eq!(bt.devices[1].id, "/org/bluez/hci0/dev_2");
         assert!(!bt.devices[1].connected);
         assert!(!bluetooth_from_objects(&[]).available);
+    }
+
+    #[test]
+    fn saved_devices_survive_radio_off_and_have_names() {
+        let value = |text: &str| OwnedValue::try_from(zbus::zvariant::Value::from(text)).unwrap();
+        let adapter = |powered| [("org.bluez.Adapter1".into(), [("Powered".into(), OwnedValue::from(powered))].into())].into();
+        let device = |flag: &str, name_key: &str, name: &str| -> Interfaces {
+            [("org.bluez.Device1".into(), [(flag.into(), OwnedValue::from(true)), ("Alias".into(), value("")), (name_key.into(), value(name))].into())].into()
+        };
+        let objects = vec![
+            ("/hci0".into(), adapter(false)), ("/hci1".into(), adapter(false)),
+            ("/hci0/paired".into(), device("Paired", "Name", "Keyboard")),
+            ("/hci1/bonded".into(), device("Bonded", "Address", "AA:BB:CC")),
+            ("/hci1/trusted".into(), device("Trusted", "Name", "Mouse")),
+            ("/hci0/seen".into(), device("Seen", "Name", "Not saved")),
+        ];
+        let bt = bluetooth_from_objects(&objects);
+        assert!(!bt.powered);
+        assert_eq!(bt.devices.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(), ["Keyboard", "AA:BB:CC", "Mouse"]);
+        assert!(bt.devices.iter().all(|d| !d.connected));
     }
 
     #[test]
