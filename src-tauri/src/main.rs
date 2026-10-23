@@ -16,6 +16,7 @@ mod panels;
 mod permissions;
 mod platform;
 mod pomodoro;
+mod power;
 mod report;
 mod system;
 mod taskbar;
@@ -201,6 +202,8 @@ fn main() {
             media::media_thumbnail,
             media::media_control,
             system::system_status,
+            power::power_profiles,
+            power::set_power_profile,
             system::get_volume,
             system::set_volume,
             system::open_shell,

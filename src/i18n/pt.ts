@@ -201,6 +201,7 @@ export const pt = {
     battery: (percent: number, charging: boolean) => `Bateria ${percent}%${charging ? " (carregando)" : ""}`,
     showDesktop: "Mostrar área de trabalho",
   },
+  power: { title: "Modo de energia", modes: { "power-saver": "Economia de energia", balanced: "Equilibrado", performance: "Desempenho" }, unavailable: "A troca de modo de energia não está disponível neste sistema.", failed: "Não foi possível trocar o modo de energia. Tente novamente." },
   sound: {
     title: "Som",
     master: "Volume geral",
@@ -324,6 +325,7 @@ export const pt = {
       launcher: "Lançador de apps",
       volume: "Som",
       network: "Wi-Fi",
+      battery: "Modo de energia",
     } as Record<string, string>,
   },
   dock: {

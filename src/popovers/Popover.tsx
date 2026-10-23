@@ -8,6 +8,7 @@ import { Commits } from "./Commits";
 import { Contributions } from "./Contributions";
 import { Launcher } from "./Launcher";
 import { NowPlaying } from "./NowPlaying";
+import { PowerPanel } from "./Power";
 import { Pomodoro } from "./Pomodoro";
 import { PullRequests } from "./PullRequests";
 import { SoundPanel } from "./Sound";
@@ -19,6 +20,8 @@ import { useT } from "../i18n";
 function Content({ kind }: { kind: string }) {
   const t = useT();
   switch (kind) {
+    case "battery":
+      return <PowerPanel />;
     case "media":
       return <NowPlaying />;
     case "github-mine":

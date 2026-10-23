@@ -291,6 +291,8 @@ const codexUsage: AiUsage = {
   fetchedAt: Date.now(),
 };
 
+const power = { profiles: ["power-saver", "balanced", "performance"], active: "balanced", canSet: true };
+
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   get_config: () => config,
   save_config: (args) => Object.assign(config, args.config),
@@ -322,6 +324,8 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     battery: { present: true, percent: 79, charging: false },
     network: { connected: true, internet: true, wifi: true, signalBars: 4, name: "Casa" },
   }),
+  power_profiles: () => power,
+  set_power_profile: (args) => { power.active = String(args.profile); },
   get_volume: () => ({ level: 0.6, muted: false }),
   audio_status: () => ({
     outputs: [

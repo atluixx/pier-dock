@@ -105,7 +105,6 @@ export function BatteryWidget({ status }: { status: SystemStatus | null }) {
       kind="battery"
       label={t.battery(battery.percent, battery.charging)}
       className={`battery-tile ${battery.percent <= 15 && !battery.charging ? "low" : ""}`}
-      onClick={() => ipc.openShell("quick-settings")}
     >
       <Icon size={20} />
       <span className="sys-text">{battery.percent}%</span>

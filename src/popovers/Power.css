@@ -1,0 +1,7 @@
+.power-body { padding: 6px 12px 12px; overflow-y: auto; }
+.power-mode { width: 100%; gap: 12px; padding: 14px 10px; }
+.power-mode span { flex: 1; text-align: left; }
+.power-mode[aria-checked="true"] { color: var(--accent); }
+.power-mode:disabled { opacity: .5; cursor: default; }
+.power-message { padding: 8px 10px; color: var(--text-secondary); font-size: 12px; }
+.power-message.error { color: var(--red); }

@@ -201,6 +201,7 @@ export const en: Dict = {
     battery: (percent, charging) => `Battery ${percent}%${charging ? " (charging)" : ""}`,
     showDesktop: "Show desktop",
   },
+  power: { title: "Power mode", modes: { "power-saver": "Power save", balanced: "Balanced", performance: "Performance" }, unavailable: "Power mode switching is unavailable on this system.", failed: "Could not change the power mode. Try again." },
   sound: {
     title: "Sound",
     master: "Volume",
@@ -324,6 +325,7 @@ export const en: Dict = {
       launcher: "App launcher",
       volume: "Sound",
       network: "Wi-Fi",
+      battery: "Power mode",
     },
   },
   dock: {

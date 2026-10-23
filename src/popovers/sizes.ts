@@ -18,4 +18,5 @@ export const PANEL_SIZES: Record<string, [number, number]> = {
   launcher: [720, 500],
   volume: [340, 420],
   network: [340, 400],
+  battery: [340, 280],
 };
