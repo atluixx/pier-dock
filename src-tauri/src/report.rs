@@ -1,6 +1,7 @@
-//! "Reportar um problema" e "Sugerir um recurso" nas configurações. A issue é criada pela API com a
-//! conta do GitHub conectada ao Pier; sem conta (ou se a API recusar), a página `issues/new` abre no
-//! navegador já preenchida pelo template do repositório.
+//! "Reportar um problema" e "Sugerir um recurso" nas configurações. Com uma conta do GitHub conectada
+//! ao Pier a issue é criada pela API em nome dela; sem conta ela passa pelo Worker (`worker/report`),
+//! que a cria com um bot. Se nenhum dos dois der certo, a página `issues/new` abre no navegador já
+//! preenchida pelo template do repositório.
 
 use std::time::Duration;
 
@@ -17,6 +18,8 @@ const LOG_NAME: &str = "pier";
 const RECENT_LINES: usize = 200;
 /// O GitHub recusa URLs muito longas; no fallback os logs perdem as linhas mais antigas até caber.
 const MAX_URL: usize = 8000;
+/// URL do Worker `worker/report` depois do deploy; vazio desliga o envio sem conta.
+const REPORT_ENDPOINT: &str = "https://pier-report.pier-dock.workers.dev";
 
 pub fn log_plugin() -> TauriPlugin<Wry> {
     tauri_plugin_log::Builder::new()
@@ -227,6 +230,18 @@ async fn create(token: &str, kind: Kind, title: &str, body: &str) -> Result<Stri
     json.get("html_url").and_then(Value::as_str).map(String::from).ok_or_else(|| "resposta do GitHub sem html_url".into())
 }
 
+async fn send_anonymous(kind: Kind, title: &str, body: &str) -> Result<String, String> {
+    let client = reqwest::Client::builder().user_agent("pier").timeout(Duration::from_secs(15)).build().err_str()?;
+    let response = client.post(REPORT_ENDPOINT).json(&json!({ "kind": kind.label(), "title": title, "body": body })).send().await.err_str()?;
+    let status = response.status();
+    let json: Value = response.json().await.unwrap_or(Value::Null);
+    if !status.is_success() {
+        let message = json.get("error").and_then(Value::as_str).unwrap_or_default();
+        return Err(format!("{} {message}", status.as_u16()).trim().to_string());
+    }
+    json.get("url").and_then(Value::as_str).map(String::from).ok_or_else(|| "resposta do servidor sem url".into())
+}
+
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum ReportResult {
@@ -257,12 +272,21 @@ pub async fn report_issue(app: AppHandle, kind: String, title: String, descripti
     let logs = logs.as_deref().filter(|l| !l.trim().is_empty());
     // `token()` pode rodar o `gh auth token`.
     let token = tauri::async_runtime::spawn_blocking(crate::github::token).await.err_str()?;
+    let body = body(kind, &description, env.as_ref(), logs);
     let mut reason = None;
     if let Some((token, _)) = token {
-        match create(&token, kind, title, &body(kind, &description, env.as_ref(), logs)).await {
+        match create(&token, kind, title, &body).await {
             Ok(url) => return Ok(ReportResult::Created { url }),
             Err(e) => {
                 log::warn!("não deu para criar a issue pela API: {e}");
+                reason = Some(e);
+            }
+        }
+    } else if !REPORT_ENDPOINT.is_empty() {
+        match send_anonymous(kind, title, &body).await {
+            Ok(url) => return Ok(ReportResult::Created { url }),
+            Err(e) => {
+                log::warn!("não deu para enviar o relato pelo servidor: {e}");
                 reason = Some(e);
             }
         }
