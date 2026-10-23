@@ -57,6 +57,8 @@ O Pier procura atualizações logo depois de abrir e a cada 12 horas. Quando hou
 
 A atualização automática funciona com o instalador do Windows, com o app do macOS e com o AppImage. Se você instalou o pacote `.deb`, baixe e instale cada versão nova pela página de releases.
 
+No Linux, o AppImage reinicia a partir da localização atual, removendo os caminhos de bibliotecas e GTK do pacote anterior. O reinício substitui o processo atual para manter o vínculo com o lançador ou contêiner. No NixOS, o `appimage-run` existente no PATH do sistema é reutilizado, inclusive quando a atualização substitui um binário nativo por um AppImage.
+
 ## Uso
 
 Os painéis de rede, som e Bluetooth mostram os detalhes da conexão e dos dispositivos no corpo do painel; o rodapé reúne as ações.

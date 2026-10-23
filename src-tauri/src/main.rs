@@ -331,7 +331,10 @@ fn main() {
         RunEvent::ExitRequested { code: None, api, .. } if app.get_webview_window(dock_window::DOCK_LABEL).is_some() => {
             api.prevent_exit();
         }
-        RunEvent::Exit => taskbar::restore(),
+        RunEvent::Exit => {
+            taskbar::restore();
+            updater::finish_restart(app);
+        }
         _ => {}
     });
 }

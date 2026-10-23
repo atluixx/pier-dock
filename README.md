@@ -57,6 +57,8 @@ Pier checks for updates shortly after it starts and every 12 hours. When a new v
 
 Automatic updates work with the Windows installer, the macOS app, and the AppImage. If you installed the `.deb` package, download and install each new version from the releases page.
 
+On Linux, the AppImage restarts from its current location with the previous bundle’s library and GTK paths cleared. Restart replaces the running process so launcher/container supervisors remain attached. On NixOS, an existing `appimage-run` in the host PATH is reused, including when an update replaces a standalone native binary with an AppImage.
+
 ## Usage
 
 Network, sound and Bluetooth panels keep connection and device details in the panel body; the footer contains actions.

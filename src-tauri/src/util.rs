@@ -41,13 +41,19 @@ pub fn windows_dir() -> String {
     std::env::var("WINDIR").unwrap_or_else(|_| r"C:\Windows".into())
 }
 
+/// Remove the current AppImage's loader and toolkit paths from a host/relaunch command.
+#[cfg(target_os = "linux")]
+pub(crate) fn configure_host_command(command: &mut std::process::Command) {
+    appimage_env::configure(command);
+}
+
 /// Inicia um programa sem esperar por ele e sem deixá-lo como processo zumbi.
 #[cfg(unix)]
 pub fn spawn_detached(program: impl AsRef<std::ffi::OsStr>, args: &[&str]) -> Result<(), String> {
     use std::process::{Command, Stdio};
     let mut command = Command::new(program);
     #[cfg(target_os = "linux")]
-    appimage_env::configure(&mut command);
+    configure_host_command(&mut command);
     let mut child = command
         .args(args)
         .stdin(Stdio::null())
