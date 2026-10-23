@@ -59,6 +59,7 @@ A atualização automática funciona com o instalador do Windows, com o app do m
 
 ## Uso
 
+Os painéis de rede, som e Bluetooth mostram os detalhes da conexão e dos dispositivos no corpo do painel; o rodapé reúne as ações.
 Os destaques e rótulos respondem rapidamente ao passar o mouse e respeitam a preferência de movimento reduzido do sistema. As prévias de janelas mantêm uma pequena espera para não abrirem ao cruzar os apps.
 
 - **Clique** num app para abri-lo ou focá-lo. Clique no app ativo para minimizá-lo. Se o app tiver várias janelas, cada clique alterna entre elas.
