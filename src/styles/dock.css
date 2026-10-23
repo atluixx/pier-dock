@@ -502,6 +502,7 @@ html[data-reduced-effects="true"] .dock-bar {
   cursor: pointer;
 }
 
+.claude-pet-orientation,
 .claude-pet-facing {
   width: 100%;
   height: 100%;
@@ -511,17 +512,13 @@ html[data-reduced-effects="true"] .dock-bar {
   transition: transform 0.15s ease;
 }
 
-/* Bordas de cima e de baixo: espelha o sprite para o lado do passeio. */
+
+.claude-pet-orientation { transition: none; }
+.claude-pet:focus-visible { outline: 2px solid var(--accent); border-radius: 6px; }
+
+/* Espelha o sprite no seu eixo local, depois de orientar os pés para a barra. */
 .claude-pet-facing.facing-left {
   transform: scaleX(-1);
-}
-
-/* Laterais: não espelha de cabeça para baixo, só inclina na direção do passeio. */
-.claude-pet-facing.facing-up {
-  transform: rotate(-6deg);
-}
-.claude-pet-facing.facing-down {
-  transform: rotate(6deg);
 }
 
 .claude-sprite.claude-pet-idle {
@@ -532,11 +529,6 @@ html[data-reduced-effects="true"] .dock-bar {
   animation: claude-pet-jump-y 0.5s ease-in-out infinite;
 }
 
-.dock-root[data-pos="left"] .claude-sprite.claude-pet-waiting,
-.dock-root[data-pos="right"] .claude-sprite.claude-pet-waiting {
-  animation-name: claude-pet-jump-x;
-}
-
 @keyframes claude-pet-jump-y {
   0%,
   100% {
@@ -544,16 +536,6 @@ html[data-reduced-effects="true"] .dock-bar {
   }
   50% {
     transform: translateY(-8px);
-  }
-}
-
-@keyframes claude-pet-jump-x {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(-8px);
   }
 }
 

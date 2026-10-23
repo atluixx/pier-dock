@@ -5,16 +5,11 @@ import { useAgentSessions } from "../hooks/useAgentSessions";
 import { useT } from "../i18n";
 import { leadStatus, openAgentSessions } from "../widgets/AgentSessionsWidget";
 import { barRect, isVertical } from "./layout";
+import { petPose, PET_SIZE as PET, PET_EDGE_PAD as EDGE_PAD } from "./petPose";
 import { ClaudeMascotIcon } from "./ClaudeMascotIcon";
 
 type Mood = "idle" | "walking" | "waiting";
 
-/** Lado do sprite, para espelhar/inclinar na direção do passeio. */
-type Facing = "left" | "right" | "up" | "down";
-
-const PET = 26;
-const EDGE_PAD = 10;
-const OVERLAP = 6;
 const SPEED = 46;
 /** A área clicável que o Rust recebe só é atualizada quando o Clawd anda isso, e sobra isso em
  * volta dele: andando, ele nunca sai da área informada. */
@@ -51,13 +46,13 @@ export function ClawdPet({ position, full, margin, visible, barRef }: Props) {
   const outerRef = useRef<HTMLDivElement>(null);
   const posRef = useRef(0);
   const dirRef = useRef<1 | -1>(1);
-  const [facing, setFacing] = useState<Facing>(vertical ? "down" : "right");
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [barSize, setBarSize] = useState({ width: 0, height: 0 });
   // Fica parado sob o cursor, senão o clique erra o alvo andando.
   const [hovered, setHovered] = useState(false);
   // Também fica parado enquanto o painel das sessões (aberto por ele ou pelo widget) está aberto.
   const [panelOpen, setPanelOpen] = useState(false);
-  const walking = mood === "walking" && !(hovered && clickable) && !panelOpen;
+  const walking = visible && mood === "walking" && !(hovered && clickable) && !panelOpen;
 
   // Ao sair da área dele o Rust liga o click-through e o WebView não recebe o mouseleave.
   useEffect(() => {
@@ -94,14 +89,7 @@ export function ClawdPet({ position, full, margin, visible, barRef }: Props) {
     const bounds = Math.max(0, axis - EDGE_PAD * 2 - PET);
     if (posRef.current > bounds) posRef.current = bounds;
     el.style.setProperty("--pet-hide", `${(vertical ? barSize.width : barSize.height) + PET + 24}px`);
-    let x: number, y: number;
-    if (!vertical) {
-      y = position === "bottom" ? rect.y - PET + OVERLAP : rect.y + rect.height - OVERLAP;
-      x = rect.x + EDGE_PAD + posRef.current;
-    } else {
-      x = position === "right" ? rect.x - PET + OVERLAP : rect.x + rect.width - OVERLAP;
-      y = rect.y + EDGE_PAD + posRef.current;
-    }
+    const { x, y } = petPose(position, rect, posRef.current, dirRef.current);
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
     if (clickableRef.current) report(x, y);
@@ -142,11 +130,11 @@ export function ClawdPet({ position, full, margin, visible, barRef }: Props) {
           if (next >= bounds) {
             next = bounds;
             dirRef.current = -1;
-            setFacing(vertical ? "up" : "left");
+            setDirection(-1);
           } else if (next <= 0) {
             next = 0;
             dirRef.current = 1;
-            setFacing(vertical ? "down" : "right");
+            setDirection(1);
           }
           posRef.current = next;
           apply();
@@ -159,21 +147,31 @@ export function ClawdPet({ position, full, margin, visible, barRef }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walking, position, full, margin, barSize, vertical]);
 
+  const pose = petPose(position, { x: 0, y: 0, width: 0, height: 0 }, 0, direction);
   return (
     <div
       ref={outerRef}
       className={`claude-pet ${visible ? "" : "claude-pet-hidden"} ${clickable ? "clickable" : ""}`}
       role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
       aria-label={clickable ? t.tile(agents.length, t.status[lead ?? "running"]) : undefined}
       aria-hidden={!clickable}
       onClick={(e) => clickable && openAgentSessions(agents, e.currentTarget)}
+      onKeyDown={(e) => {
+        if (clickable && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          openAgentSessions(agents, e.currentTarget);
+        }
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className={`claude-pet-facing facing-${facing}`}>
-        <span className={`claude-sprite claude-pet-sprite ${walking ? "walking" : `claude-pet-${mood === "walking" ? "idle" : mood}`} ${lead ? `claude-${lead}` : ""}`}>
-          <ClaudeMascotIcon size={18} />
-        </span>
+      <div className="claude-pet-orientation" style={{ transform: `rotate(${pose.angle}deg)` }}>
+        <div className={`claude-pet-facing ${pose.mirror ? "facing-left" : "facing-right"}`}>
+          <span className={`claude-sprite claude-pet-sprite ${walking ? "walking" : `claude-pet-${mood === "walking" ? "idle" : mood}`} ${lead ? `claude-${lead}` : ""}`}>
+            <ClaudeMascotIcon size={18} />
+          </span>
+        </div>
       </div>
     </div>
   );
