@@ -1,4 +1,5 @@
-import { GitCommitHorizontal, GitCompare, GitPullRequest } from "lucide-react";
+import { GitCompare, GitPullRequest } from "lucide-react";
+import { GitCommitHorizontal } from "../ui/DockIcons";
 import type { GithubData, PullRequest, WidgetSize } from "../lib/ipc";
 import { Tile } from "./Tile";
 import { locale, useT } from "../i18n";
@@ -50,7 +51,7 @@ export function GithubCommitsWidget({ data }: { data: GithubData | null }) {
   const t = useT().github;
   return (
     <Tile kind="github-commits" label={t.commitsTile(todayCount)}>
-      <GitCommitHorizontal size={18} strokeWidth={1.8} />
+      <GitCommitHorizontal size={18} />
       <Count value={todayCount} />
     </Tile>
   );

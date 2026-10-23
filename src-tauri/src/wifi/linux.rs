@@ -219,7 +219,9 @@ pub fn disconnect() -> Result<(), String> {
 
 /// O Linux não pede permissão para ver as redes; o botão abre as configurações de Wi-Fi.
 pub fn request_permission(_app: &tauri::AppHandle) {
-    crate::system::open_shell("network".into());
+    tauri::async_runtime::spawn(async {
+        if let Err(error) = crate::system::open_shell("network".into()).await { log::warn!("{error}"); }
+    });
 }
 
 #[cfg(test)]

@@ -28,7 +28,7 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 - **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
 - **System widgets:** Network (with the Wi-Fi networks nearby), volume (with the output device and per-app volume), Bluetooth (with paired devices, connecting and disconnecting them on macOS and Linux), battery, clock, show desktop (minimizes every window with one click), system usage (CPU and memory with the last minute of history), and, on Windows, the tray arrow that opens the hidden icons. The hidden-icons popup closes when you click outside it, press Escape, or click the tray arrow again.
 - **Productivity widgets:** Weather, a Pomodoro timer, your next calendar event with a join button for video calls, and your command-line AI usage.
-- **AI agents:** The AI Agents widget shows sessions from Claude Code, Codex, opencode, and Gemini CLI as running, asking for permission, with an error, or done, and a click jumps to the terminal or IDE that started one. Clawd, Claude's mascot, can walk along the dock while a session runs. Codex CLI and app-server sessions (including T3 Code) are detected automatically from local lifecycle events, without hooks or a restart. Optional Codex hooks add permission status; trust them with `/hooks`. Enable the other CLIs' integrations in the widget's options; opencode needs a restart to load its plugin.
+- **AI agents:** The AI Agents widget shows sessions from Claude Code, Codex, opencode, and Gemini CLI as running, asking for permission, with an error, or done, and a click jumps to the terminal or IDE that started one. Clawd, Claude's mascot, can walk along the dock while a session runs. Clawd rotates to match all four dock edges, including while idle, with its feet on the bar and permission jumps directed away from it. Codex CLI and app-server sessions (including T3 Code) are detected automatically from local lifecycle events, without hooks or a restart. Optional Codex hooks add permission status; trust them with `/hooks`. Enable the other CLIs' integrations in the widget's options; opencode needs a restart to load its plugin.
 - **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
 - **Automatic updates:** Pier checks for new versions and installs them in one click.
 - **English and Portuguese:** The interface follows your system language. To change it, go to **Settings** > **General** > **Language**.
@@ -59,6 +59,9 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 
 ## Usage
 
+Network, sound and Bluetooth panels keep connection and device details in the panel body; the footer contains actions.
+Hover highlights and labels respond quickly and follow the system’s reduced-motion preference. Window previews still wait briefly to avoid opening while you move across apps.
+
 - **Click** an app to open or focus it. Click the active app to minimize it. If the app has several windows, clicking cycles through them.
 - **Shift+click** an app to open a new instance.
 - **Right-click** an app to see its windows, pin or unpin it, or close it.
@@ -70,11 +73,18 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 | --- | --- | --- |
 | Open or focus the app in position N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
 
+### Battery power modes
+
+Click the battery widget to select a power mode. Linux reads available profiles from power-profiles-daemon (including compatible services); Windows lists installed standard power plans. Unsupported modes are disabled. macOS currently shows that mode switching is unavailable.
+
 ### GitHub widgets
 
 Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) automatically. To use a different account, paste a personal access token with the `repo` and `read:user` scopes in **Settings** > **GitHub**. The token takes priority over the GitHub CLI and is stored in your system's keychain.
 
 ### Weather and calendar widgets
+
+Click the clock/date widget to open a month calendar, browse months, or return to today. This works without a calendar account.
+
 
 - **Weather:** Choose your city in **Settings** > **Widgets** > **Weather**. Forecasts come from [Open-Meteo](https://open-meteo.com) and don't need an API key.
 - **Calendar:** Paste your calendar's secret iCal address in **Settings** > **Widgets** > **Calendar**. Google Calendar, Outlook, and iCloud all publish one. Pier stores the address in your system's keychain.
@@ -89,6 +99,10 @@ It reads Claude Code and Codex CLI, and **Settings** > **Widgets** > **AI usage*
 - **Codex CLI:** `~/.codex/sessions/**/rollout-*.jsonl`. The `rate_limits` line is the same source the `/status` command shows, with the plan's `primary` and `secondary` windows, and the token counts come from the `last_token_usage` of each turn.
 
 Only the numeric `usage` fields, the model name, and the timestamp are read — never the content of your conversations, the commands, or the diffs. The CLIs only refresh the percentages while they run, so with them closed the number freezes: the widget dims and says how old the reading is instead of passing a stale value off as current.
+
+### Bluetooth
+
+Bluetooth keeps saved devices visible while the radio is off. Turn it on, then click a saved device to connect or use Disconnect for a connected device. Linux and macOS connect directly; Windows opens Bluetooth settings. Devices that cannot be read individually no longer discard the Windows paired inventory.
 
 ## Platform notes
 
@@ -113,6 +127,8 @@ macOS has some limitations compared to Windows:
 
 ### Linux
 
+The sound panel can route each playing app to its own output on PulseAudio/PipeWire and resolves app icons from desktop metadata. Other platforms keep their supported volume controls and show when per-app routing is unavailable.
+
 Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On KDE Plasma 6 the dock needs no extension: in an X11 session it lists windows, reserves screen space and draws glass with KWin's blur, and on Wayland it lists the windows of X11 apps (windows of native Wayland apps aren't listed yet). On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
 
 To keep the dock on another monitor, or have it follow the cursor, on GNOME you need version 4 of the extension. If **Settings** > **General** > **Show the dock on** offers to update it, select **Update the extension**, and then log out and log back in.
@@ -130,6 +146,12 @@ Pier stores its settings in `config.json`:
 If you used Pier when it was called WinDock, Pier imports your settings, GitHub token, and launch-at-login setting the first time it runs. On GNOME, reinstall the extension from Pier's settings.
 
 ## Troubleshooting
+
+System settings actions follow the current Linux desktop (including KDE Bluetooth settings), report launch failures, and can be retried. Browser interaction tests run in CI and before release packaging; native settings and hardware still need verification on each target platform.
+
+### Hover feels slow
+
+If hover animation feels sluggish, try **Settings > Appearance > Reduce visual effects**. It disables blur and decorative dock/icon shadows while keeping your widgets and animations. Turning it off restores your chosen material.
 
 ### The taskbar or Dock doesn't come back
 

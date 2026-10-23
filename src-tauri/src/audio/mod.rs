@@ -29,6 +29,8 @@ pub struct AppStream {
     pub icon: Option<String>,
     pub level: f32,
     pub muted: bool,
+    /// The sink used by all grouped streams; None when they use different outputs.
+    pub output_id: Option<String>,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -39,6 +41,7 @@ pub struct AudioState {
     pub apps: Option<Vec<AppStream>>,
     /// No macOS, o usuário negou a Gravação de Áudio do Sistema e os volumes dos apps não valem.
     pub apps_need_permission: bool,
+    pub can_route_apps: bool,
 }
 
 /// No macOS o volume de cada app depende de taps que o Pier mantém e reconcilia em segundo plano.
@@ -50,11 +53,16 @@ pub fn start() {
 #[tauri::command]
 pub async fn audio_status() -> Result<AudioState, String> {
     tauri::async_runtime::spawn_blocking(|| {
+        #[cfg(target_os = "linux")]
+        return backend::state();
+        #[cfg(not(target_os = "linux"))]
+        {
         #[cfg(target_os = "macos")]
         let apps_need_permission = backend::apps_need_permission();
         #[cfg(not(target_os = "macos"))]
         let apps_need_permission = false;
-        AudioState { outputs: backend::outputs().unwrap_or_default(), apps: backend::apps(), apps_need_permission }
+        AudioState { outputs: backend::outputs().unwrap_or_default(), apps: backend::apps(), apps_need_permission, can_route_apps: false }
+        }
     })
     .await
     .err_str()
@@ -70,6 +78,16 @@ pub async fn set_app_volume(id: String, level: Option<f32>, muted: Option<bool>)
     tauri::async_runtime::spawn_blocking(move || backend::set_app_volume(&id, level.map(|l| l.clamp(0.0, 1.0)), muted))
         .await
         .err_str()?
+}
+
+#[tauri::command]
+pub async fn set_app_output(id: String, output: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        #[cfg(target_os = "linux")]
+        return backend::set_app_output(&id, &output);
+        #[cfg(not(target_os = "linux"))]
+        { let _ = (id, output); Err("Per-app output routing is not supported on this platform".into()) }
+    }).await.err_str()?
 }
 
 #[cfg(test)]

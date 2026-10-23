@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { AppWindow, Check, Speaker, Volume1, Volume2, VolumeX } from "lucide-react";
-import { ipc, type AppStream } from "../lib/ipc";
+import { ipc, type AppStream, type OutputDevice } from "../lib/ipc";
 import { useAudio, useVolume } from "../hooks/useSystem";
 import { useIcon } from "../hooks/useIcon";
 import { ActionFooter } from "../ui/ActionFooter";
@@ -19,7 +20,12 @@ function MuteButton({ level, muted, label, onToggle }: { level: number; muted: b
   );
 }
 
-function AppRow({ app, onChange }: { app: AppStream; onChange: (patch: Partial<Pick<AppStream, "level" | "muted">>) => void }) {
+function AppRow({ app, outputs, canRoute, onRoute, onChange }: {
+  app: AppStream; outputs: OutputDevice[]; canRoute: boolean; onRoute: (output: string) => Promise<void>;
+  onChange: (patch: Partial<Pick<AppStream, "level" | "muted">>) => void;
+}) {
+  const [routing, setRouting] = useState(false);
+  const [failed, setFailed] = useState(false);
   const t = useT().sound;
   const icon = useIcon(app.icon);
   return (
@@ -29,6 +35,16 @@ function AppRow({ app, onChange }: { app: AppStream; onChange: (patch: Partial<P
       </span>
       <span className="sound-app-main">
         <span className="sound-app-name">{app.name}</span>
+        {canRoute && <select className="sound-app-output" aria-label={t.outputOf(app.name)} value={app.outputId ?? ""} disabled={routing}
+          onFocus={() => void ipc.focusPanel().catch(console.error)}
+          onChange={async (event) => {
+            const output = event.target.value; setRouting(true); setFailed(false);
+            try { await onRoute(output); } catch { setFailed(true); } finally { setRouting(false); }
+          }}>
+          <option value="" disabled>{t.chooseOutput}</option>
+          {outputs.map((output) => <option key={output.id} value={output.id}>{output.name}</option>)}
+        </select>}
+        {failed && <span className="sound-route-error" role="alert">{t.routeFailed}</span>}
         <Slider value={app.muted ? 0 : app.level} label={t.volumeOf(app.name)} onChange={(level) => onChange({ level, muted: false })} />
       </span>
       <MuteButton level={app.level} muted={app.muted} label={app.muted ? t.unmute : t.mute} onToggle={() => onChange({ muted: !app.muted })} />
@@ -38,11 +54,10 @@ function AppRow({ app, onChange }: { app: AppStream; onChange: (patch: Partial<P
 
 export function SoundPanel() {
   const [volume, setVolume] = useVolume();
-  const { audio, setOutput, setApp } = useAudio();
+  const { audio, setOutput, setApp, setAppOutput } = useAudio();
   const t = useT().sound;
   const level = volume?.level ?? 0;
   const muted = volume?.muted ?? false;
-  const current = audio?.outputs.find((o) => o.default);
 
   return (
     <>
@@ -84,10 +99,11 @@ export function SoundPanel() {
                 </button>
               </div>
             )}
+            {!audio.canRouteApps && audio.apps.length > 0 && <p className="sound-routing-note">{t.routingUnavailable}</p>}
             {audio.apps.length ? (
               <ul className="list sound-list">
                 {audio.apps.map((app) => (
-                  <AppRow key={app.id} app={app} onChange={(patch) => setApp(app.id, patch)} />
+                  <AppRow key={app.id} app={app} outputs={audio.outputs} canRoute={audio.canRouteApps} onRoute={(output) => setAppOutput(app.id, output)} onChange={(patch) => setApp(app.id, patch)} />
                 ))}
               </ul>
             ) : (
@@ -96,7 +112,7 @@ export function SoundPanel() {
           </>
         )}
       </div>
-      <ActionFooter context={current?.name ?? ""} actions={[{ label: t.settings, keys: "↵", onClick: () => ipc.openShell("sound") }]} />
+      <ActionFooter context="" actions={[{ label: t.settings, keys: "↵", onClick: () => ipc.openShell("sound") }]} />
     </>
   );
 }

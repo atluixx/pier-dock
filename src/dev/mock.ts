@@ -29,6 +29,8 @@ function iconDataUrl(color: string, init: string): string {
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
+const power = { profiles: ["power-saver", "balanced", "performance"], active: "balanced", canSet: true };
+
 let bluetooth: BluetoothState = {
   available: true,
   powered: true,
@@ -63,6 +65,7 @@ const config: Config = {
     { kind: "show-desktop", enabled: params.has("new"), size: "small" },
   ],
   material: "glass",
+  reducedEffects: false,
   glassOpacity: 0.4,
   accent: "coral",
   iconSize: 40,
@@ -291,6 +294,19 @@ const codexUsage: AiUsage = {
   fetchedAt: Date.now(),
 };
 
+const audio = {
+    outputs: [
+      { id: "speakers", name: "MacBook Air Speakers", default: true },
+      { id: "headphones", name: "WH-1000XM4", default: false },
+    ],
+    apps: [
+      { id: "1", name: "Spotify", icon: "/Applications/Spotify.app", outputId: "speakers", level: 0.8, muted: false },
+      { id: "2", name: "Firefox", icon: "org.mozilla.firefox.desktop", outputId: "speakers", level: 0.45, muted: true },
+    ],
+    canRouteApps: true,
+    appsNeedPermission: params.has("audio-permission"),
+  };
+
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   get_config: () => config,
   save_config: (args) => Object.assign(config, args.config),
@@ -322,18 +338,11 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     battery: { present: true, percent: 79, charging: false },
     network: { connected: true, internet: true, wifi: true, signalBars: 4, name: "Casa" },
   }),
+  power_profiles: () => power,
+  set_power_profile: (args) => { power.active = String(args.profile); },
   get_volume: () => ({ level: 0.6, muted: false }),
-  audio_status: () => ({
-    outputs: [
-      { id: "speakers", name: "MacBook Air Speakers", default: true },
-      { id: "headphones", name: "WH-1000XM4", default: false },
-    ],
-    apps: [
-      { id: "1", name: "Spotify", icon: null, level: 0.8, muted: false },
-      { id: "2", name: "Firefox", icon: null, level: 0.45, muted: true },
-    ],
-    appsNeedPermission: params.has("audio-permission"),
-  }),
+  audio_status: () => audio,
+  set_app_output: (args) => { const app = audio.apps.find((app) => app.id === args.id); if (app) app.outputId = String(args.output); },
   wifi_status: () => ({
     available: true,
     enabled: true,

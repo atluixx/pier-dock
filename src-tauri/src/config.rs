@@ -78,6 +78,8 @@ pub struct Config {
     pub widgets: Vec<WidgetConfig>,
     /// "glass" (vidro líquido, onde o sistema permite) ou "solid".
     pub material: String,
+    /// Usa material sólido e remove sombras decorativas sem perder o material escolhido.
+    pub reduced_effects: bool,
     /// Opacidade da tinta sobre o vidro da dock (0 a 1).
     pub glass_opacity: f32,
     /// Cor de destaque: "coral", "blue", "green", "amber" ou "lilac".
@@ -181,6 +183,7 @@ impl Default for Config {
                 disabled("show-desktop", "small"),
             ],
             material: "glass".into(),
+            reduced_effects: false,
             glass_opacity: 0.4,
             accent: "coral".into(),
             icon_size: 40,
@@ -205,6 +208,12 @@ impl Default for Config {
             auto_update: true,
             claude_pet_enabled: false,
         }
+    }
+}
+
+impl Config {
+    pub fn effective_material(&self) -> &str {
+        if self.reduced_effects { "solid" } else { &self.material }
     }
 }
 
@@ -365,7 +374,7 @@ pub fn apply(app: &AppHandle, state: &ConfigState, config: Config) -> Result<(),
     crate::dock_window::set_auto_hide(app, &config.auto_hide);
     crate::dock_window::set_position(app, &config.dock_position);
     crate::dock_window::set_monitor(app, &config.dock_monitor);
-    crate::backdrop::set_material(app, &config.material);
+    crate::backdrop::set_material(app, config.effective_material());
     crate::pomodoro::config_changed(app);
     if old_hide != config.hide_taskbar {
         if config.hide_taskbar {
@@ -386,6 +395,22 @@ mod tests {
         let config = Config::default();
         let json = serde_json::to_string(&config).unwrap();
         assert_eq!(serde_json::from_str::<Config>(&json).unwrap(), config);
+    }
+
+    #[test]
+    fn reduced_effects_override_material_without_losing_the_choice() {
+        let old: Config = serde_json::from_str(r#"{"material":"glass"}"#).unwrap();
+        assert!(!old.reduced_effects);
+        assert_eq!(old.effective_material(), "glass");
+        let mut reduced = Config { reduced_effects: true, ..old };
+        assert_eq!(reduced.effective_material(), "solid");
+        assert_eq!(reduced.material, "glass");
+        let json = serde_json::to_string(&reduced).unwrap();
+        assert!(serde_json::from_str::<Config>(&json).unwrap().reduced_effects);
+        reduced.reduced_effects = false;
+        assert_eq!(reduced.effective_material(), "glass");
+        reduced.material = "solid".into();
+        assert_eq!(reduced.effective_material(), "solid");
     }
 
     #[test]

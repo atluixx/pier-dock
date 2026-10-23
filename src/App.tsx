@@ -32,9 +32,10 @@ export function App() {
     if (!config) return;
     const root = document.documentElement;
     root.dataset.accent = config.accent;
-    root.dataset.material = config.material === "glass" && glassSupported ? "glass" : "solid";
+    root.dataset.reducedEffects = String(config.reducedEffects);
+    root.dataset.material = config.material === "glass" && glassSupported && !config.reducedEffects ? "glass" : "solid";
     root.style.setProperty("--dock-opacity", String(config.glassOpacity));
-  }, [config?.accent, config?.material, config?.glassOpacity, glassSupported]);
+  }, [config?.accent, config?.material, config?.glassOpacity, config?.reducedEffects, glassSupported]);
 
   if (!config) return null;
   if (currentView.view === "panel") return <Popover kind={currentView.kind} />;
