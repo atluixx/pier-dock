@@ -173,6 +173,8 @@ export const pt = {
       codex: "Codex CLI",
       opencode: "opencode",
       gemini: "Gemini CLI",
+      antigravity: "Antigravity",
+      t3: "T3 Code",
     },
   },
   system: {
@@ -532,7 +534,7 @@ export const pt = {
       `Google Agenda: Configurações da agenda → Endereço secreto no formato iCal. Outlook: Calendário → Calendários compartilhados → Publicar um calendário (link ICS). O endereço fica guardado ${keychain}.`,
     agentIntegrationLabel: "Integrações das IAs",
     agentIntegrationHint:
-      "As sessões do Codex, incluindo o T3 Code, são detectadas automaticamente. Os outros CLIs usam hooks ou um plugin. O Pier só usa metadados e status das sessões.",
+      "As sessões do T3 Code de todos os provedores, incluindo o Antigravity, são detectadas automaticamente. As sessões avulsas do Codex também são automáticas; os outros CLIs usam hooks ou um plugin. O Pier só usa metadados e status das sessões.",
     agentInstalled: {
       claude: "Hooks instalados em ~/.claude/settings.json.",
       codex: "A detecção automática de sessões está ativa. Hooks opcionais de permissão estão instalados; rode /hooks no Codex para confiar neles.",

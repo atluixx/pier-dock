@@ -286,7 +286,7 @@ export interface AiProvider {
 }
 
 /** As CLIs cujas sessões o Pier acompanha. */
-export type AgentProviderId = "claude" | "codex" | "opencode" | "gemini";
+export type AgentProviderId = "claude" | "codex" | "opencode" | "gemini" | "antigravity" | "t3";
 
 /** Estado de uma sessão, visto pelos hooks/plugin instalados pela integração do provider. */
 export type AgentSessionState = "running" | "permission" | "error" | "done";
