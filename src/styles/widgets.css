@@ -413,7 +413,10 @@
   color: var(--text);
 }
 
-.wx-icon.wx-sun,
+.wx-icon.wx-sun {
+  color: var(--weather-sun);
+}
+
 .wx-icon.wx-storm,
 /* No ícone de sol entre nuvens, os raios são todos os traços menos o último (a nuvem). */
 .wx-cloud-sun path:not(:last-child) {
@@ -822,6 +825,11 @@
 
 .ai-mark svg,
 .ai-ring > svg:not(.ring) {
+  color: var(--ai-level);
+}
+
+.ai-unknown .ai-mark svg,
+.ai-unknown .ai-ring > svg:not(.ring) {
   color: var(--text-tertiary);
 }
 

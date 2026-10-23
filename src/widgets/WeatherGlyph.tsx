@@ -1,4 +1,5 @@
-import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudMoon, CloudRain, CloudSnow, CloudSun, Moon, Sun } from "lucide-react";
+import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudMoon, CloudRain, CloudSnow, CloudSun, Moon } from "lucide-react";
+import { Sun } from "../ui/DockIcons";
 import type { WeatherIcon } from "../lib/weather";
 
 const ICONS = {
