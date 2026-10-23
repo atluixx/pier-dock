@@ -131,6 +131,8 @@ If you used Pier when it was called WinDock, Pier imports your settings, GitHub 
 
 ## Troubleshooting
 
+System settings actions follow the current Linux desktop (including KDE Bluetooth settings), report launch failures, and can be retried. Browser interaction tests run in CI and before release packaging; native settings and hardware still need verification on each target platform.
+
 ### The taskbar or Dock doesn't come back
 
 Pier restores the native taskbar (or the macOS Dock) when it quits. If the process is killed, run the following command to restore it:
@@ -153,5 +155,3 @@ Copyright © 2026 Nathan Ferreira and Matheus Basilio.
 Pier is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](LICENSE) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 Pier is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-System settings actions follow the current Linux desktop (including KDE Bluetooth settings), report launch failures, and can be retried. Browser interaction tests run in CI and before release packaging; native settings and hardware still need verification on each target platform.
