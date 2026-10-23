@@ -63,6 +63,7 @@ const config: Config = {
     { kind: "show-desktop", enabled: params.has("new"), size: "small" },
   ],
   material: "glass",
+  reducedEffects: false,
   glassOpacity: 0.4,
   accent: "coral",
   iconSize: 40,

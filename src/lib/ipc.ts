@@ -59,6 +59,8 @@ export interface Config {
   pinnedApps: AppEntry[];
   widgets: WidgetConfig[];
   material: "glass" | "solid";
+  /** Disable native blur and decorative dock/icon shadows without changing the chosen material. */
+  reducedEffects: boolean;
   /** Opacidade da tinta sobre o vidro da dock (0 a 1). */
   glassOpacity: number;
   accent: Accent;

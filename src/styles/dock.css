@@ -115,6 +115,12 @@
   opacity: 0.85;
 }
 
+/* Optional lower-cost rendering; retain the border/highlight for separation. */
+html[data-reduced-effects="true"] .dock-bar {
+  --shadow-icon: none;
+  box-shadow: var(--glass-highlight);
+}
+
 /* Apps: presos à borda da tela, crescem para dentro dela com a magnificação. */
 .dock-item {
   position: relative;

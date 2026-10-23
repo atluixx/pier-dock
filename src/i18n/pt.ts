@@ -394,6 +394,8 @@ export const pt = {
     unpin: "Desafixar do lançador",
   },
   appearance: {
+    reducedEffects: "Reduzir efeitos visuais",
+    reducedEffectsHint: "Usa um fundo sólido e remove as sombras da dock e dos ícones. Ao desativar, o material escolhido é restaurado.",
     material: "Material",
     glass: "Vidro líquido",
     solid: "Sólido",

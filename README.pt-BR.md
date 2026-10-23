@@ -133,6 +133,10 @@ Se você usava o Pier quando ele se chamava WinDock, o Pier importa as suas conf
 
 ## Solução de problemas
 
+### Lentidão ao passar o mouse
+
+Se a animação ao passar o mouse ficar lenta, experimente **Configurações > Aparência > Reduzir efeitos visuais**. A opção desativa o desfoque e as sombras decorativas da dock e dos ícones, mantendo os widgets e as animações. Ao desativá-la, o material escolhido é restaurado.
+
 ### A barra de tarefas ou o Dock não voltou
 
 O Pier restaura a barra de tarefas nativa (ou o Dock do macOS) ao sair. Se o processo for encerrado à força, rode o comando abaixo para restaurá-la:

@@ -55,6 +55,22 @@ cargo test -- --ignored --nocapture    # smoke tests against the real system
 
 The smoke tests exercise real windows, apps, media sessions, and the GitHub API on the machine that runs them.
 
+### Hover and graphics profiling
+
+Use a release build to judge native performance. In **Settings > Appearance**, **Reduce visual effects** switches to a solid background and removes decorative dock/icon shadows without changing your saved material choice. Compare the same monitor, scale, icon count and widget configuration. Keep the pet and media playback consistent and avoid running builds during a capture.
+
+For a repeatable frontend diagnostic, run `npm run dev` and open `http://localhost:1420/?view=dock&profile=1`. In the browser console:
+
+```js
+await pierPerformance.measure({ label: "baseline", durationMs: 5000, sweep: true })
+```
+
+The synthetic sweep repeats the same path and includes event-dispatch/hit-testing overhead. For actual pointer input, omit `sweep` and move across the dock manually during the capture. Run each case at least three times after a warmup: (1) glass with normal shadows, (2) solid material with normal shadows, (3) reduced visual effects, and (4) magnification disabled. Change one setting between cases and record the active material from the result: an unsupported glass compositor already uses solid material. To isolate icon shadows during diagnosis, temporarily set `document.querySelector('.dock-bar').style.setProperty('--shadow-icon', 'none')`, then remove that property afterward.
+
+The report includes frame interval median/95th percentile/max, counts over 16.7ms and 33.3ms, icon geometry reads, frontend `set_hit_rect` requests, and long tasks where supported. These interval thresholds are observations, not a refresh-rate-independent count of dropped frames. Discard captures with `hiddenDuringRun`, and record the build, OS/compositor, GPU, refresh rate and active settings with the JSON. `pierPerformance.cancel()` stops a capture. Only one capture runs at a time; instrumentation is restored afterward.
+
+To inspect a native build, paste `scripts/profile-hover.js` into that build's WebView inspector and call the same API. Inspector availability depends on how the build was packaged. The script sends no data and makes no persistent configuration changes. Browser mock results do not measure native blur, IPC processing time or GPU/compositor work: use the platform/WebView profiler alongside the script for those. Compare frame-time traces and native bounds request counts before claiming a performance improvement.
+
 ### Icons
 
 All platform icons come from `app-icon.svg` and `src-tauri/icons/source/`. To regenerate them, run `./scripts/icons.sh` on macOS (it requires `iconutil`).

@@ -133,6 +133,10 @@ If you used Pier when it was called WinDock, Pier imports your settings, GitHub 
 
 ## Troubleshooting
 
+### Hover feels slow
+
+If hover animation feels sluggish, try **Settings > Appearance > Reduce visual effects**. It disables blur and decorative dock/icon shadows while keeping your widgets and animations. Turning it off restores your chosen material.
+
 ### The taskbar or Dock doesn't come back
 
 Pier restores the native taskbar (or the macOS Dock) when it quits. If the process is killed, run the following command to restore it:
