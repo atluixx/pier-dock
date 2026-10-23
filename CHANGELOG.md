@@ -2,6 +2,34 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.14.0
+
+### Power modes and per-app audio
+- **Battery:** the battery widget opens a panel with the active power profile and the Power save, Balanced and Performance modes your system supports. A mode that fails to apply is reported instead of showing as selected.
+- **Sound:** on Linux (PulseAudio/PipeWire), each playing app shows its icon and its own output selector, so you can send one app to another device without moving the rest.
+
+### Reports without a GitHub account
+You can now send a bug report from Pier without connecting a GitHub account. It is opened as an issue for you.
+
+### Settings in the dock
+While **Settings** or **What's new** is open, Pier shows up as a running app: in the dock, and on macOS also in the system Dock and Cmd+Tab. Click it to bring the window back, even if other windows are covering it.
+
+### Smoother dock
+Hovering and magnifying icons is faster and lighter, and background updates from widgets no longer redraw the whole dock. **Settings** > **Appearance** has a new **Reduce visual effects** option that uses a solid background and drops the decorative shadows, for machines that struggle with the blur.
+
+### More widget improvements
+- **Clock:** clicking the date opens a month calendar with previous/next month and **Today**, instead of the notifications.
+- **Bluetooth:** saved devices stay in the list even when Bluetooth is off, and you can turn it on, connect, and disconnect from the panel.
+- **Network, Sound and Bluetooth:** the panel footers no longer repeat confusing connection details.
+- **Dock icons** now match the artwork on the website, including the battery, media controls, volume, Wi-Fi, and calendar icons.
+
+### Fixes
+- **Windows:** with the dock always shown, fullscreen apps and videos hide it.
+- **AI Agents:** Antigravity and other providers running inside T3 Code are detected.
+- **Clawd:** the mascot stands on the dock on every screen edge, not only the bottom.
+- **Dock:** the hover highlight of a magnified icon stays inside the bar.
+- **System settings:** Bluetooth opens the right settings app on each Linux desktop, and a settings action that fails now shows an error you can retry.
+
 ## 0.13.0
 
 ### Unread counts on the dock

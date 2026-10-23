@@ -2,6 +2,34 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.14.0
+
+### Modos de energia e áudio por app
+- **Bateria:** o widget de bateria abre um painel com o perfil de energia ativo e os modos Economia, Equilibrado e Desempenho que o sistema suporta. Um modo que não consegue ser aplicado é informado em vez de aparecer como selecionado.
+- **Som:** no Linux (PulseAudio/PipeWire), cada app que está tocando mostra o ícone e o seu próprio seletor de saída, para mandar um app para outro dispositivo sem mexer nos demais.
+
+### Relatórios sem conta do GitHub
+Agora dá para enviar um relatório de problema pelo Pier sem conectar uma conta do GitHub. Ele é aberto como uma issue para você.
+
+### Configurações na dock
+Enquanto **Configurações** ou **Novidades** estiver aberta, o Pier aparece como um app em execução: na dock e, no macOS, também no Dock do sistema e no Cmd+Tab. Clique nele para trazer a janela de volta, mesmo com outras janelas por cima.
+
+### Dock mais fluida
+Passar o mouse e ampliar os ícones ficou mais rápido e leve, e as atualizações dos widgets em segundo plano não redesenham mais a dock inteira. Em **Configurações** > **Aparência** há uma nova opção **Reduzir efeitos visuais**, que usa fundo sólido e tira as sombras decorativas, para máquinas que sofrem com o desfoque.
+
+### Mais melhorias nos widgets
+- **Relógio:** clicar na data abre um calendário do mês com mês anterior/próximo e **Hoje**, em vez das notificações.
+- **Bluetooth:** dispositivos salvos continuam na lista com o Bluetooth desligado, e dá para ligar, conectar e desconectar pelo painel.
+- **Rede, Som e Bluetooth:** o rodapé dos painéis não repete mais detalhes de conexão que confundiam.
+- **Ícones da dock** agora seguem a arte do site, incluindo bateria, controles de mídia, volume, Wi-Fi e calendário.
+
+### Correções
+- **Windows:** com a dock sempre visível, apps em tela cheia e vídeos escondem a dock.
+- **Agentes de IA:** o Antigravity e outros provedores rodando dentro do T3 Code são detectados.
+- **Clawd:** o mascote fica em pé na dock em todas as bordas da tela, não só embaixo.
+- **Dock:** o destaque ao passar o mouse num ícone ampliado fica dentro da barra.
+- **Configurações do sistema:** o Bluetooth abre o app de configurações certo em cada desktop Linux, e uma ação que falha agora mostra um erro com opção de tentar de novo.
+
 ## 0.13.0
 
 ### Contador de notificações na dock
