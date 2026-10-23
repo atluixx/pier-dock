@@ -72,6 +72,10 @@ Os destaques e rótulos respondem rapidamente ao passar o mouse e respeitam a pr
 | --- | --- | --- |
 | Abrir ou focar o app da posição N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
 
+### Modos de energia
+
+Clique na bateria para escolher o modo de energia. No Linux, os perfis vêm do power-profiles-daemon (ou serviço compatível); no Windows, são exibidos os planos padrão instalados. Modos indisponíveis ficam desativados. No macOS, a troca de modo ainda não está disponível.
+
 ### Widgets do GitHub
 
 O Pier usa automaticamente o login do [GitHub CLI](https://cli.github.com) (`gh auth login`). Para usar outra conta, cole um personal access token com os escopos `repo` e `read:user` em **Configurações** > **GitHub**. O token tem prioridade sobre o GitHub CLI e fica guardado no chaveiro do sistema.

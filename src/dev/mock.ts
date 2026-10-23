@@ -29,6 +29,8 @@ function iconDataUrl(color: string, init: string): string {
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
+const power = { profiles: ["power-saver", "balanced", "performance"], active: "balanced", canSet: true };
+
 let bluetooth: BluetoothState = {
   available: true,
   powered: true,
@@ -323,6 +325,8 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     battery: { present: true, percent: 79, charging: false },
     network: { connected: true, internet: true, wifi: true, signalBars: 4, name: "Casa" },
   }),
+  power_profiles: () => power,
+  set_power_profile: (args) => { power.active = String(args.profile); },
   get_volume: () => ({ level: 0.6, muted: false }),
   audio_status: () => ({
     outputs: [

@@ -363,6 +363,8 @@ export interface ReportEnvironment {
 /** "fallback": sem conta conectada (ou a API recusou), a página issues/new preenchida. */
 export type ReportResult = { kind: "created"; url: string } | { kind: "fallback"; url: string; reason: string | null };
 
+export interface PowerProfiles { profiles: string[]; active: string | null; canSet: boolean; }
+
 export interface OutputDevice {
   id: string;
   name: string;
@@ -456,6 +458,8 @@ export const ipc = {
   openTray: (anchorX: number, anchorY: number) => invoke<void>("open_tray", { anchorX, anchorY }),
   openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar" | "bluetooth" | "sound" | "network" | "audio-capture") =>
     invoke<void>("open_shell", { kind }),
+  powerProfiles: () => invoke<PowerProfiles>("power_profiles"),
+  setPowerProfile: (profile: string) => invoke<void>("set_power_profile", { profile }),
   audioStatus: () => invoke<AudioState>("audio_status"),
   setOutputDevice: (id: string) => invoke<void>("set_output_device", { id }),
   setAppVolume: (id: string, patch: { level?: number; muted?: boolean }) => invoke<void>("set_app_volume", { id, ...patch }),

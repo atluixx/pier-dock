@@ -72,6 +72,10 @@ Hover highlights and labels respond quickly and follow the system’s reduced-mo
 | --- | --- | --- |
 | Open or focus the app in position N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
 
+### Battery power modes
+
+Click the battery widget to select a power mode. Linux reads available profiles from power-profiles-daemon (including compatible services); Windows lists installed standard power plans. Unsupported modes are disabled. macOS currently shows that mode switching is unavailable.
+
 ### GitHub widgets
 
 Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) automatically. To use a different account, paste a personal access token with the `repo` and `read:user` scopes in **Settings** > **GitHub**. The token takes priority over the GitHub CLI and is stored in your system's keychain.

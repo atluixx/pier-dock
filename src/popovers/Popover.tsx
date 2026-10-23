@@ -9,6 +9,7 @@ import { Commits } from "./Commits";
 import { Contributions } from "./Contributions";
 import { Launcher } from "./Launcher";
 import { NowPlaying } from "./NowPlaying";
+import { PowerPanel } from "./Power";
 import { Pomodoro } from "./Pomodoro";
 import { PullRequests } from "./PullRequests";
 import { SoundPanel } from "./Sound";
@@ -36,6 +37,8 @@ function Content({ kind }: { kind: string }) {
       return <Weather />;
     case "pomodoro":
       return <Pomodoro />;
+    case "battery":
+      return <PowerPanel />;
     case "system-usage":
       return <SystemUsage />;
     case "calendar":
