@@ -6,6 +6,7 @@ import { useIcon } from "../hooks/useIcon";
 import { ActionFooter } from "../ui/ActionFooter";
 import { Slider } from "../ui/Slider";
 import { useT } from "../i18n";
+import { OutputPicker } from "./OutputPicker";
 
 function VolumeIcon({ level, muted, size = 16 }: { level: number; muted: boolean; size?: number }) {
   const Icon = muted || level === 0 ? VolumeX : level < 0.5 ? Volume1 : Volume2;
@@ -33,20 +34,17 @@ function AppRow({ app, outputs, canRoute, onRoute, onChange }: {
       <span className="sound-app-icon" aria-hidden>
         {icon ? <img src={icon} alt="" /> : <AppWindow size={16} strokeWidth={1.8} />}
       </span>
-      <span className="sound-app-main">
+      <div className="sound-app-main">
         <span className="sound-app-name">{app.name}</span>
-        {canRoute && <select className="sound-app-output" aria-label={t.outputOf(app.name)} value={app.outputId ?? ""} disabled={routing}
-          onFocus={() => void ipc.focusPanel().catch(console.error)}
-          onChange={async (event) => {
-            const output = event.target.value; setRouting(true); setFailed(false);
+        {canRoute && <OutputPicker label={t.outputOf(app.name)} placeholder={t.chooseOutput}
+          outputs={outputs} value={app.outputId} disabled={routing}
+          onChoose={async (output) => {
+            setRouting(true); setFailed(false);
             try { await onRoute(output); } catch { setFailed(true); } finally { setRouting(false); }
-          }}>
-          <option value="" disabled>{t.chooseOutput}</option>
-          {outputs.map((output) => <option key={output.id} value={output.id}>{output.name}</option>)}
-        </select>}
+          }} />}
         {failed && <span className="sound-route-error" role="alert">{t.routeFailed}</span>}
         <Slider value={app.muted ? 0 : app.level} label={t.volumeOf(app.name)} onChange={(level) => onChange({ level, muted: false })} />
-      </span>
+      </div>
       <MuteButton level={app.level} muted={app.muted} label={app.muted ? t.unmute : t.mute} onToggle={() => onChange({ muted: !app.muted })} />
     </li>
   );
