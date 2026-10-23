@@ -168,26 +168,25 @@ pub fn set_bluetooth(powered: bool) -> Result<(), String> {
     Ok(())
 }
 
-fn shell_open(target: &str) {
+fn shell_open(target: &str) -> Result<(), String> {
     com_init();
-    unsafe {
-        ShellExecuteW(None, &HSTRING::from("open"), &HSTRING::from(target), PCWSTR::null(), PCWSTR::null(), SW_SHOWNORMAL);
-    }
+    let result = unsafe {
+        ShellExecuteW(None, &HSTRING::from("open"), &HSTRING::from(target), PCWSTR::null(), PCWSTR::null(), SW_SHOWNORMAL)
+    };
+    if result.0 as isize <= 32 { Err(format!("Could not open {target}: {}", result.0 as isize)) } else { Ok(()) }
 }
 
-/// Abre os flyouts nativos (Menu Iniciar, Configurações Rápidas e Central de Notificações), o
-/// Gerenciador de Tarefas e o Calendário do Outlook.
-pub fn open_shell(kind: &str) {
+pub fn open_shell(kind: &str) -> Result<(), String> {
     match kind {
-        "start" => press(&[VK_LWIN]),
-        "quick-settings" => press(&[VK_LWIN, VK_A]),
-        "notifications" => press(&[VK_LWIN, VK_N]),
+        "start" => { press(&[VK_LWIN]); Ok(()) },
+        "quick-settings" => { press(&[VK_LWIN, VK_A]); Ok(()) },
+        "notifications" => { press(&[VK_LWIN, VK_N]); Ok(()) },
         "system-monitor" => shell_open(&format!(r"{}\System32\Taskmgr.exe", windows_dir())),
         "calendar" => shell_open("outlookcal:"),
         "bluetooth" => shell_open("ms-settings:bluetooth"),
         "sound" => shell_open("ms-settings:sound"),
         "network" => shell_open("ms-settings:network-wifi"),
-        _ => {}
+        _ => Err(format!("System action unavailable: {kind}")),
     }
 }
 

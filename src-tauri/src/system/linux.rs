@@ -183,48 +183,30 @@ pub fn disconnect_bluetooth(id: &str) -> Result<(), String> {
     call_device(id, "Disconnect")
 }
 
-/// Configurações de Bluetooth: as do GNOME, as do Blueman (Linux Mint e outras) ou as do Cinnamon.
-fn open_bluetooth_settings() {
-    let _ = spawn_detached("gnome-control-center", &["bluetooth"])
-        .or_else(|_| spawn_detached("blueman-manager", &[]))
-        .or_else(|_| spawn_detached("cinnamon-settings", &["bluetooth"]));
-}
-
-fn open_sound_settings() {
-    let _ = spawn_detached("gnome-control-center", &["sound"])
-        .or_else(|_| spawn_detached("systemsettings", &["kcm_pulseaudio"]))
-        .or_else(|_| spawn_detached("pavucontrol", &[]))
-        .or_else(|_| spawn_detached("cinnamon-settings", &["sound"]));
-}
-
-fn open_network_settings() {
-    let _ = spawn_detached("gnome-control-center", &["wifi"])
-        .or_else(|_| spawn_detached("systemsettings", &["kcm_networkmanagement"]))
-        .or_else(|_| spawn_detached("nm-connection-editor", &[]))
-        .or_else(|_| spawn_detached("cinnamon-settings", &["network"]));
-}
-
-/// Grade de apps, menu de configurações rápidas e calendário/notificações do GNOME. Sem a
-/// extensão, o menu de apps abre pela tecla Super (Cinnamon, MATE e Xfce, sessões X11) e as
-/// configurações pelo app de Configurações. O Monitor do Sistema e o Agenda do GNOME são apps
-/// comuns.
-pub fn open_shell(kind: &str) {
-    match (gnome_shell::shell(), kind) {
-        (Some(shell), "start") => drop(shell.show_apps()),
-        (Some(shell), "quick-settings") => drop(shell.open_quick_settings()),
-        (Some(shell), "notifications") => drop(shell.open_calendar()),
-        (None, "start") => {
-            if let Some(x11) = x11::get() {
-                x11.tap_super();
-            }
-        }
-        (None, "quick-settings") => drop(spawn_detached("gnome-control-center", &[])),
-        (_, "system-monitor") => drop(spawn_detached("gnome-system-monitor", &[])),
-        (_, "calendar") => drop(spawn_detached("gnome-calendar", &[])),
-        (_, "bluetooth") => open_bluetooth_settings(),
-        (_, "sound") => open_sound_settings(),
-        (_, "network") => open_network_settings(),
-        _ => {}
+/// Launch the settings application for the current desktop, retaining fallbacks for mixed installs.
+pub fn open_shell(kind: &str) -> Result<(), String> {
+    if let Some(shell) = gnome_shell::shell() {
+        let result = match kind {
+            "start" => Some(shell.show_apps()),
+            "quick-settings" => Some(shell.open_quick_settings()),
+            "notifications" => Some(shell.open_calendar()),
+            _ => None,
+        };
+        if let Some(result) = result { return result.map_err(|e| e.to_string()); }
+    }
+    match kind {
+        "start" => {
+            let x11 = x11::get().ok_or("Application launcher is unavailable in this session")?;
+            x11.tap_super();
+            Ok(())
+        },
+        "bluetooth" | "sound" | "network" | "quick-settings" => {
+            let desktop = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default();
+            super::settings::launch(&super::settings::candidates(&desktop, kind), |program, args| spawn_detached(program, args))
+        },
+        "system-monitor" => spawn_detached("gnome-system-monitor", &[]),
+        "calendar" => spawn_detached("gnome-calendar", &[]),
+        _ => Err(format!("System action unavailable: {kind}")),
     }
 }
 

@@ -153,3 +153,5 @@ Copyright © 2026 Nathan Ferreira e Matheus Basilio.
 O Pier é software livre: você pode redistribuí-lo e/ou modificá-lo sob os termos da [Licença Pública Geral GNU](LICENSE), conforme publicada pela Free Software Foundation, na versão 3 da Licença ou (a seu critério) em qualquer versão posterior.
 
 O Pier é distribuído na esperança de que seja útil, mas SEM NENHUMA GARANTIA, nem mesmo a garantia implícita de COMERCIALIZAÇÃO ou de ADEQUAÇÃO A UM DETERMINADO FIM. Consulte a Licença Pública Geral GNU para mais detalhes.
+
+As ações de configurações seguem o desktop Linux atual (incluindo Bluetooth no KDE), mostram falhas ao abrir e permitem tentar novamente. Testes de interação no navegador rodam no CI e antes de empacotar releases; configurações nativas e hardware ainda precisam de verificação em cada plataforma.
