@@ -70,6 +70,10 @@ A atualização automática funciona com o instalador do Windows, com o app do m
 | --- | --- | --- |
 | Abrir ou focar o app da posição N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
 
+### Modos de energia
+
+Clique na bateria para escolher o modo de energia. No Linux, os perfis vêm do power-profiles-daemon (ou serviço compatível); no Windows, são exibidos os planos padrão instalados. Modos indisponíveis ficam desativados. No macOS, a troca de modo ainda não está disponível.
+
 ### Widgets do GitHub
 
 O Pier usa automaticamente o login do [GitHub CLI](https://cli.github.com) (`gh auth login`). Para usar outra conta, cole um personal access token com os escopos `repo` e `read:user` em **Configurações** > **GitHub**. O token tem prioridade sobre o GitHub CLI e fica guardado no chaveiro do sistema.
@@ -112,9 +116,6 @@ O macOS tem algumas limitações em relação ao Windows:
 - O widget de Bluetooth pede a permissão de Bluetooth na primeira vez, não liga nem desliga o Bluetooth (o macOS não permite) e não mostra a bateria dos dispositivos.
 
 ### Linux
-
-Clique na bateria para escolher o modo de energia. No Linux, os perfis vêm do power-profiles-daemon (ou serviço compatível); no Windows, são exibidos os planos padrão instalados. Modos indisponíveis ficam desativados. No macOS, a troca de modo ainda não está disponível.
-
 
 O Pier tem suporte completo ao GNOME 45 a 49, em Wayland e X11, pela extensão do GNOME Shell. No KDE Plasma 6 a dock não precisa de extensão: numa sessão X11 ela lista as janelas, reserva o espaço na tela e desenha o vidro com o blur do KWin, e no Wayland lista as janelas dos apps X11 (as janelas dos apps nativos do Wayland ainda não aparecem). Em outros ambientes de desktop, o Pier só lista janelas em sessões X11 e não consegue esconder o painel nativo. Apps fixados e widgets funcionam em todos.
 

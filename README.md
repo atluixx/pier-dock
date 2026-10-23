@@ -70,6 +70,10 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 | --- | --- | --- |
 | Open or focus the app in position N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
 
+### Battery power modes
+
+Click the battery widget to select a power mode. Linux reads available profiles from power-profiles-daemon (including compatible services); Windows lists installed standard power plans. Unsupported modes are disabled. macOS currently shows that mode switching is unavailable.
+
 ### GitHub widgets
 
 Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) automatically. To use a different account, paste a personal access token with the `repo` and `read:user` scopes in **Settings** > **GitHub**. The token takes priority over the GitHub CLI and is stored in your system's keychain.
@@ -112,9 +116,6 @@ macOS has some limitations compared to Windows:
 - The Bluetooth widget asks for Bluetooth permission the first time, can't turn Bluetooth on or off (macOS doesn't allow it), and doesn't show device battery levels.
 
 ### Linux
-
-Click the battery widget to select a power mode. Linux reads available profiles from power-profiles-daemon (including compatible services); Windows lists installed standard power plans. Unsupported modes are disabled. macOS currently shows that mode switching is unavailable.
-
 
 Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On KDE Plasma 6 the dock needs no extension: in an X11 session it lists windows, reserves screen space and draws glass with KWin's blur, and on Wayland it lists the windows of X11 apps (windows of native Wayland apps aren't listed yet). On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
 
