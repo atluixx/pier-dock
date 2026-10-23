@@ -22,7 +22,7 @@ O Pier substitui a barra de tarefas ou a dock do sistema por uma barra única co
 
 ## Recursos
 
-- **Apps:** apps fixados e abertos, com ampliação, reordenação por arrastar, lista de janelas, separadores e uma bolinha com a contagem exibida no título da janela, como "(3) WhatsApp".
+- **Apps:** apps fixados e abertos, com ampliação, reordenação por arrastar, lista de janelas, separadores e uma bolinha com a contagem exibida no título da janela, como "(3) WhatsApp". A ampliação usa escala visual, preservando o espaçamento e as áreas clicáveis, com medições compartilhadas do layout. A ampliação respeita a preferência de movimento reduzido do sistema.
 - **Barra personalizável:** coloque a dock na borda de baixo, de cima, da esquerda ou da direita da tela (nas laterais ela fica em pé), deixe-a no tamanho dos ícones ou de ponta a ponta e escolha o tamanho dos ícones, a altura do painel, o material e a cor de destaque.
 - **Player de mídia:** mostra o que está tocando no Spotify, no YouTube Music e em outros players, com os controles de reprodução.
 - **Widgets do GitHub:** pull requests aguardando a sua revisão, os seus pull requests abertos, commits recentes e o gráfico de contribuições.
@@ -59,6 +59,9 @@ A atualização automática funciona com o instalador do Windows, com o app do m
 
 ## Uso
 
+Os painéis de rede, som e Bluetooth mostram os detalhes da conexão e dos dispositivos no corpo do painel; o rodapé reúne as ações.
+Os destaques e rótulos respondem rapidamente ao passar o mouse e respeitam a preferência de movimento reduzido do sistema. As prévias de janelas mantêm uma pequena espera para não abrirem ao cruzar os apps.
+
 - **Clique** num app para abri-lo ou focá-lo. Clique no app ativo para minimizá-lo. Se o app tiver várias janelas, cada clique alterna entre elas.
 - **Shift+clique** num app abre uma nova instância.
 - **Clique com o botão direito** num app para ver as janelas dele, fixá-lo, desafixá-lo ou fechá-lo.
@@ -70,11 +73,18 @@ A atualização automática funciona com o instalador do Windows, com o app do m
 | --- | --- | --- |
 | Abrir ou focar o app da posição N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
 
+### Modos de energia
+
+Clique na bateria para escolher o modo de energia. No Linux, os perfis vêm do power-profiles-daemon (ou serviço compatível); no Windows, são exibidos os planos padrão instalados. Modos indisponíveis ficam desativados. No macOS, a troca de modo ainda não está disponível.
+
 ### Widgets do GitHub
 
 O Pier usa automaticamente o login do [GitHub CLI](https://cli.github.com) (`gh auth login`). Para usar outra conta, cole um personal access token com os escopos `repo` e `read:user` em **Configurações** > **GitHub**. O token tem prioridade sobre o GitHub CLI e fica guardado no chaveiro do sistema.
 
 ### Widgets de clima e agenda
+
+Clique no relógio/data para abrir um calendário mensal, navegar pelos meses ou voltar para hoje. Não é preciso configurar uma conta de calendário.
+
 
 - **Clima:** escolha a cidade em **Configurações** > **Widgets** > **Clima**. A previsão vem do [Open-Meteo](https://open-meteo.com) e não precisa de chave de API.
 - **Agenda:** cole o endereço secreto iCal da sua agenda em **Configurações** > **Widgets** > **Agenda**. O Google Agenda, o Outlook e o iCloud publicam esse endereço. O Pier guarda o endereço no chaveiro do sistema.
@@ -89,6 +99,10 @@ Ele lê o Claude Code e o Codex CLI, e **Configurações** > **Widgets** > **Uso
 - **Codex CLI:** `~/.codex/sessions/**/rollout-*.jsonl`. A linha `rate_limits` é a mesma fonte do comando `/status`, com as janelas `primary` e `secondary` do plano, e os tokens vêm do `last_token_usage` de cada turno.
 
 Só os campos numéricos de `usage`, o nome do modelo e o timestamp são lidos — nunca o conteúdo das conversas, os comandos executados ou os diffs. Os CLIs só renovam os percentuais enquanto estão abertos, então com eles fechados o número congela: o widget esmaece e diz há quanto tempo foi a leitura em vez de passar um valor velho por atual.
+
+### Bluetooth
+
+O Bluetooth mantém os dispositivos salvos visíveis com o rádio desligado. Ligue-o e clique em um dispositivo salvo para conectar ou use Desconectar nos conectados. Linux e macOS conectam diretamente; Windows abre as configurações de Bluetooth. Falhas ao ler um dispositivo não descartam mais a lista de pareados no Windows.
 
 ## Particularidades de cada plataforma
 
@@ -113,6 +127,8 @@ O macOS tem algumas limitações em relação ao Windows:
 
 ### Linux
 
+No PulseAudio/PipeWire, o painel de som permite escolher uma saída para cada aplicativo e usa os ícones dos arquivos desktop. Nas outras plataformas, os controles de volume continuam disponíveis e a ausência de suporte à troca de saída é indicada.
+
 O Pier tem suporte completo ao GNOME 45 a 49, em Wayland e X11, pela extensão do GNOME Shell. No KDE Plasma 6 a dock não precisa de extensão: numa sessão X11 ela lista as janelas, reserva o espaço na tela e desenha o vidro com o blur do KWin, e no Wayland lista as janelas dos apps X11 (as janelas dos apps nativos do Wayland ainda não aparecem). Em outros ambientes de desktop, o Pier só lista janelas em sessões X11 e não consegue esconder o painel nativo. Apps fixados e widgets funcionam em todos.
 
 Para deixar a dock em outro monitor, ou fazer ela seguir o cursor, o GNOME precisa da versão 4 da extensão. Se **Configurações** > **Geral** > **Mostrar a dock em** oferecer a atualização, clique em **Atualizar a extensão** e depois encerre a sessão e entre de novo.
@@ -130,6 +146,12 @@ O Pier guarda as configurações em `config.json`:
 Se você usava o Pier quando ele se chamava WinDock, o Pier importa as suas configurações, o token do GitHub e o início automático na primeira execução. No GNOME, reinstale a extensão pelas configurações do Pier.
 
 ## Solução de problemas
+
+As ações de configurações seguem o desktop Linux atual (incluindo Bluetooth no KDE), mostram falhas ao abrir e permitem tentar novamente. Testes de interação no navegador rodam no CI e antes de empacotar releases; configurações nativas e hardware ainda precisam de verificação em cada plataforma.
+
+### Lentidão ao passar o mouse
+
+Se a animação ao passar o mouse ficar lenta, experimente **Configurações > Aparência > Reduzir efeitos visuais**. A opção desativa o desfoque e as sombras decorativas da dock e dos ícones, mantendo os widgets e as animações. Ao desativá-la, o material escolhido é restaurado.
 
 ### A barra de tarefas ou o Dock não voltou
 

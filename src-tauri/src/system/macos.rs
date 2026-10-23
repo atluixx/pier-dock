@@ -9,7 +9,7 @@ use objc2_io_bluetooth::{BluetoothHCIPowerState, IOBluetoothDevice, IOBluetoothH
 use super::{kind_from_class, Battery, Bluetooth, BluetoothDevice, Network, Volume};
 use crate::platform::macos::ax::Element;
 use crate::platform::macos::{osascript, workspace};
-use crate::util::{run, spawn_detached};
+use crate::util::run;
 
 /// Saída do `pmset -g batt`:
 /// `Now drawing from 'AC Power'\n -InternalBattery-0 (id=…)\t87%; charging; 1:02 remaining present: true`.
@@ -145,32 +145,22 @@ fn press_menu_extra(identifier: &str) -> bool {
 /// `start` abre a grade de apps (o app Apps no macOS 26, o Launchpad antes dele),
 /// `quick-settings` o Central de Controle, `notifications` a Central de Notificações,
 /// `system-monitor` o Monitor de Atividade e `calendar` o Calendário.
-pub fn open_shell(kind: &str) {
+pub fn open_shell(kind: &str) -> Result<(), String> {
+    let open = |args: &[&str]| crate::util::run("/usr/bin/open", args).map(|_| ()).ok_or_else(|| "Could not open system application".to_string());
     match kind {
         "start" => {
             let apps = "/System/Applications/Apps.app";
-            let _ = if std::path::Path::new(apps).exists() {
-                spawn_detached("/usr/bin/open", &[apps])
-            } else {
-                spawn_detached("/usr/bin/open", &["-a", "Launchpad"])
-            };
-        }
-        "quick-settings" => {
-            if !press_menu_extra("com.apple.menuextra.controlcenter") {
-                let _ = spawn_detached("/usr/bin/open", &["x-apple.systempreferences:"]);
-            }
-        }
-        "notifications" => {
-            press_menu_extra("com.apple.menuextra.clock");
-        }
-        "system-monitor" => drop(spawn_detached("/usr/bin/open", &["-b", "com.apple.ActivityMonitor"])),
-        "calendar" => drop(spawn_detached("/usr/bin/open", &["-b", "com.apple.iCal"])),
-        "bluetooth" => drop(spawn_detached("/usr/bin/open", &["x-apple.systempreferences:com.apple.BluetoothSettings"])),
-        "sound" => drop(spawn_detached("/usr/bin/open", &["x-apple.systempreferences:com.apple.Sound-Settings.extension"])),
-        // A Gravação de Áudio do Sistema fica no mesmo painel da Gravação de Tela.
-        "audio-capture" => drop(spawn_detached("/usr/bin/open", &["x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"])),
-        "network" => drop(spawn_detached("/usr/bin/open", &["x-apple.systempreferences:com.apple.wifi-settings-extension"])),
-        _ => {}
+            if std::path::Path::new(apps).exists() { open(&[apps]) } else { open(&["-a", "Launchpad"]) }
+        },
+        "quick-settings" => if press_menu_extra("com.apple.menuextra.controlcenter") { Ok(()) } else { open(&["x-apple.systempreferences:"]) },
+        "notifications" => if press_menu_extra("com.apple.menuextra.clock") { Ok(()) } else { Err("Notification Center requires Accessibility access".into()) },
+        "system-monitor" => open(&["-b", "com.apple.ActivityMonitor"]),
+        "calendar" => open(&["-b", "com.apple.iCal"]),
+        "bluetooth" => open(&["x-apple.systempreferences:com.apple.BluetoothSettings"]),
+        "sound" => open(&["x-apple.systempreferences:com.apple.Sound-Settings.extension"]),
+        "audio-capture" => open(&["x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"]),
+        "network" => open(&["x-apple.systempreferences:com.apple.wifi-settings-extension"]),
+        _ => Err(format!("System action unavailable: {kind}")),
     }
 }
 

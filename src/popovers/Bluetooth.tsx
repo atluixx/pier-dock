@@ -32,10 +32,19 @@ export function BluetoothPanel() {
       });
   };
 
-  const choose = (device: BluetoothDevice) => (bt?.canConnect ? run(device, ipc.bluetoothConnect) : ipc.openShell("bluetooth"));
+  const choose = (device: BluetoothDevice) => run(device, bt?.canConnect ? ipc.bluetoothConnect : () => ipc.openShell("bluetooth"));
+  const power = async (powered: boolean) => {
+    if (busy) return;
+    setBusy("power");
+    setFailed(null);
+    try { await setPowered(powered); }
+    catch (error) { console.error(error); setFailed("power"); }
+    finally { setBusy(null); }
+  };
 
   const empty = (Icon: typeof BluetoothIcon, title: string, sub: string) => (
     <div className="popover-empty">
+      {failed === "power" && <p role="alert">{t.actionFailed}</p>}
       <span className="empty-icon">
         <Icon size={22} strokeWidth={1.8} />
       </span>
@@ -48,10 +57,10 @@ export function BluetoothPanel() {
     const Icon = KIND_ICONS[device.kind];
     const level = device.battery;
     const Battery = level === null ? null : level > 70 ? BatteryFull : level > 30 ? BatteryMedium : BatteryLow;
-    const sub = busy === device.id && !device.connected ? t.connecting : failed === device.id ? t.failed : t.kinds[device.kind];
+    const sub = busy === device.id && !device.connected ? t.connecting : failed === device.id ? t.actionFailed : t.kinds[device.kind];
     return (
       <li key={device.id} className="bt-item">
-        <button className="list-row bt-device" disabled={bt?.canConnect && device.connected} onClick={() => choose(device)}>
+        <button className="list-row bt-device" disabled={busy !== null || (bt?.canConnect && (device.connected || !bt.powered))} onClick={() => choose(device)}>
           <span className="bt-device-icon" aria-hidden>
             <Icon size={16} strokeWidth={1.8} />
           </span>
@@ -78,11 +87,13 @@ export function BluetoothPanel() {
   let body;
   if (!bt) body = <span className="popover-loading">…</span>;
   else if (!bt.available) body = empty(BluetoothOff, t.unavailable, t.unavailableSub);
-  else if (!bt.powered) body = empty(BluetoothOff, t.off, t.offSub);
+  else if (!bt.powered && !devices.length) body = empty(BluetoothOff, t.off, t.offSub);
   else if (!devices.length) body = empty(BluetoothIcon, t.none, t.noneSub);
   else
     body = (
       <>
+        {failed === "power" && <p role="alert">{t.actionFailed}</p>}
+        {!bt.powered && <p className="bt-radio-off">{t.offSub}</p>}
         {connected.length > 0 && (
           <>
             <span className="eyebrow bt-eyebrow">{t.connected}</span>
@@ -98,15 +109,14 @@ export function BluetoothPanel() {
       </>
     );
 
-  const status = !bt?.available ? "" : !bt.powered ? t.offShort : connected.length ? t.connectedCount(connected.length) : t.on;
   return (
     <>
       <div className="popover-header">
         <span className="popover-heading bt-heading">Bluetooth</span>
-        {bt?.available && bt.canToggle && <Switch checked={bt.powered} label="Bluetooth" onChange={setPowered} />}
+        {bt?.available && bt.canToggle && <Switch checked={bt.powered} label="Bluetooth" disabled={busy !== null} onChange={(powered) => void power(powered)} />}
       </div>
       <div className="bt-body">{body}</div>
-      <ActionFooter context={status} actions={[{ label: t.settings, keys: "↵", onClick: () => ipc.openShell("bluetooth") }]} />
+      <ActionFooter context="" actions={[{ label: t.settings, keys: "↵", onClick: () => ipc.openShell("bluetooth") }]} />
     </>
   );
 }

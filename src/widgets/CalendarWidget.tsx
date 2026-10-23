@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { CalendarDays, Video } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { Video } from "../ui/DockIcons";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ipc, type CalendarData } from "../lib/ipc";
 import { canJoin, clock, countdown, isOngoing, remainingToday } from "../lib/calendar";
@@ -84,7 +85,7 @@ export function CalendarWidget({ data, wide }: { data: CalendarData | null; wide
       </button>
       {join && next.meetingUrl && (
         <button className="cal-join" onClick={() => openUrl(next.meetingUrl!)}>
-          <Video size={11} strokeWidth={2.4} aria-hidden />
+          <Video size={12} strokeWidth={2.4} aria-hidden />
           {common.join}
         </button>
       )}

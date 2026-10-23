@@ -1,4 +1,4 @@
-import type { AiUsage, BluetoothState, CalendarData, GithubData, MediaState, SystemStatus, WeatherData, WidgetKind, WidgetSize } from "../lib/ipc";
+import type { WidgetKind, WidgetSize } from "../lib/ipc";
 import { MediaWidget } from "./MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "./GithubWidgets";
 import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, ShowDesktopWidget, TrayWidget, VolumeWidget } from "./SystemWidgets";
@@ -9,17 +9,8 @@ import { CalendarWidget } from "./CalendarWidget";
 import { AiUsageWidget } from "./AiUsageWidget";
 import { AgentSessionsWidget } from "./AgentSessionsWidget";
 
-/** Dados que os widgets mostram, lidos uma vez por quem os desenha (a dock ou as configurações). */
-export interface WidgetData {
-  media: MediaState;
-  github: GithubData | null;
-  system: SystemStatus | null;
-  bluetooth: BluetoothState | null;
-  weather: WeatherData | null;
-  weatherConfigured: boolean;
-  calendar: CalendarData | null;
-  ai: AiUsage | null;
-}
+import type { WidgetData } from "./widgetData";
+export type { WidgetData } from "./widgetData";
 
 /** Widgets com formato largo e compacto. */
 export const RESIZABLE = new Set<WidgetKind>(["media", "github-contrib", "weather", "pomodoro", "system-usage", "calendar", "ai-usage"]);

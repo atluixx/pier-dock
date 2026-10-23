@@ -1042,6 +1042,8 @@
   font-weight: 600;
 }
 
+.bt-radio-off { margin: 8px 16px; color: var(--text-secondary); font-size: 12px; }
+
 .bt-body {
   flex: 1;
   min-height: 0;
@@ -1292,6 +1294,12 @@
   color: var(--accent);
 }
 
+
+.sound-app-output { width: 100%; max-width: 100%; padding: 4px 6px; border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; font-size: 11px; }
+.sound-route-error, .sound-routing-note { font-size: 11px; color: var(--text-secondary); }
+.sound-route-error { color: var(--text-danger); }
+.sound-routing-note { padding: 4px 12px; }
+
 .sound-app {
   display: flex;
   align-items: center;
@@ -1521,3 +1529,12 @@
 .wifi-empty-action {
   margin-top: 12px;
 }
+
+.month-navigation { display: flex; gap: 4px; }
+.month-calendar { width: calc(100% - 24px); margin: 0 12px; border-collapse: collapse; table-layout: fixed; text-align: center; }
+.month-calendar th { height: 30px; font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+.month-calendar td { height: 34px; font-size: 13px; }
+.month-calendar time { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; }
+.month-calendar .other-month { color: var(--text-tertiary); }
+.month-calendar [aria-current="date"] { background: var(--accent); color: var(--text-on-accent, white); }
+.month-today { display: flex; justify-content: center; padding: 10px; }

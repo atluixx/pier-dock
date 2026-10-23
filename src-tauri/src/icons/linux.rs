@@ -84,6 +84,9 @@ fn read_icon(path: &Path) -> Result<(Vec<u8>, &'static str), String> {
 
 /// Nome (ou caminho) do ícone para a chave: desktop id, arquivo .desktop, executável ou pasta.
 fn icon_name(key: &str) -> Option<String> {
+    if let Some(name) = key.strip_prefix("theme:") {
+        return (!name.is_empty() && name.chars().all(|c| c.is_alphanumeric() || "_.-+".contains(c))).then(|| name.to_string());
+    }
     let path = Path::new(key);
     let entry = if key.ends_with(".desktop") {
         if path.is_absolute() { desktop_entry::read_file(path) } else { desktop_entry::by_id(key) }

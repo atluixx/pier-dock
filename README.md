@@ -22,7 +22,7 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 
 ## Features
 
-- **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, dividers, and a badge with the count shown in the window title, like "(3) WhatsApp".
+- **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, dividers, and a badge with the count shown in the window title, like "(3) WhatsApp". Magnification scales the artwork while preserving spacing and clickable areas, and follows the system’s reduced-motion preference.
 - **Customizable bar:** Put the dock on the bottom, top, left, or right edge of the screen (it stands vertically on the sides), fit it to the icons or stretch it along the edge, and pick the icon size, panel height, material, and accent color.
 - **Media player:** Shows what's playing in Spotify, YouTube Music, and other players, with playback controls.
 - **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
@@ -59,6 +59,9 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 
 ## Usage
 
+Network, sound and Bluetooth panels keep connection and device details in the panel body; the footer contains actions.
+Hover highlights and labels respond quickly and follow the system’s reduced-motion preference. Window previews still wait briefly to avoid opening while you move across apps.
+
 - **Click** an app to open or focus it. Click the active app to minimize it. If the app has several windows, clicking cycles through them.
 - **Shift+click** an app to open a new instance.
 - **Right-click** an app to see its windows, pin or unpin it, or close it.
@@ -70,11 +73,18 @@ Automatic updates work with the Windows installer, the macOS app, and the AppIma
 | --- | --- | --- |
 | Open or focus the app in position N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
 
+### Battery power modes
+
+Click the battery widget to select a power mode. Linux reads available profiles from power-profiles-daemon (including compatible services); Windows lists installed standard power plans. Unsupported modes are disabled. macOS currently shows that mode switching is unavailable.
+
 ### GitHub widgets
 
 Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) automatically. To use a different account, paste a personal access token with the `repo` and `read:user` scopes in **Settings** > **GitHub**. The token takes priority over the GitHub CLI and is stored in your system's keychain.
 
 ### Weather and calendar widgets
+
+Click the clock/date widget to open a month calendar, browse months, or return to today. This works without a calendar account.
+
 
 - **Weather:** Choose your city in **Settings** > **Widgets** > **Weather**. Forecasts come from [Open-Meteo](https://open-meteo.com) and don't need an API key.
 - **Calendar:** Paste your calendar's secret iCal address in **Settings** > **Widgets** > **Calendar**. Google Calendar, Outlook, and iCloud all publish one. Pier stores the address in your system's keychain.
@@ -89,6 +99,10 @@ It reads Claude Code and Codex CLI, and **Settings** > **Widgets** > **AI usage*
 - **Codex CLI:** `~/.codex/sessions/**/rollout-*.jsonl`. The `rate_limits` line is the same source the `/status` command shows, with the plan's `primary` and `secondary` windows, and the token counts come from the `last_token_usage` of each turn.
 
 Only the numeric `usage` fields, the model name, and the timestamp are read — never the content of your conversations, the commands, or the diffs. The CLIs only refresh the percentages while they run, so with them closed the number freezes: the widget dims and says how old the reading is instead of passing a stale value off as current.
+
+### Bluetooth
+
+Bluetooth keeps saved devices visible while the radio is off. Turn it on, then click a saved device to connect or use Disconnect for a connected device. Linux and macOS connect directly; Windows opens Bluetooth settings. Devices that cannot be read individually no longer discard the Windows paired inventory.
 
 ## Platform notes
 
@@ -113,6 +127,8 @@ macOS has some limitations compared to Windows:
 
 ### Linux
 
+The sound panel can route each playing app to its own output on PulseAudio/PipeWire and resolves app icons from desktop metadata. Other platforms keep their supported volume controls and show when per-app routing is unavailable.
+
 Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On KDE Plasma 6 the dock needs no extension: in an X11 session it lists windows, reserves screen space and draws glass with KWin's blur, and on Wayland it lists the windows of X11 apps (windows of native Wayland apps aren't listed yet). On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
 
 To keep the dock on another monitor, or have it follow the cursor, on GNOME you need version 4 of the extension. If **Settings** > **General** > **Show the dock on** offers to update it, select **Update the extension**, and then log out and log back in.
@@ -130,6 +146,12 @@ Pier stores its settings in `config.json`:
 If you used Pier when it was called WinDock, Pier imports your settings, GitHub token, and launch-at-login setting the first time it runs. On GNOME, reinstall the extension from Pier's settings.
 
 ## Troubleshooting
+
+System settings actions follow the current Linux desktop (including KDE Bluetooth settings), report launch failures, and can be retried. Browser interaction tests run in CI and before release packaging; native settings and hardware still need verification on each target platform.
+
+### Hover feels slow
+
+If hover animation feels sluggish, try **Settings > Appearance > Reduce visual effects**. It disables blur and decorative dock/icon shadows while keeping your widgets and animations. Turning it off restores your chosen material.
 
 ### The taskbar or Dock doesn't come back
 

@@ -16,6 +16,7 @@ mod panels;
 mod permissions;
 mod platform;
 mod pomodoro;
+mod power;
 mod report;
 mod system;
 mod taskbar;
@@ -201,6 +202,8 @@ fn main() {
             media::media_thumbnail,
             media::media_control,
             system::system_status,
+            power::power_profiles,
+            power::set_power_profile,
             system::get_volume,
             system::set_volume,
             system::open_shell,
@@ -212,6 +215,7 @@ fn main() {
             audio::audio_status,
             audio::set_output_device,
             audio::set_app_volume,
+            audio::set_app_output,
             wifi::wifi_status,
             wifi::wifi_scan,
             wifi::wifi_set_enabled,
@@ -265,7 +269,7 @@ fn main() {
             let (hide_taskbar, auto_hide, material, dock_position, dock_monitor) = {
                 let config = app.state::<config::ConfigState>();
                 let config = config.0.lock().unwrap();
-                (config.hide_taskbar, config.auto_hide.clone(), config.material.clone(), config.dock_position.clone(), config.dock_monitor.clone())
+                (config.hide_taskbar, config.auto_hide.clone(), config.effective_material().to_owned(), config.dock_position.clone(), config.dock_monitor.clone())
             };
             dock_window::init_auto_hide(&auto_hide);
             dock_window::init_position(&dock_position);

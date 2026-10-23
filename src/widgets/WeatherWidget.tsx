@@ -26,14 +26,14 @@ export function WeatherWidget({ data, wide, configured }: { data: WeatherData | 
   if (!wide) {
     return (
       <Tile kind="weather" label={label} className="weather-tile small">
-        <WeatherGlyph icon={condition.icon} size={18} strokeWidth={2} />
+        <WeatherGlyph icon={condition.icon} size={22} strokeWidth={2} />
         <span className="wx-temp">{degrees(current.temperature)}</span>
       </Tile>
     );
   }
   return (
     <Tile kind="weather" label={label} className="weather-tile wide">
-      <WeatherGlyph icon={condition.icon} size={24} />
+      <WeatherGlyph icon={condition.icon} size={24} strokeWidth={2} />
       <span className="wx-temp">{degrees(current.temperature)}</span>
       <span className="wx-text">
         <span className="wx-condition">{condition.short}</span>
