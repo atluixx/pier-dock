@@ -1521,3 +1521,5 @@
 .wifi-empty-action {
   margin-top: 12px;
 }
+
+.bt-radio-off { margin: 8px 16px; color: var(--text-secondary); font-size: 12px; }

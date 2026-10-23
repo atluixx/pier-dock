@@ -79,7 +79,7 @@ export function useWifi() {
 }
 
 /** Só consulta com `enabled`: no macOS a primeira leitura pede a permissão de Bluetooth. */
-export function useBluetooth(enabled = true, intervalMs = 10_000): [BluetoothState | null, (powered: boolean) => void, () => void] {
+export function useBluetooth(enabled = true, intervalMs = 10_000): [BluetoothState | null, (powered: boolean) => Promise<void>, () => void] {
   const [state, setState] = useState<BluetoothState | null>(null);
   const refresh = useCallback(() => ipc.bluetoothStatus().then(setState).catch(() => {}), []);
   useEffect(() => {
@@ -88,13 +88,10 @@ export function useBluetooth(enabled = true, intervalMs = 10_000): [BluetoothSta
     const id = setInterval(refresh, intervalMs);
     return () => clearInterval(id);
   }, [enabled, intervalMs, refresh]);
-  const setPowered = useCallback(
-    (powered: boolean) => {
-      setState((s) => (s ? { ...s, powered, devices: powered ? s.devices : s.devices.map((d) => ({ ...d, connected: false })) } : s));
-      ipc.setBluetooth(powered).catch(console.error).finally(refresh);
-    },
-    [refresh],
-  );
+  const setPowered = useCallback(async (powered: boolean) => {
+    try { await ipc.setBluetooth(powered); }
+    finally { await refresh(); }
+  }, [refresh]);
   return [state, setPowered, refresh];
 }
 
