@@ -59,6 +59,8 @@ A atualização automática funciona com o instalador do Windows, com o app do m
 
 ## Uso
 
+Os destaques e rótulos respondem rapidamente ao passar o mouse e respeitam a preferência de movimento reduzido do sistema. As prévias de janelas mantêm uma pequena espera para não abrirem ao cruzar os apps.
+
 - **Clique** num app para abri-lo ou focá-lo. Clique no app ativo para minimizá-lo. Se o app tiver várias janelas, cada clique alterna entre elas.
 - **Shift+clique** num app abre uma nova instância.
 - **Clique com o botão direito** num app para ver as janelas dele, fixá-lo, desafixá-lo ou fechá-lo.
