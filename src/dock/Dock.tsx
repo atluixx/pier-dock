@@ -387,6 +387,7 @@ const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
   // A barra encosta na borda da tela no eixo da espessura e fica centrada no eixo do comprimento
   // (de ponta a ponta ela ocupa a borda inteira).
   const barStyle: React.CSSProperties = {
+    ["--dock-thickness" as string]: `${metrics.barThickness}px`,
     ["--dock-item-offset" as string]: `${metrics.itemOffset}px`,
   };
   if (vertical) {
