@@ -495,7 +495,11 @@
   transition: transform 0.15s ease;
 }
 
-/* Bordas de cima e de baixo: espelha o sprite para o lado do passeio. */
+
+.claude-pet-orientation { transition: none; }
+.claude-pet:focus-visible { outline: 2px solid var(--accent); border-radius: 6px; }
+
+/* Espelha o sprite no seu eixo local, depois de orientar os pés para a barra. */
 .claude-pet-facing.facing-left {
   transform: scaleX(-1);
 }
@@ -617,6 +621,3 @@
   background: var(--danger);
   color: var(--text-on-accent);
 }
-
-.claude-pet-orientation { transition: none; }
-.claude-pet:focus-visible { outline: 2px solid var(--accent); border-radius: 6px; }
