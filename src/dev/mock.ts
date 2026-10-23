@@ -29,6 +29,8 @@ function iconDataUrl(color: string, init: string): string {
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
+const power = { profiles: ["power-saver", "balanced", "performance"], active: "balanced", canSet: true };
+
 let bluetooth: BluetoothState = {
   available: true,
   powered: true,
@@ -290,8 +292,6 @@ const codexUsage: AiUsage = {
   topModel: "gpt-5.6-luna",
   fetchedAt: Date.now(),
 };
-
-const power = { profiles: ["power-saver", "balanced", "performance"], active: "balanced", canSet: true };
 
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   get_config: () => config,

@@ -20,8 +20,6 @@ import { useT } from "../i18n";
 function Content({ kind }: { kind: string }) {
   const t = useT();
   switch (kind) {
-    case "battery":
-      return <PowerPanel />;
     case "media":
       return <NowPlaying />;
     case "github-mine":
@@ -36,6 +34,8 @@ function Content({ kind }: { kind: string }) {
       return <Weather />;
     case "pomodoro":
       return <Pomodoro />;
+    case "battery":
+      return <PowerPanel />;
     case "system-usage":
       return <SystemUsage />;
     case "calendar":
