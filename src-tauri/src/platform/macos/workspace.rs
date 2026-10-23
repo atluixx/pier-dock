@@ -30,13 +30,12 @@ fn describe(app: &NSRunningApplication) -> RunningApp {
     }
 }
 
-/// Apps "regulares" (com ícone no Dock), sem o próprio Pier.
+/// Apps "regulares" (com ícone no Dock). O Pier só é regular enquanto uma janela comum está aberta.
 pub fn running_apps() -> Vec<RunningApp> {
-    let own = std::process::id() as i32;
     NSWorkspace::sharedWorkspace()
         .runningApplications()
         .iter()
-        .filter(|a| a.activationPolicy() == NSApplicationActivationPolicy::Regular && a.processIdentifier() != own)
+        .filter(|a| a.activationPolicy() == NSApplicationActivationPolicy::Regular)
         .map(|a| describe(&a))
         .collect()
 }

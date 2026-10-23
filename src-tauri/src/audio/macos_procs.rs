@@ -60,7 +60,8 @@ fn owner<'a>(pid: i32, bundle_id: Option<&str>, apps: &'a [RunningApp]) -> Optio
 /// Os apps com algum processo no CoreAudio. Processos sem um app regular por trás (serviços do
 /// sistema, o próprio Pier) ficam de fora.
 pub fn groups() -> Vec<AppGroup> {
-    let apps = workspace::running_apps();
+    let own = std::process::id() as i32;
+    let apps: Vec<_> = workspace::running_apps().into_iter().filter(|a| a.pid != own).collect();
     let mut groups: Vec<AppGroup> = Vec::new();
     for object in get_ids(SYSTEM, global(kAudioHardwarePropertyProcessObjectList)) {
         let Some(pid) = get::<i32>(object, global(kAudioProcessPropertyPID)) else { continue };

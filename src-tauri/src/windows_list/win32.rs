@@ -1,8 +1,9 @@
 //! Janelas no Windows: enumeração com as regras da taskbar e hooks de eventos do sistema.
 
 use std::sync::atomic::{AtomicIsize, Ordering};
+use std::sync::OnceLock;
 
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use windows::Win32::Foundation::{CloseHandle, BOOL, HANDLE, HWND, LPARAM, RECT, TRUE, WPARAM};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_CLOAKED, DWMWA_EXTENDED_FRAME_BOUNDS};
 use windows::Win32::Graphics::Gdi::{
@@ -36,6 +37,18 @@ use crate::util::{com_init, wide_to_string, ErrStr};
 /// Última janela de outro processo que esteve em primeiro plano. Clicar na dock pode mover o foco
 /// para o WebView, então "qual app está ativo" é lembrado aqui.
 static LAST_FOREGROUND: AtomicIsize = AtomicIsize::new(0);
+
+static APP: OnceLock<AppHandle> = OnceLock::new();
+
+/// Configurações e novidades são janelas comuns do Pier e entram na lista como qualquer app; o
+/// resto das janelas do processo (dock, painéis) não.
+fn is_own_listed(h: HWND) -> bool {
+    let Some(app) = APP.get() else { return false };
+    [crate::panels::SETTINGS_LABEL, crate::panels::WHATS_NEW_LABEL]
+        .iter()
+        .filter_map(|label| app.get_webview_window(label)?.hwnd().ok())
+        .any(|w| w.0 == h.0)
+}
 
 fn hwnd(value: i64) -> HWND {
     HWND(value as isize as *mut _)
@@ -125,7 +138,7 @@ pub fn snapshot() -> WindowsSnapshot {
         .filter(|&h| is_app_window(h))
         .filter_map(|h| {
             let pid = window_pid(h);
-            if pid == own_pid {
+            if pid == own_pid && !is_own_listed(h) {
                 return None;
             }
             Some(WindowInfo {
@@ -162,7 +175,8 @@ unsafe extern "system" fn on_win_event(
 }
 
 /// Hooks de eventos do sistema, numa thread com message loop.
-pub fn start(_app: AppHandle) {
+pub fn start(app: AppHandle) {
+    let _ = APP.set(app);
     unsafe {
         let fg = GetForegroundWindow();
         if !fg.is_invalid() && window_pid(fg) != std::process::id() {

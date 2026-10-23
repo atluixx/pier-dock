@@ -201,6 +201,8 @@ pub fn open_whats_new_window(app: &AppHandle, since: &str) -> tauri::Result<Webv
 /// a view que o frontend renderiza. Se já estiver aberta, só traz para a frente.
 fn app_window(app: &AppHandle, label: &str, kind: &str, title: &str, size: (f64, f64), min_size: (f64, f64)) -> tauri::Result<WebviewWindow> {
     if let Some(window) = app.get_webview_window(label) {
+        #[cfg(target_os = "macos")]
+        set_regular_policy(app, true);
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();
@@ -225,7 +227,50 @@ fn app_window(app: &AppHandle, label: &str, kind: &str, title: &str, size: (f64,
     let window = builder.build()?;
     #[cfg(windows)]
     apply_mica(&window);
+    #[cfg(target_os = "macos")]
+    set_regular_policy(app, true);
+    // Os eventos do sistema ignoram o próprio processo, então a lista de janelas é avisada daqui.
+    let handle = app.clone();
+    let closing = label.to_owned();
+    window.on_window_event(move |event| match event {
+        WindowEvent::Focused(_) | WindowEvent::Resized(_) | WindowEvent::Destroyed => {
+            if matches!(event, WindowEvent::Destroyed) {
+                #[cfg(target_os = "macos")]
+                set_regular_policy(&handle, handle.webview_windows().keys().any(|l| *l != closing && (l == SETTINGS_LABEL || l == WHATS_NEW_LABEL)));
+            }
+            crate::windows_list::mark_dirty();
+        }
+        _ => {}
+    });
+    crate::windows_list::mark_dirty();
     Ok(window)
+}
+
+/// No macOS o Pier é um app de segundo plano (sem ícone no Dock); enquanto há uma janela comum
+/// aberta ele vira um app regular, para aparecer na dock e poder ser trazido de volta.
+#[cfg(target_os = "macos")]
+fn set_regular_policy(app: &AppHandle, regular: bool) {
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        let policy = if regular { tauri::ActivationPolicy::Regular } else { tauri::ActivationPolicy::Accessory };
+        let _ = handle.set_activation_policy(policy);
+        if regular {
+            set_dock_icon();
+        }
+    });
+}
+
+/// Fora de um bundle `.app` (em `tauri dev`) o macOS mostra o ícone genérico de executável.
+#[cfg(target_os = "macos")]
+fn set_dock_icon() {
+    use objc2::{AllocAnyThread, MainThreadMarker};
+    use objc2_app_kit::{NSApplication, NSImage};
+    use objc2_foundation::NSData;
+    let Some(mtm) = MainThreadMarker::new() else { return };
+    let data = NSData::with_bytes(include_bytes!("../icons/128x128@2x.png"));
+    if let Some(image) = NSImage::initWithData(NSImage::alloc(), &data) {
+        unsafe { NSApplication::sharedApplication(mtm).setApplicationIconImage(Some(&image)) };
+    }
 }
 
 /// O Mica falha sem aviso no `.effects()` do Tauri; aplicado direto, dá para saber e cair no
