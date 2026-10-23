@@ -119,7 +119,7 @@ export function ClockWidget() {
   const date = shortDate(now);
   const full = now.toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   return (
-    <Tile kind="clock" label={full} className="clock-tile" onClick={() => ipc.openShell("notifications")}>
+    <Tile kind="clock" label={full} className="clock-tile">
       <span className="clock-time">{time}</span>
       <span className="clock-date">{date}</span>
     </Tile>

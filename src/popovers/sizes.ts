@@ -3,6 +3,7 @@ export const PANEL_INSET = 18;
 
 /** Tamanho visível (px lógicos) do popover de cada widget, sem a margem da sombra. */
 export const PANEL_SIZES: Record<string, [number, number]> = {
+  clock: [340, 360],
   media: [380, 258],
   "github-review": [440, 400],
   "github-mine": [440, 400],

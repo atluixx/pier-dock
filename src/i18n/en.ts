@@ -306,9 +306,11 @@ export const en: Dict = {
     progress: "Track progress",
     nowPlayingTile: (label) => `Now playing: ${label}`,
   },
+  dateCalendar: { previous: "Previous month", next: "Next month", today: "Today" },
   popover: {
     unknown: "Unknown panel.",
     labels: {
+      clock: "Calendar",
       media: "Now playing",
       "github-mine": "Your pull requests",
       "github-review": "Pending reviews",

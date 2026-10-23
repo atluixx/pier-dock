@@ -1521,3 +1521,12 @@
 .wifi-empty-action {
   margin-top: 12px;
 }
+
+.month-navigation { display: flex; gap: 4px; }
+.month-calendar { width: calc(100% - 24px); margin: 0 12px; border-collapse: collapse; table-layout: fixed; text-align: center; }
+.month-calendar th { height: 30px; font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+.month-calendar td { height: 34px; font-size: 13px; }
+.month-calendar time { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; }
+.month-calendar .other-month { color: var(--text-tertiary); }
+.month-calendar [aria-current="date"] { background: var(--accent); color: var(--text-on-accent, white); }
+.month-today { display: flex; justify-content: center; padding: 10px; }

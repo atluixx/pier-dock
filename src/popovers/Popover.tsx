@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { ipc } from "../lib/ipc";
 import { BluetoothPanel } from "./Bluetooth";
+import { MonthCalendar } from "./MonthCalendar";
 import { Calendar } from "./Calendar";
 import { AiUsagePanel } from "./AiUsagePanel";
 import { AgentSessionsPanel } from "./AgentSessionsPanel";
@@ -19,6 +20,8 @@ import { useT } from "../i18n";
 function Content({ kind }: { kind: string }) {
   const t = useT();
   switch (kind) {
+    case "clock":
+      return <MonthCalendar />;
     case "media":
       return <NowPlaying />;
     case "github-mine":
