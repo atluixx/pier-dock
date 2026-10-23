@@ -2,6 +2,13 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.16.0
+
+### Fixes
+- **Updates:** on Linux, **Install and restart** reopens Pier after installing the new version, instead of just closing it. On NixOS, an AppImage update restarts through `appimage-run`.
+- **Sound:** each app's output selector opens inside the sound panel, so picking a device no longer closes the selector or the whole panel. It also works with the keyboard (arrows, Enter and Esc).
+- **Dock:** clicking an app that isn't pinned no longer shuffles the open apps. They stay where they appeared, and newly opened apps go at the end.
+
 ## 0.15.0
 
 ### Notification badges on Windows
