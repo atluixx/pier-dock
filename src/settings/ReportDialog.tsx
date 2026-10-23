@@ -144,7 +144,7 @@ export function ReportDialog({ kind, onClose }: { kind: ReportKind; onClose: () 
             <>
               <span className="field-hint">{connected ? t.viaAccount : t.viaBrowser}</span>
               <button className="btn btn-primary" disabled={!title.trim() || !editable} onClick={send}>
-                {step.step === "sending" ? t.sending : connected ? t.create : t.continueOnGithub}
+                {step.step === "sending" ? t.sending : connected ? t.create : t.send}
               </button>
             </>
           )}
