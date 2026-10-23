@@ -63,6 +63,13 @@ test("o app instalado dá o nome e o destino de abertura do grupo", () => {
   assert.equal(app!.installed, installed);
 });
 
+test("o badge usa o maior entre a soma dos títulos e o badge do sistema", () => {
+  const apps = buildDockApps([chrome], [win({ exe: chrome.exe!, title: "(2) Chrome", badge: 5 }), win({ id: 2, exe: chrome.exe!, title: "(1) Chrome" })], true);
+  assert.equal(apps[0]!.badge, 5);
+  const byTitle = buildDockApps([chrome], [win({ exe: chrome.exe!, title: "(4) Chrome", badge: 1 })], true);
+  assert.equal(byTitle[0]!.badge, 4);
+});
+
 test("fixar um app aberto usa o instalado, ou monta a entrada pela primeira janela", () => {
   const installed: AppEntry = { id: "code", name: "VS Code", target: "t", exe: "e" };
   const [withInstalled] = buildDockApps([], [win({ exe: "E" })], true, [installed]);
