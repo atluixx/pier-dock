@@ -1042,6 +1042,8 @@
   font-weight: 600;
 }
 
+.bt-radio-off { margin: 8px 16px; color: var(--text-secondary); font-size: 12px; }
+
 .bt-body {
   flex: 1;
   min-height: 0;
@@ -1521,5 +1523,3 @@
 .wifi-empty-action {
   margin-top: 12px;
 }
-
-.bt-radio-off { margin: 8px 16px; color: var(--text-secondary); font-size: 12px; }
