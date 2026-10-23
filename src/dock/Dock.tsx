@@ -18,7 +18,7 @@ import { buildDockApps, type DockApp } from "./apps";
 import { PREVIEW_GAP, barRect, dockMetrics, isVertical, previewSpace } from "./layout";
 import { WindowPreview } from "./WindowPreview";
 import { ClawdPet } from "./ClawdPet";
-import { MagnifyCtx } from "./Magnify";
+import { MagnifyCtx, MagnifyGeometry } from "./Magnify";
 import { resetDockHover } from "./hoverReset";
 import { AppIcon } from "./AppIcon";
 import { SortableItem } from "./SortableItem";
@@ -407,6 +407,7 @@ export function Dock({ config }: { config: Config }) {
   }
 
   return (
+    <MagnifyGeometry mouse={mouse} position={position}>
     <div
       className="dock-root"
       data-pos={position}
@@ -449,5 +450,6 @@ export function Dock({ config }: { config: Config }) {
         <WindowPreview app={previewApp} anchor={preview} position={position} onClose={() => setPreview(null)} onHoverChange={onPreviewHover} />
       )}
     </div>
+    </MagnifyGeometry>
   );
 }
