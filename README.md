@@ -143,6 +143,8 @@ If you used Pier when it was called WinDock, Pier imports your settings, GitHub 
 
 ## Troubleshooting
 
+System settings actions follow the current Linux desktop (including KDE Bluetooth settings), report launch failures, and can be retried. Browser interaction tests run in CI and before release packaging; native settings and hardware still need verification on each target platform.
+
 ### Hover feels slow
 
 If hover animation feels sluggish, try **Settings > Appearance > Reduce visual effects**. It disables blur and decorative dock/icon shadows while keeping your widgets and animations. Turning it off restores your chosen material.

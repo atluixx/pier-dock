@@ -6,6 +6,8 @@
 #[cfg_attr(target_os = "linux", path = "linux.rs")]
 #[cfg_attr(target_os = "macos", path = "macos.rs")]
 mod backend;
+#[cfg(target_os = "linux")]
+mod settings;
 
 use serde::Serialize;
 
@@ -192,8 +194,8 @@ pub async fn open_tray(app: tauri::AppHandle, anchor_x: f64, anchor_y: f64) -> R
 /// Abre os menus e apps nativos: `start`, `quick-settings`, `notifications`, `system-monitor`,
 /// `calendar`, `bluetooth`, `sound` e `network` (as configurações de Bluetooth, de som e de Wi-Fi).
 #[tauri::command]
-pub fn open_shell(kind: String) {
-    backend::open_shell(&kind);
+pub async fn open_shell(kind: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || backend::open_shell(&kind)).await.err_str()?
 }
 
 #[cfg(test)]

@@ -143,6 +143,8 @@ Se você usava o Pier quando ele se chamava WinDock, o Pier importa as suas conf
 
 ## Solução de problemas
 
+As ações de configurações seguem o desktop Linux atual (incluindo Bluetooth no KDE), mostram falhas ao abrir e permitem tentar novamente. Testes de interação no navegador rodam no CI e antes de empacotar releases; configurações nativas e hardware ainda precisam de verificação em cada plataforma.
+
 ### Lentidão ao passar o mouse
 
 Se a animação ao passar o mouse ficar lenta, experimente **Configurações > Aparência > Reduzir efeitos visuais**. A opção desativa o desfoque e as sombras decorativas da dock e dos ícones, mantendo os widgets e as animações. Ao desativá-la, o material escolhido é restaurado.

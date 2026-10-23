@@ -180,6 +180,7 @@ export const en: Dict = {
     },
   },
   system: {
+    actionFailed: "Could not complete this action. Try again.",
     cpuLast60: "CPU · last 60 s",
     cpuChart: "CPU usage chart for the last 60 seconds",
     memory: "Memory",

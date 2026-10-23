@@ -178,6 +178,7 @@ export const pt = {
     },
   },
   system: {
+    actionFailed: "Não foi possível concluir esta ação. Tente novamente.",
     cpuLast60: "CPU · últimos 60 s",
     cpuChart: "Gráfico de uso de CPU nos últimos 60 segundos",
     memory: "Memória",
