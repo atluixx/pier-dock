@@ -37,7 +37,7 @@ test("sound output, master mute, app mute and sliders send the selected control"
   await expectCall(page, "set_output_device", { id: "headphones" });
   await page.locator(".sound-master button").click();
   await expectCall(page, "set_volume", { muted: true });
-  await page.locator(".sound-app").filter({ hasText: "Spotify" }).getByRole("button").click();
+  await page.locator(".sound-app").filter({ hasText: "Spotify" }).locator(".sound-mute").click();
   await expectCall(page, "set_app_volume", { id: "1", muted: true });
   await page.getByRole("slider").first().focus();
   await page.keyboard.press("ArrowRight");
