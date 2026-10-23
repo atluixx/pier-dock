@@ -205,6 +205,8 @@ export const en: Dict = {
   },
   power: { title: "Power mode", modes: { "power-saver": "Power save", balanced: "Balanced", performance: "Performance" }, unavailable: "Power mode switching is unavailable on this system.", failed: "Could not change the power mode. Try again." },
   sound: {
+    outputOf: (name: string) => `${name} output`,
+    chooseOutput: "Choose output", routeFailed: "Could not switch this application’s output.", routingUnavailable: "Per-app output switching is unavailable on this platform.",
     title: "Sound",
     master: "Volume",
     muted: "Muted",

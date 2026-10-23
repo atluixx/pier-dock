@@ -432,7 +432,7 @@ pub fn apps() -> Vec<AppStream> {
                 return None;
             }
             let volume = state.volumes.get(&bundle).copied().unwrap_or_default();
-            Some(AppStream { id: bundle, name: group.app.name, icon: group.app.path, level: volume.level, muted: volume.muted })
+            Some(AppStream { id: bundle, name: group.app.name, icon: group.app.path, level: volume.level, muted: volume.muted, output_id: None })
         })
         .collect();
     apps.sort_by_key(|a| a.name.to_lowercase());

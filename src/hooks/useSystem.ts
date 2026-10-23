@@ -48,7 +48,11 @@ export function useAudio(intervalMs = 1_500) {
     setState((s) => (s?.apps ? { ...s, apps: s.apps.map((a) => (a.id === id ? { ...a, ...patch } : a)) } : s));
     ipc.setAppVolume(id, patch).catch(console.error);
   }, []);
-  return { audio: state, setOutput, setApp };
+  const setAppOutput = useCallback(async (id: string, output: string) => {
+    await ipc.setAppOutput(id, output);
+    await refresh();
+  }, [refresh]);
+  return { audio: state, setOutput, setApp, setAppOutput };
 }
 
 /** Redes do popover de Wi-Fi: estado a cada 3 s e uma busca nova a cada 10 s. */

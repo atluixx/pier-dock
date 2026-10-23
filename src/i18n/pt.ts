@@ -205,6 +205,8 @@ export const pt = {
   },
   power: { title: "Modo de energia", modes: { "power-saver": "Economia de energia", balanced: "Equilibrado", performance: "Desempenho" }, unavailable: "A troca de modo de energia não está disponível neste sistema.", failed: "Não foi possível trocar o modo de energia. Tente novamente." },
   sound: {
+    outputOf: (name: string) => `${name} saída`,
+    chooseOutput: "Escolher saída", routeFailed: "Não foi possível trocar a saída deste aplicativo.", routingUnavailable: "A troca de saída por aplicativo não está disponível nesta plataforma.",
     title: "Som",
     master: "Volume geral",
     muted: "Sem som",
