@@ -34,6 +34,8 @@ pub struct WindowInfo {
     /// Pid do processo dono da janela — usado para casar uma sessão de CLI de IA com a janela de
     /// terminal/IDE que a lançou (ver `agent_sessions`).
     pub pid: u32,
+    /// Notificações pendentes do app na central do sistema (no Windows); 0 quando não há.
+    pub badge: u32,
 }
 
 #[derive(Serialize, Clone, PartialEq, Debug)]

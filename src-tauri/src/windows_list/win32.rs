@@ -11,6 +11,7 @@ use windows::Win32::Graphics::Gdi::{
 };
 use windows::Win32::Storage::Xps::{PrintWindow, PRINT_WINDOW_FLAGS};
 use windows::Win32::Storage::EnhancedStorage::PKEY_AppUserModel_ID;
+use windows::Win32::Storage::Packaging::Appx::GetApplicationUserModelId;
 use windows::Win32::System::Threading::{
     AttachThreadInput, GetCurrentThreadId, OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32,
     PROCESS_QUERY_LIMITED_INFORMATION,
@@ -101,6 +102,19 @@ fn window_aumid(h: HWND) -> Option<String> {
     }
 }
 
+/// Apps empacotados (Store/MSIX, como o WhatsApp) nem sempre põem o AUMID na janela; o do processo
+/// é o mesmo que o shell usa para agrupar na barra de tarefas e acha o ícone real no AppsFolder.
+pub(crate) fn process_aumid(pid: u32) -> Option<String> {
+    unsafe {
+        let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+        let mut buf = [0u16; 130];
+        let mut len = buf.len() as u32;
+        let err = GetApplicationUserModelId(handle, &mut len, windows::core::PWSTR(buf.as_mut_ptr()));
+        let _ = CloseHandle(handle);
+        (err.0 == 0 && len > 1).then(|| wide_to_string(&buf[..len as usize - 1]))
+    }
+}
+
 fn window_title(h: HWND) -> String {
     let mut buf = [0u16; 512];
     let len = unsafe { GetWindowTextW(h, &mut buf) } as usize;
@@ -128,11 +142,16 @@ pub fn snapshot() -> WindowsSnapshot {
             if pid == own_pid {
                 return None;
             }
+            let exe = process_path(pid);
+            let win_aumid = window_aumid(h);
+            let proc_aumid = process_aumid(pid);
+            let badge = crate::notifications::badge_for(&exe, win_aumid.as_deref(), proc_aumid.as_deref());
             Some(WindowInfo {
                 id: h.0 as isize as i64,
                 title: window_title(h),
-                exe: process_path(pid),
-                aumid: window_aumid(h),
+                badge,
+                exe,
+                aumid: win_aumid.or(proc_aumid),
                 minimized: unsafe { IsIconic(h).as_bool() },
                 pid,
             })

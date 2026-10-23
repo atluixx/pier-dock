@@ -73,7 +73,8 @@ function findInstalled(installed: AppEntry[], w: WindowInfo): AppEntry | undefin
 function launchTargetForWindow(w: WindowInfo, isUwp: boolean): string {
   // No Linux o desktop id (`firefox.desktop`) é resolvido pelo backend.
   if (os === "linux" && w.aumid) return w.aumid;
-  return w.aumid && isUwp ? `shell:AppsFolder\\${w.aumid}` : w.exe;
+  // Apps empacotados (AUMID com "!") também são abertos pelo AppsFolder, como no Menu Iniciar.
+  return w.aumid && (isUwp || w.aumid.includes("!")) ? `shell:AppsFolder\\${w.aumid}` : w.exe;
 }
 
 /** Junta apps fixados com janelas abertas: cada janela vai para o app fixado correspondente ou forma um grupo próprio. */
@@ -120,7 +121,11 @@ export function buildDockApps(
     app.windows.push(w);
   }
   const apps = [...pinnedApps, ...running.values()];
-  for (const app of apps) app.badge = app.windows.reduce((sum, w) => sum + parseTitleCount(w.title), 0);
+  for (const app of apps) {
+    const fromTitle = app.windows.reduce((sum, w) => sum + parseTitleCount(w.title), 0);
+    const fromSystem = Math.max(0, ...app.windows.map((w) => w.badge ?? 0));
+    app.badge = Math.max(fromTitle, fromSystem);
+  }
   return apps;
 }
 

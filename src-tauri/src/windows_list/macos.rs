@@ -118,6 +118,7 @@ pub fn snapshot() -> WindowsSnapshot {
                     aumid: app.bundle_id.clone(),
                     minimized: app.hidden || window.bool(kAXMinimizedAttribute),
                     pid: app.pid as u32,
+                    badge: 0,
                 });
                 elements.insert(id as i64, window);
             }
@@ -130,6 +131,7 @@ pub fn snapshot() -> WindowsSnapshot {
                 aumid: app.bundle_id.clone(),
                 minimized: app.hidden,
                 pid: app.pid as u32,
+                badge: 0,
             });
         }
     }

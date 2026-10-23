@@ -106,6 +106,8 @@ export interface WindowInfo {
   minimized: boolean;
   /** Pid do processo dono da janela. */
   pid: number;
+  /** Notificações pendentes do app na central do sistema (Windows); 0 ou ausente quando não há. */
+  badge?: number;
 }
 
 export interface WindowsSnapshot {
