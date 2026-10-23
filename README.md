@@ -147,7 +147,7 @@ If you used Pier when it was called WinDock, Pier imports your settings, GitHub 
 
 ## Troubleshooting
 
-System settings actions follow the current Linux desktop (including KDE Bluetooth settings), report launch failures, and can be retried. Browser interaction tests run in CI and before release packaging; native settings and hardware still need verification on each target platform.
+System settings actions follow the current Linux desktop (including KDE Bluetooth settings), report launch failures, and can be retried. Browser interaction tests run in CI; native settings and hardware still need verification on each target platform.
 
 ### Hover feels slow
 

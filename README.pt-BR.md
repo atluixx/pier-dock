@@ -147,7 +147,7 @@ Se você usava o Pier quando ele se chamava WinDock, o Pier importa as suas conf
 
 ## Solução de problemas
 
-As ações de configurações seguem o desktop Linux atual (incluindo Bluetooth no KDE), mostram falhas ao abrir e permitem tentar novamente. Testes de interação no navegador rodam no CI e antes de empacotar releases; configurações nativas e hardware ainda precisam de verificação em cada plataforma.
+As ações de configurações seguem o desktop Linux atual (incluindo Bluetooth no KDE), mostram falhas ao abrir e permitem tentar novamente. Testes de interação no navegador rodam no CI; configurações nativas e hardware ainda precisam de verificação em cada plataforma.
 
 ### Lentidão ao passar o mouse
 
