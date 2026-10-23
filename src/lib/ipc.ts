@@ -59,6 +59,8 @@ export interface Config {
   pinnedApps: AppEntry[];
   widgets: WidgetConfig[];
   material: "glass" | "solid";
+  /** Disable native blur and decorative dock/icon shadows without changing the chosen material. */
+  reducedEffects: boolean;
   /** Opacidade da tinta sobre o vidro da dock (0 a 1). */
   glassOpacity: number;
   accent: Accent;
@@ -286,7 +288,7 @@ export interface AiProvider {
 }
 
 /** As CLIs cujas sessões o Pier acompanha. */
-export type AgentProviderId = "claude" | "codex" | "opencode" | "gemini";
+export type AgentProviderId = "claude" | "codex" | "opencode" | "gemini" | "antigravity" | "t3";
 
 /** Estado de uma sessão, visto pelos hooks/plugin instalados pela integração do provider. */
 export type AgentSessionState = "running" | "permission" | "error" | "done";
@@ -360,6 +362,8 @@ export interface ReportEnvironment {
 
 /** "fallback": sem conta conectada (ou a API recusou), a página issues/new preenchida. */
 export type ReportResult = { kind: "created"; url: string } | { kind: "fallback"; url: string; reason: string | null };
+
+export interface PowerProfiles { profiles: string[]; active: string | null; canSet: boolean; }
 
 export interface OutputDevice {
   id: string;
@@ -454,6 +458,8 @@ export const ipc = {
   openTray: (anchorX: number, anchorY: number) => invoke<void>("open_tray", { anchorX, anchorY }),
   openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar" | "bluetooth" | "sound" | "network" | "audio-capture") =>
     invoke<void>("open_shell", { kind }),
+  powerProfiles: () => invoke<PowerProfiles>("power_profiles"),
+  setPowerProfile: (profile: string) => invoke<void>("set_power_profile", { profile }),
   audioStatus: () => invoke<AudioState>("audio_status"),
   setOutputDevice: (id: string) => invoke<void>("set_output_device", { id }),
   setAppVolume: (id: string, patch: { level?: number; muted?: boolean }) => invoke<void>("set_app_volume", { id, ...patch }),

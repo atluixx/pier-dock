@@ -160,7 +160,7 @@ export function AiUsageOptions({ config, update }: OptionsProps) {
 
 type AgentDisplay = "icon" | "both" | "pet";
 
-const AGENT_PROVIDERS: AgentProviderId[] = ["claude", "codex", "opencode", "gemini"];
+const AGENT_PROVIDERS: Exclude<AgentProviderId, "antigravity" | "t3">[] = ["claude", "codex", "opencode", "gemini"];
 
 /** Hooks/plugin de cada CLI que alimentam o widget de agents. */
 export function AgentSessionsOptions({ config, update }: OptionsProps) {

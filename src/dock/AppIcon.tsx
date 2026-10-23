@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { memo, useContext, useEffect, useRef, useState } from "react";
 import { motion, useAnimationControls, useMotionValueEvent } from "framer-motion";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -43,7 +43,7 @@ interface Props {
   onHoverChange?: (app: DockApp, inside: boolean) => void;
 }
 
-export function AppIcon({ app, active, sortable, shortcut, onPreview, onHoverChange }: Props) {
+export const AppIcon = memo(function AppIcon({ app, active, sortable, shortcut, onPreview, onHoverChange }: Props) {
   const src = useIcon(app.iconKey);
   const bounce = useAnimationControls();
   const { mouse, position } = useContext(MagnifyCtx)!;
@@ -172,4 +172,4 @@ export function AppIcon({ app, active, sortable, shortcut, onPreview, onHoverCha
       </button>
     </div>
   );
-}
+});

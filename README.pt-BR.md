@@ -22,13 +22,13 @@ O Pier substitui a barra de tarefas ou a dock do sistema por uma barra única co
 
 ## Recursos
 
-- **Apps:** apps fixados e abertos, com ampliação, reordenação por arrastar, lista de janelas, separadores e uma bolinha com a contagem exibida no título da janela, como "(3) WhatsApp".
+- **Apps:** apps fixados e abertos, com ampliação, reordenação por arrastar, lista de janelas, separadores e uma bolinha com a contagem exibida no título da janela, como "(3) WhatsApp". A ampliação usa escala visual, preservando o espaçamento e as áreas clicáveis, com medições compartilhadas do layout. A ampliação respeita a preferência de movimento reduzido do sistema.
 - **Barra personalizável:** coloque a dock na borda de baixo, de cima, da esquerda ou da direita da tela (nas laterais ela fica em pé), deixe-a no tamanho dos ícones ou de ponta a ponta e escolha o tamanho dos ícones, a altura do painel, o material e a cor de destaque.
 - **Player de mídia:** mostra o que está tocando no Spotify, no YouTube Music e em outros players, com os controles de reprodução.
 - **Widgets do GitHub:** pull requests aguardando a sua revisão, os seus pull requests abertos, commits recentes e o gráfico de contribuições.
 - **Widgets do sistema:** rede (com as redes Wi-Fi por perto), volume (com a saída de áudio e o volume por app), Bluetooth (com os dispositivos pareados, que dá para conectar e desconectar no macOS e no Linux), bateria, relógio, mostrar a área de trabalho (minimiza todas as janelas com um clique), uso do sistema (CPU e memória com o histórico do último minuto) e, no Windows, a seta da bandeja que abre os ícones ocultos. A gaveta de ícones ocultos fecha ao clicar fora dela, pressionar Escape ou clicar na seta da bandeja novamente.
 - **Widgets de produtividade:** clima, timer Pomodoro, o próximo compromisso da agenda, com botão para entrar na videochamada, e o uso das suas IAs de linha de comando.
-- **Agentes de IA:** o widget Agentes de IA mostra as sessões do Claude Code, Codex, opencode e Gemini CLI como em execução, pedindo permissão, com erro ou concluídas, e um clique leva ao terminal ou à IDE que a iniciou. O Clawd, mascote do Claude, pode andar pela dock enquanto uma sessão roda. As sessões do Codex CLI e do app-server (incluindo o T3 Code) são detectadas automaticamente pelos eventos locais, sem hooks nem reinício. Hooks opcionais do Codex adicionam o status de permissão; confie neles com `/hooks`. Ative as integrações dos outros CLIs nas opções do widget; o opencode precisa ser reiniciado para carregar o plugin.
+- **Agentes de IA:** o widget Agentes de IA mostra as sessões do Claude Code, Codex, opencode e Gemini CLI como em execução, pedindo permissão, com erro ou concluídas, e um clique leva ao terminal ou à IDE que a iniciou. O Clawd, mascote do Claude, pode andar pela dock enquanto uma sessão roda. As sessões do T3 Code de todos os provedores, incluindo o Antigravity (agy), são detectadas automaticamente pelos metadados locais enquanto o T3 estiver aberto. As sessões do Codex CLI e do app-server também são detectadas pelos eventos locais, sem hooks. O banco de estado do T3 é aberto somente para leitura; mensagens e credenciais nunca são consultadas. Para uma pasta de dados personalizada do T3, defina `PIER_T3_STATE_FILE` com o caminho do arquivo `statev2.sqlite`. Hooks opcionais do Codex adicionam o status de permissão; confie neles com `/hooks`. Ative as integrações dos outros CLIs nas opções do widget; o opencode precisa ser reiniciado para carregar o plugin.
 - **Atalhos de teclado:** abra ou foque o app da posição 1 a 9 de qualquer lugar.
 - **Atualização automática:** o Pier procura versões novas e as instala com um clique.
 - **Português e inglês:** a interface segue o idioma do sistema. Para trocar, vá em **Configurações** > **Geral** > **Idioma**.
@@ -60,6 +60,7 @@ A atualização automática funciona com o instalador do Windows, com o app do m
 ## Uso
 
 Os painéis de rede, som e Bluetooth mostram os detalhes da conexão e dos dispositivos no corpo do painel; o rodapé reúne as ações.
+Os destaques e rótulos respondem rapidamente ao passar o mouse e respeitam a preferência de movimento reduzido do sistema. As prévias de janelas mantêm uma pequena espera para não abrirem ao cruzar os apps.
 
 - **Clique** num app para abri-lo ou focá-lo. Clique no app ativo para minimizá-lo. Se o app tiver várias janelas, cada clique alterna entre elas.
 - **Shift+clique** num app abre uma nova instância.
@@ -72,11 +73,18 @@ Os painéis de rede, som e Bluetooth mostram os detalhes da conexão e dos dispo
 | --- | --- | --- |
 | Abrir ou focar o app da posição N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
 
+### Modos de energia
+
+Clique na bateria para escolher o modo de energia. No Linux, os perfis vêm do power-profiles-daemon (ou serviço compatível); no Windows, são exibidos os planos padrão instalados. Modos indisponíveis ficam desativados. No macOS, a troca de modo ainda não está disponível.
+
 ### Widgets do GitHub
 
 O Pier usa automaticamente o login do [GitHub CLI](https://cli.github.com) (`gh auth login`). Para usar outra conta, cole um personal access token com os escopos `repo` e `read:user` em **Configurações** > **GitHub**. O token tem prioridade sobre o GitHub CLI e fica guardado no chaveiro do sistema.
 
 ### Widgets de clima e agenda
+
+Clique no relógio/data para abrir um calendário mensal, navegar pelos meses ou voltar para hoje. Não é preciso configurar uma conta de calendário.
+
 
 - **Clima:** escolha a cidade em **Configurações** > **Widgets** > **Clima**. A previsão vem do [Open-Meteo](https://open-meteo.com) e não precisa de chave de API.
 - **Agenda:** cole o endereço secreto iCal da sua agenda em **Configurações** > **Widgets** > **Agenda**. O Google Agenda, o Outlook e o iCloud publicam esse endereço. O Pier guarda o endereço no chaveiro do sistema.
@@ -132,6 +140,10 @@ O Pier guarda as configurações em `config.json`:
 Se você usava o Pier quando ele se chamava WinDock, o Pier importa as suas configurações, o token do GitHub e o início automático na primeira execução. No GNOME, reinstale a extensão pelas configurações do Pier.
 
 ## Solução de problemas
+
+### Lentidão ao passar o mouse
+
+Se a animação ao passar o mouse ficar lenta, experimente **Configurações > Aparência > Reduzir efeitos visuais**. A opção desativa o desfoque e as sombras decorativas da dock e dos ícones, mantendo os widgets e as animações. Ao desativá-la, o material escolhido é restaurado.
 
 ### A barra de tarefas ou o Dock não voltou
 

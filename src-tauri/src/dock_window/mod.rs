@@ -271,7 +271,7 @@ pub struct Layout {
     pub hover_headroom: f64,
 }
 
-#[derive(Clone, Copy, Default, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq)]
 pub struct HitRect {
     pub x: f64,
     pub y: f64,
@@ -441,7 +441,13 @@ pub fn set_dock_hover(hovering: bool) {
 /// A barra mudou de tamanho (itens, magnificação): atualiza a área clicável e o vidro.
 #[tauri::command]
 pub fn set_hit_rect(app: AppHandle, rect: HitRect) {
-    *HIT.lock().unwrap() = rect;
+    {
+        let mut hit = HIT.lock().unwrap();
+        if *hit == rect {
+            return;
+        }
+        *hit = rect;
+    }
     if let Some(window) = app.get_webview_window(DOCK_LABEL) {
         let glass = crate::backdrop::Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
         crate::backdrop::set_frame(&window, glass, rect.radius);
