@@ -3,7 +3,8 @@
 
 use std::collections::HashMap;
 
-use super::{AppStream, OutputDevice};
+use super::{AppStream, AudioState, OutputDevice};
+use crate::platform::linux::desktop_entry::{self, DesktopEntry};
 use crate::util::run;
 
 /// Um item do `pactl list`: `Sink #47` ou `Sink Input #85`, com os campos (`Mute: no`) e as
@@ -83,7 +84,7 @@ pub fn set_output(id: &str) -> Result<(), String> {
 }
 
 /// Os sink inputs agrupados por app: o Firefox, por exemplo, abre um stream por aba.
-fn apps_from(inputs: &[Block], exe: impl Fn(&str) -> Option<String>) -> Vec<AppStream> {
+fn apps_from(inputs: &[Block], sinks: &[Block], entries: &[DesktopEntry], exe: impl Fn(&str) -> Option<String>) -> Vec<AppStream> {
     let mut apps: Vec<AppStream> = Vec::new();
     let mut keys: Vec<String> = Vec::new();
     for input in inputs {
@@ -91,7 +92,9 @@ fn apps_from(inputs: &[Block], exe: impl Fn(&str) -> Option<String>) -> Vec<AppS
         let Some(name) = props.get("application.name").or_else(|| props.get("application.process.binary")).or_else(|| props.get("media.name")) else {
             continue;
         };
-        let key = props.get("application.process.binary").unwrap_or(name).clone();
+        let key = props.get("application.id").or_else(|| props.get("application.process.binary")).unwrap_or(name).clone();
+        let output_id = input.fields.get("Sink").and_then(|index| index.parse::<u32>().ok())
+            .and_then(|index| sinks.iter().find(|sink| sink.index == index)).and_then(|sink| sink.fields.get("Name")).cloned();
         let level = input.fields.get("Volume").and_then(|v| parse_level(v)).unwrap_or(1.0);
         let muted = input.fields.get("Mute").is_some_and(|m| m == "yes");
         if let Some(i) = keys.iter().position(|k| *k == key) {
@@ -99,19 +102,63 @@ fn apps_from(inputs: &[Block], exe: impl Fn(&str) -> Option<String>) -> Vec<AppS
             app.id = format!("{},{}", app.id, input.index);
             app.level = app.level.max(level);
             app.muted &= muted;
+            if app.output_id != output_id { app.output_id = None; }
             continue;
         }
-        let icon = props.get("application.process.id").and_then(|pid| exe(pid));
+        let executable = props.get("application.process.id").and_then(|pid| exe(pid));
+        let icon = app_icon(props, entries, executable);
         keys.push(key);
-        apps.push(AppStream { id: input.index.to_string(), name: name.clone(), icon, level, muted });
+        apps.push(AppStream { id: input.index.to_string(), name: name.clone(), icon, level, muted, output_id });
     }
     apps
 }
 
-pub fn apps() -> Option<Vec<AppStream>> {
-    let inputs = run("pactl", &["list", "sink-inputs"])?;
+pub fn state() -> AudioState {
+    let sinks = run("pactl", &["list", "sinks"]).map(|s| parse_blocks(&s)).unwrap_or_default();
+    let inputs = run("pactl", &["list", "sink-inputs"]);
+    let entries = desktop_entry::all();
     let exe = |pid: &str| std::fs::read_link(format!("/proc/{pid}/exe")).ok().map(|p| p.display().to_string());
-    Some(apps_from(&parse_blocks(&inputs), exe))
+    let outputs = outputs_from(&sinks, default_sink().as_deref());
+    let can_route_apps = inputs.is_some() && !outputs.is_empty();
+    let apps = inputs.map(|input| apps_from(&parse_blocks(&input), &sinks, &entries, exe));
+    AudioState { outputs, apps, apps_need_permission: false, can_route_apps }
+}
+
+pub fn apps() -> Option<Vec<AppStream>> { state().apps }
+
+/// All validation completes before the first stream is moved.
+fn move_streams(id: &str, output: &str, available: &[OutputDevice], mut move_one: impl FnMut(u32, &str) -> Result<(), String>) -> Result<(), String> {
+    if !available.iter().any(|device| device.id == output) { return Err("Audio output is no longer available".into()); }
+    let indices: Vec<u32> = id.split(',').map(|part| part.parse::<u32>().map_err(|_| "Invalid audio stream".to_string())).collect::<Result<_, _>>()?;
+    for index in indices { move_one(index, output)?; }
+    Ok(())
+}
+
+pub fn set_app_output(id: &str, output: &str) -> Result<(), String> {
+    move_streams(id, output, &outputs()?, |index, sink| {
+        run("pactl", &["move-sink-input", &index.to_string(), sink]).ok_or_else(|| "Could not move the application audio stream".to_string()).map(drop)
+    })
+}
+
+fn app_icon(props: &HashMap<String, String>, entries: &[DesktopEntry], executable: Option<String>) -> Option<String> {
+    let desktop = props.get("application.desktop").or_else(|| props.get("application.id"));
+    if let Some(id) = desktop {
+        let id = id.strip_suffix(".desktop").unwrap_or(id);
+        if let Some(entry) = entries.iter().find(|entry| entry.id.strip_suffix(".desktop").unwrap_or(&entry.id).eq_ignore_ascii_case(id)) {
+            return Some(entry.id.clone());
+        }
+    }
+    let binary = props.get("application.process.binary").map(String::as_str).or(executable.as_deref());
+    let simple_name = |name: &str| std::path::Path::new(name).file_name().unwrap_or_default().to_string_lossy().trim_start_matches('.').trim_end_matches("-wrapped").to_lowercase();
+    if let Some(binary) = binary {
+        if let Some(entry) = entries.iter().find(|entry| entry.executable().is_some_and(|program| simple_name(&program) == simple_name(binary))) {
+            return Some(entry.id.clone());
+        }
+    }
+    if let Some(icon) = props.get("application.icon_name").filter(|name| !name.is_empty() && name.chars().all(|c| c.is_alphanumeric() || "_.-+".contains(c))) {
+        return Some(format!("theme:{icon}"));
+    }
+    executable
 }
 
 pub fn set_app_volume(id: &str, level: Option<f32>, muted: Option<bool>) -> Result<(), String> {
@@ -191,9 +238,38 @@ Sink Input #90
 
     #[test]
     fn groups_sink_inputs_by_app() {
-        let apps = apps_from(&parse_blocks(INPUTS), |pid| Some(format!("/proc/{pid}/exe")));
+        let apps = apps_from(&parse_blocks(INPUTS), &parse_blocks(SINKS), &[], |pid| Some(format!("/proc/{pid}/exe")));
         assert_eq!(apps.len(), 2);
-        assert_eq!(apps[0], AppStream { id: "85,86".into(), name: "Firefox".into(), icon: Some("/proc/1234/exe".into()), level: 1.0, muted: false });
-        assert_eq!(apps[1], AppStream { id: "90".into(), name: "Spotify".into(), icon: None, level: 0.3, muted: true });
+        assert_eq!(apps[0], AppStream { id: "85,86".into(), name: "Firefox".into(), icon: Some("/proc/1234/exe".into()), level: 1.0, muted: false, output_id: Some("alsa_output.pci-0000_00_1f.3.analog-stereo".into()) });
+        assert_eq!(apps[1], AppStream { id: "90".into(), name: "Spotify".into(), icon: None, level: 0.3, muted: true, output_id: Some("alsa_output.pci-0000_00_1f.3.analog-stereo".into()) });
     }
+    #[test]
+    fn route_moves_only_the_selected_group_and_validates_every_id_first() {
+        let outputs = vec![OutputDevice { id: "headphones".into(), name: "Headphones".into(), default: false }];
+        let mut moved = vec![];
+        move_streams("85,86", "headphones", &outputs, |id, sink| { moved.push((id, sink.to_string())); Ok(()) }).unwrap();
+        assert_eq!(moved, [(85, "headphones".into()), (86, "headphones".into())]);
+        assert!(move_streams("85,invalid", "headphones", &outputs, |_, _| panic!("must validate first")).is_err());
+        assert!(move_streams("85", "missing", &outputs, |_, _| panic!("must validate output")).is_err());
+        assert!(move_streams("85,86", "headphones", &outputs, |_, _| Err("device disappeared".into())).is_err());
+    }
+    #[test]
+    fn desktop_metadata_and_wrapped_binary_resolve_real_icons() {
+        let entry = DesktopEntry { id: "org.mozilla.firefox.desktop".into(), exec: Some("/usr/bin/firefox".into()), icon: Some("firefox".into()), ..Default::default() };
+        let entries = [entry];
+        let props = HashMap::from([("application.id".into(), "org.mozilla.firefox".into())]);
+        assert_eq!(app_icon(&props, &entries, Some("/nix/store/unknown-exe".into())).as_deref(), Some("org.mozilla.firefox.desktop"));
+        let props = HashMap::from([("application.process.binary".into(), ".firefox-wrapped".into())]);
+        assert_eq!(app_icon(&props, &entries, None).as_deref(), Some("org.mozilla.firefox.desktop"));
+        let props = HashMap::from([("application.icon_name".into(), "spotify".into())]);
+        assert_eq!(app_icon(&props, &[], None).as_deref(), Some("theme:spotify"));
+    }
+    #[test]
+    fn grouped_streams_with_different_outputs_report_mixed_routing() {
+        let mut inputs = parse_blocks(INPUTS);
+        inputs[1].fields.insert("Sink".into(), "52".into());
+        let apps = apps_from(&inputs, &parse_blocks(SINKS), &[], |_| None);
+        assert_eq!(apps[0].output_id, None);
+    }
+
 }

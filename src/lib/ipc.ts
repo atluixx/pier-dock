@@ -373,6 +373,7 @@ export interface AppStream {
   name: string;
   /** Chave para o `getIcon` (caminho do executável). */
   icon: string | null;
+  outputId: string | null;
   level: number;
   muted: boolean;
 }
@@ -383,6 +384,7 @@ export interface AudioState {
   apps: AppStream[] | null;
   /** No macOS, a Gravação de Áudio do Sistema foi negada e os volumes dos apps não valem. */
   appsNeedPermission: boolean;
+  canRouteApps: boolean;
 }
 
 export interface WifiNetwork {
@@ -455,6 +457,7 @@ export const ipc = {
   openShell: (kind: "start" | "quick-settings" | "notifications" | "system-monitor" | "calendar" | "bluetooth" | "sound" | "network" | "audio-capture") =>
     invoke<void>("open_shell", { kind }),
   audioStatus: () => invoke<AudioState>("audio_status"),
+  setAppOutput: (id: string, output: string) => invoke<void>("set_app_output", { id, output }),
   setOutputDevice: (id: string) => invoke<void>("set_output_device", { id }),
   setAppVolume: (id: string, patch: { level?: number; muted?: boolean }) => invoke<void>("set_app_volume", { id, ...patch }),
   wifiStatus: () => invoke<WifiState>("wifi_status"),

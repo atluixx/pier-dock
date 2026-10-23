@@ -202,6 +202,8 @@ export const pt = {
     showDesktop: "Mostrar área de trabalho",
   },
   sound: {
+    outputOf: (name: string) => `${name} saída`,
+    chooseOutput: "Escolher saída", routeFailed: "Não foi possível trocar a saída deste aplicativo.", routingUnavailable: "A troca de saída por aplicativo não está disponível nesta plataforma.",
     title: "Som",
     master: "Volume geral",
     muted: "Sem som",

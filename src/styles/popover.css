@@ -1521,3 +1521,8 @@
 .wifi-empty-action {
   margin-top: 12px;
 }
+
+.sound-app-output { width: 100%; max-width: 100%; padding: 4px 6px; border-radius: 6px; background: var(--surface-input); color: var(--text); font: inherit; font-size: 11px; }
+.sound-route-error, .sound-routing-note { font-size: 11px; color: var(--text-secondary); }
+.sound-route-error { color: var(--red); }
+.sound-routing-note { padding: 4px 12px; }

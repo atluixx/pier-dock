@@ -212,6 +212,7 @@ fn main() {
             audio::audio_status,
             audio::set_output_device,
             audio::set_app_volume,
+            audio::set_app_output,
             wifi::wifi_status,
             wifi::wifi_scan,
             wifi::wifi_set_enabled,

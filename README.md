@@ -113,6 +113,9 @@ macOS has some limitations compared to Windows:
 
 ### Linux
 
+The sound panel can route each playing app to its own output on PulseAudio/PipeWire and resolves app icons from desktop metadata. Other platforms keep their supported volume controls and show when per-app routing is unavailable.
+
+
 Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On KDE Plasma 6 the dock needs no extension: in an X11 session it lists windows, reserves screen space and draws glass with KWin's blur, and on Wayland it lists the windows of X11 apps (windows of native Wayland apps aren't listed yet). On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
 
 To keep the dock on another monitor, or have it follow the cursor, on GNOME you need version 4 of the extension. If **Settings** > **General** > **Show the dock on** offers to update it, select **Update the extension**, and then log out and log back in.

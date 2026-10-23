@@ -141,7 +141,7 @@ pub fn apps() -> Option<Vec<AppStream>> {
         if name.is_empty() {
             continue;
         }
-        apps.push(AppStream { id, name, icon: (!exe.is_empty()).then_some(exe), level, muted });
+        apps.push(AppStream { id, name, icon: (!exe.is_empty()).then_some(exe), level, muted, output_id: None });
     }
     Some(apps)
 }

@@ -202,6 +202,8 @@ export const en: Dict = {
     showDesktop: "Show desktop",
   },
   sound: {
+    outputOf: (name: string) => `${name} output`,
+    chooseOutput: "Choose output", routeFailed: "Could not switch this application’s output.", routingUnavailable: "Per-app output switching is unavailable on this platform.",
     title: "Sound",
     master: "Volume",
     muted: "Muted",
