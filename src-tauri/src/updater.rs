@@ -13,6 +13,9 @@ use tauri_plugin_updater::{Update, UpdaterExt};
 
 use crate::util::ErrStr;
 
+#[cfg(target_os = "linux")]
+mod relaunch;
+
 pub const MENU_ID: &str = "update";
 #[cfg(not(debug_assertions))]
 const CHECK_INTERVAL: Duration = Duration::from_secs(12 * 60 * 60);
@@ -26,6 +29,8 @@ pub struct UpdateInfo {
 
 #[derive(Default)]
 pub struct UpdateState {
+    #[cfg(target_os = "linux")]
+    relaunch: Mutex<Option<relaunch::Relaunch>>,
     pending: Mutex<Option<Update>>,
     tray_item: Mutex<Option<MenuItem<Wry>>>,
 }
@@ -88,6 +93,8 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
         Some(update) => update,
         None => app.updater().err_str()?.check().await.err_str()?.ok_or("Nenhuma atualização disponível")?,
     };
+    #[cfg(target_os = "linux")]
+    let relaunch = relaunch::prepare(&app.env()).err_str()?;
     let bytes = update.download(|_, _| {}, || {}).await.err_str()?;
     // No Windows o instalador encerra o processo sem passar pelo `RunEvent::Exit`: a barra nativa
     // precisa voltar antes.
@@ -98,7 +105,30 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
         }
         return Err(e.to_string());
     }
-    app.restart();
+    #[cfg(target_os = "linux")]
+    {
+        *app.state::<UpdateState>().relaunch.lock().unwrap() = Some(relaunch);
+        app.exit(0);
+    }
+    // Request the normal exit lifecycle without parking an async worker forever.
+    // Windows installers normally exit the process themselves and handle their own relaunch.
+    #[cfg(not(target_os = "linux"))]
+    app.request_restart();
+    Ok(())
+}
+
+/// Called after native taskbar restoration, at the end of the old instance's exit lifecycle.
+pub fn finish_restart(app: &AppHandle) {
+    #[cfg(target_os = "linux")]
+    if let Some(relaunch) = app.state::<UpdateState>().relaunch.lock().unwrap().take() {
+        // An exec does not close the D-Bus connection until it succeeds, so release the name first.
+        tauri_plugin_single_instance::destroy(app);
+        app.cleanup_before_exit();
+        log::info!("restarting the updated Linux application");
+        log::error!("could not relaunch the updated Linux application: {}", relaunch.exec());
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = app;
 }
 
 /// No Linux só o AppImage: no `.deb` o plugin instala com `pkexec`, que pediria a senha no boot.
