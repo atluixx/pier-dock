@@ -175,6 +175,8 @@ export const en: Dict = {
       codex: "Codex CLI",
       opencode: "opencode",
       gemini: "Gemini CLI",
+      antigravity: "Antigravity",
+      t3: "T3 Code",
     },
   },
   system: {
@@ -202,7 +204,10 @@ export const en: Dict = {
     battery: (percent, charging) => `Battery ${percent}%${charging ? " (charging)" : ""}`,
     showDesktop: "Show desktop",
   },
+  power: { title: "Power mode", modes: { "power-saver": "Power save", balanced: "Balanced", performance: "Performance" }, unavailable: "Power mode switching is unavailable on this system.", failed: "Could not change the power mode. Try again." },
   sound: {
+    outputOf: (name: string) => `${name} output`,
+    chooseOutput: "Choose output", routeFailed: "Could not switch this application’s output.", routingUnavailable: "Per-app output switching is unavailable on this platform.",
     title: "Sound",
     master: "Volume",
     muted: "Muted",
@@ -307,9 +312,11 @@ export const en: Dict = {
     progress: "Track progress",
     nowPlayingTile: (label) => `Now playing: ${label}`,
   },
+  dateCalendar: { previous: "Previous month", next: "Next month", today: "Today" },
   popover: {
     unknown: "Unknown panel.",
     labels: {
+      clock: "Calendar",
       media: "Now playing",
       "github-mine": "Your pull requests",
       "github-review": "Pending reviews",
@@ -325,6 +332,7 @@ export const en: Dict = {
       launcher: "App launcher",
       volume: "Sound",
       network: "Wi-Fi",
+      battery: "Power mode",
     },
   },
   dock: {
@@ -393,6 +401,8 @@ export const en: Dict = {
     unpin: "Unpin from launcher",
   },
   appearance: {
+    reducedEffects: "Reduce visual effects",
+    reducedEffectsHint: "Use a solid background and remove dock and icon shadows. Turning this off restores your material choice.",
     material: "Material",
     glass: "Liquid glass",
     solid: "Solid",
@@ -533,7 +543,7 @@ export const en: Dict = {
       `Google Calendar: Calendar settings → Secret address in iCal format. Outlook: Calendar → Shared calendars → Publish a calendar (ICS link). The address is stored ${keychain}.`,
     agentIntegrationLabel: "AI integrations",
     agentIntegrationHint:
-      "Codex sessions, including T3 Code, are detected automatically. Other CLIs use hooks or a plugin. Pier only uses session metadata and status.",
+      "T3 Code sessions from all providers, including Antigravity, are detected automatically. Standalone Codex sessions are also automatic; other CLIs use hooks or a plugin. Pier only uses session metadata and status.",
     agentInstalled: {
       claude: "Hooks installed in ~/.claude/settings.json.",
       codex: "Automatic session detection is active. Optional permission hooks are installed; run /hooks in Codex to trust them.",

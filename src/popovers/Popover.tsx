@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { ipc } from "../lib/ipc";
 import { BluetoothPanel } from "./Bluetooth";
+import { MonthCalendar } from "./MonthCalendar";
 import { Calendar } from "./Calendar";
 import { AiUsagePanel } from "./AiUsagePanel";
 import { AgentSessionsPanel } from "./AgentSessionsPanel";
@@ -8,6 +9,7 @@ import { Commits } from "./Commits";
 import { Contributions } from "./Contributions";
 import { Launcher } from "./Launcher";
 import { NowPlaying } from "./NowPlaying";
+import { PowerPanel } from "./Power";
 import { Pomodoro } from "./Pomodoro";
 import { PullRequests } from "./PullRequests";
 import { SoundPanel } from "./Sound";
@@ -19,6 +21,8 @@ import { useT } from "../i18n";
 function Content({ kind }: { kind: string }) {
   const t = useT();
   switch (kind) {
+    case "clock":
+      return <MonthCalendar />;
     case "media":
       return <NowPlaying />;
     case "github-mine":
@@ -33,6 +37,8 @@ function Content({ kind }: { kind: string }) {
       return <Weather />;
     case "pomodoro":
       return <Pomodoro />;
+    case "battery":
+      return <PowerPanel />;
     case "system-usage":
       return <SystemUsage />;
     case "calendar":

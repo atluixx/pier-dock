@@ -98,7 +98,6 @@ export function BluetoothPanel() {
       </>
     );
 
-  const status = !bt?.available ? "" : !bt.powered ? t.offShort : connected.length ? t.connectedCount(connected.length) : t.on;
   return (
     <>
       <div className="popover-header">
@@ -106,7 +105,7 @@ export function BluetoothPanel() {
         {bt?.available && bt.canToggle && <Switch checked={bt.powered} label="Bluetooth" onChange={setPowered} />}
       </div>
       <div className="bt-body">{body}</div>
-      <ActionFooter context={status} actions={[{ label: t.settings, keys: "↵", onClick: () => ipc.openShell("bluetooth") }]} />
+      <ActionFooter context="" actions={[{ label: t.settings, keys: "↵", onClick: () => ipc.openShell("bluetooth") }]} />
     </>
   );
 }

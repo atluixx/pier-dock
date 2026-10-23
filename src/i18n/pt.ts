@@ -173,6 +173,8 @@ export const pt = {
       codex: "Codex CLI",
       opencode: "opencode",
       gemini: "Gemini CLI",
+      antigravity: "Antigravity",
+      t3: "T3 Code",
     },
   },
   system: {
@@ -202,7 +204,10 @@ export const pt = {
     battery: (percent: number, charging: boolean) => `Bateria ${percent}%${charging ? " (carregando)" : ""}`,
     showDesktop: "Mostrar área de trabalho",
   },
+  power: { title: "Modo de energia", modes: { "power-saver": "Economia de energia", balanced: "Equilibrado", performance: "Desempenho" }, unavailable: "A troca de modo de energia não está disponível neste sistema.", failed: "Não foi possível trocar o modo de energia. Tente novamente." },
   sound: {
+    outputOf: (name: string) => `${name} saída`,
+    chooseOutput: "Escolher saída", routeFailed: "Não foi possível trocar a saída deste aplicativo.", routingUnavailable: "A troca de saída por aplicativo não está disponível nesta plataforma.",
     title: "Som",
     master: "Volume geral",
     muted: "Sem som",
@@ -307,9 +312,11 @@ export const pt = {
     progress: "Progresso da faixa",
     nowPlayingTile: (label: string) => `Tocando agora: ${label}`,
   },
+  dateCalendar: { previous: "Mês anterior", next: "Próximo mês", today: "Hoje" },
   popover: {
     unknown: "Painel desconhecido.",
     labels: {
+      clock: "Calendário",
       media: "Tocando agora",
       "github-mine": "Seus pull requests",
       "github-review": "Revisões pendentes",
@@ -325,6 +332,7 @@ export const pt = {
       launcher: "Lançador de apps",
       volume: "Som",
       network: "Wi-Fi",
+      battery: "Modo de energia",
     } as Record<string, string>,
   },
   dock: {
@@ -393,6 +401,8 @@ export const pt = {
     unpin: "Desafixar do lançador",
   },
   appearance: {
+    reducedEffects: "Reduzir efeitos visuais",
+    reducedEffectsHint: "Usa um fundo sólido e remove as sombras da dock e dos ícones. Ao desativar, o material escolhido é restaurado.",
     material: "Material",
     glass: "Vidro líquido",
     solid: "Sólido",
@@ -533,7 +543,7 @@ export const pt = {
       `Google Agenda: Configurações da agenda → Endereço secreto no formato iCal. Outlook: Calendário → Calendários compartilhados → Publicar um calendário (link ICS). O endereço fica guardado ${keychain}.`,
     agentIntegrationLabel: "Integrações das IAs",
     agentIntegrationHint:
-      "As sessões do Codex, incluindo o T3 Code, são detectadas automaticamente. Os outros CLIs usam hooks ou um plugin. O Pier só usa metadados e status das sessões.",
+      "As sessões do T3 Code de todos os provedores, incluindo o Antigravity, são detectadas automaticamente. As sessões avulsas do Codex também são automáticas; os outros CLIs usam hooks ou um plugin. O Pier só usa metadados e status das sessões.",
     agentInstalled: {
       claude: "Hooks instalados em ~/.claude/settings.json.",
       codex: "A detecção automática de sessões está ativa. Hooks opcionais de permissão estão instalados; rode /hooks no Codex para confiar neles.",
