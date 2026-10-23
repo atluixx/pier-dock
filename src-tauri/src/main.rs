@@ -265,7 +265,7 @@ fn main() {
             let (hide_taskbar, auto_hide, material, dock_position, dock_monitor) = {
                 let config = app.state::<config::ConfigState>();
                 let config = config.0.lock().unwrap();
-                (config.hide_taskbar, config.auto_hide.clone(), config.material.clone(), config.dock_position.clone(), config.dock_monitor.clone())
+                (config.hide_taskbar, config.auto_hide.clone(), config.effective_material().to_owned(), config.dock_position.clone(), config.dock_monitor.clone())
             };
             dock_window::init_auto_hide(&auto_hide);
             dock_window::init_position(&dock_position);

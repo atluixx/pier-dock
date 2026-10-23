@@ -59,6 +59,8 @@ export interface Config {
   pinnedApps: AppEntry[];
   widgets: WidgetConfig[];
   material: "glass" | "solid";
+  /** Disable native blur and decorative dock/icon shadows without changing the chosen material. */
+  reducedEffects: boolean;
   /** Opacidade da tinta sobre o vidro da dock (0 a 1). */
   glassOpacity: number;
   accent: Accent;
@@ -286,7 +288,7 @@ export interface AiProvider {
 }
 
 /** As CLIs cujas sessões o Pier acompanha. */
-export type AgentProviderId = "claude" | "codex" | "opencode" | "gemini";
+export type AgentProviderId = "claude" | "codex" | "opencode" | "gemini" | "antigravity" | "t3";
 
 /** Estado de uma sessão, visto pelos hooks/plugin instalados pela integração do provider. */
 export type AgentSessionState = "running" | "permission" | "error" | "done";

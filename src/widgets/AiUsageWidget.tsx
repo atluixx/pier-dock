@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { Sparkles } from "../ui/DockIcons";
 import type { AiUsage } from "../lib/ipc";
 import { limitLevel, providerName, tightest } from "../lib/aiUsage";
 import { formatPercent, formatResetIn, formatTokens } from "../lib/format";
@@ -31,9 +31,9 @@ export function AiUsageWidget({ data, wide }: { data: AiUsage | null; wide: bool
   if (!wide) {
     return (
       <Tile kind="ai-usage" label={parts.join(" · ")} className={className}>
-        <Ring size={40} radius={16.5} stroke={2.5} progress={progress} />
+        <Ring size={40} radius={18.5} stroke={3} progress={progress} />
         <span className="ai-mark">
-          <Sparkles size={9} strokeWidth={2.6} aria-hidden />
+          <Sparkles size={10} strokeWidth={2} aria-hidden />
           <span className="ai-percent">
             {limit.percent ?? "--"}
             {limit.percent !== null && <small>%</small>}
@@ -46,8 +46,8 @@ export function AiUsageWidget({ data, wide }: { data: AiUsage | null; wide: bool
   return (
     <Tile kind="ai-usage" label={parts.join(" · ")} className={className}>
       <span className="ai-ring">
-        <Ring size={34} radius={14} stroke={2.5} progress={progress} />
-        <Sparkles size={12} strokeWidth={2.4} aria-hidden />
+        <Ring size={34} radius={15.75} stroke={2.5} progress={progress} />
+        <Sparkles size={13} strokeWidth={2} aria-hidden />
       </span>
       <span className="ai-text">
         <span className="ai-value">{formatPercent(limit.percent)}</span>

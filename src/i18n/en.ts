@@ -175,6 +175,8 @@ export const en: Dict = {
       codex: "Codex CLI",
       opencode: "opencode",
       gemini: "Gemini CLI",
+      antigravity: "Antigravity",
+      t3: "T3 Code",
     },
   },
   system: {
@@ -394,6 +396,8 @@ export const en: Dict = {
     unpin: "Unpin from launcher",
   },
   appearance: {
+    reducedEffects: "Reduce visual effects",
+    reducedEffectsHint: "Use a solid background and remove dock and icon shadows. Turning this off restores your material choice.",
     material: "Material",
     glass: "Liquid glass",
     solid: "Solid",
@@ -534,7 +538,7 @@ export const en: Dict = {
       `Google Calendar: Calendar settings → Secret address in iCal format. Outlook: Calendar → Shared calendars → Publish a calendar (ICS link). The address is stored ${keychain}.`,
     agentIntegrationLabel: "AI integrations",
     agentIntegrationHint:
-      "Codex sessions, including T3 Code, are detected automatically. Other CLIs use hooks or a plugin. Pier only uses session metadata and status.",
+      "T3 Code sessions from all providers, including Antigravity, are detected automatically. Standalone Codex sessions are also automatic; other CLIs use hooks or a plugin. Pier only uses session metadata and status.",
     agentInstalled: {
       claude: "Hooks installed in ~/.claude/settings.json.",
       codex: "Automatic session detection is active. Optional permission hooks are installed; run /hooks in Codex to trust them.",

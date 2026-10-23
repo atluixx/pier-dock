@@ -22,13 +22,13 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 
 ## Features
 
-- **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, dividers, and a badge with the count shown in the window title, like "(3) WhatsApp".
+- **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, dividers, and a badge with the count shown in the window title, like "(3) WhatsApp". Magnification scales the artwork while preserving spacing and clickable areas, and follows the system’s reduced-motion preference.
 - **Customizable bar:** Put the dock on the bottom, top, left, or right edge of the screen (it stands vertically on the sides), fit it to the icons or stretch it along the edge, and pick the icon size, panel height, material, and accent color.
 - **Media player:** Shows what's playing in Spotify, YouTube Music, and other players, with playback controls.
 - **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
 - **System widgets:** Network (with the Wi-Fi networks nearby), volume (with the output device and per-app volume), Bluetooth (with paired devices, connecting and disconnecting them on macOS and Linux), battery, clock, show desktop (minimizes every window with one click), system usage (CPU and memory with the last minute of history), and, on Windows, the tray arrow that opens the hidden icons. The hidden-icons popup closes when you click outside it, press Escape, or click the tray arrow again.
 - **Productivity widgets:** Weather, a Pomodoro timer, your next calendar event with a join button for video calls, and your command-line AI usage.
-- **AI agents:** The AI Agents widget shows sessions from Claude Code, Codex, opencode, and Gemini CLI as running, asking for permission, with an error, or done, and a click jumps to the terminal or IDE that started one. Clawd, Claude's mascot, can walk along the dock while a session runs. Codex CLI and app-server sessions (including T3 Code) are detected automatically from local lifecycle events, without hooks or a restart. Optional Codex hooks add permission status; trust them with `/hooks`. Enable the other CLIs' integrations in the widget's options; opencode needs a restart to load its plugin.
+- **AI agents:** The AI Agents widget shows sessions from Claude Code, Codex, opencode, and Gemini CLI as running, asking for permission, with an error, or done, and a click jumps to the terminal or IDE that started one. Clawd, Claude's mascot, can walk along the dock while a session runs. T3 Code sessions from all providers, including Antigravity (agy), are detected automatically from local run metadata while T3 is open. Codex CLI and app-server sessions are also detected from local lifecycle events, without hooks. T3's state database is opened read-only; messages and credentials are never queried. For a custom T3 data location, set `PIER_T3_STATE_FILE` to its `statev2.sqlite` file. Optional Codex hooks add permission status; trust them with `/hooks`. Enable the other CLIs' integrations in the widget's options; opencode needs a restart to load its plugin.
 - **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
 - **Automatic updates:** Pier checks for new versions and installs them in one click.
 - **English and Portuguese:** The interface follows your system language. To change it, go to **Settings** > **General** > **Language**.
@@ -58,6 +58,8 @@ Pier checks for updates shortly after it starts and every 12 hours. When a new v
 Automatic updates work with the Windows installer, the macOS app, and the AppImage. If you installed the `.deb` package, download and install each new version from the releases page.
 
 ## Usage
+
+Hover highlights and labels respond quickly and follow the system’s reduced-motion preference. Window previews still wait briefly to avoid opening while you move across apps.
 
 - **Click** an app to open or focus it. Click the active app to minimize it. If the app has several windows, clicking cycles through them.
 - **Shift+click** an app to open a new instance.
@@ -133,6 +135,10 @@ Pier stores its settings in `config.json`:
 If you used Pier when it was called WinDock, Pier imports your settings, GitHub token, and launch-at-login setting the first time it runs. On GNOME, reinstall the extension from Pier's settings.
 
 ## Troubleshooting
+
+### Hover feels slow
+
+If hover animation feels sluggish, try **Settings > Appearance > Reduce visual effects**. It disables blur and decorative dock/icon shadows while keeping your widgets and animations. Turning it off restores your chosen material.
 
 ### The taskbar or Dock doesn't come back
 
