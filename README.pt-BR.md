@@ -115,7 +115,6 @@ O macOS tem algumas limitações em relação ao Windows:
 
 No PulseAudio/PipeWire, o painel de som permite escolher uma saída para cada aplicativo e usa os ícones dos arquivos desktop. Nas outras plataformas, os controles de volume continuam disponíveis e a ausência de suporte à troca de saída é indicada.
 
-
 O Pier tem suporte completo ao GNOME 45 a 49, em Wayland e X11, pela extensão do GNOME Shell. No KDE Plasma 6 a dock não precisa de extensão: numa sessão X11 ela lista as janelas, reserva o espaço na tela e desenha o vidro com o blur do KWin, e no Wayland lista as janelas dos apps X11 (as janelas dos apps nativos do Wayland ainda não aparecem). Em outros ambientes de desktop, o Pier só lista janelas em sessões X11 e não consegue esconder o painel nativo. Apps fixados e widgets funcionam em todos.
 
 Para deixar a dock em outro monitor, ou fazer ela seguir o cursor, o GNOME precisa da versão 4 da extensão. Se **Configurações** > **Geral** > **Mostrar a dock em** oferecer a atualização, clique em **Atualizar a extensão** e depois encerre a sessão e entre de novo.
