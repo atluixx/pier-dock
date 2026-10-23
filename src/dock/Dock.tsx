@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMotionValue } from "framer-motion";
 import { LayoutGrid, Search } from "lucide-react";
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
@@ -12,9 +12,7 @@ import { labels, os, widgetSupported } from "../lib/platform";
 import { dict } from "../i18n";
 import { useConfig } from "../store/config";
 import { useWindows } from "../hooks/useWindows";
-import { useMedia } from "../hooks/useMedia";
-import { useGithub } from "../hooks/useGithub";
-import { useBluetooth, useSystemStatus } from "../hooks/useSystem";
+import { reuseDockApps } from "./appIdentity";
 import { buildDockApps, type DockApp } from "./apps";
 import { PREVIEW_GAP, barRect, dockMetrics, isVertical, previewSpace } from "./layout";
 import { WindowPreview } from "./WindowPreview";
@@ -24,11 +22,8 @@ import { resetDockHover } from "./hoverReset";
 import { AppIcon } from "./AppIcon";
 import { SortableItem } from "./SortableItem";
 import { addDivider, applyOrder, isDivider, LAUNCHER_KEY, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
-import { WidgetView, type WidgetData } from "../widgets/WidgetView";
+import { DockWidget, DockWidgetsProvider } from "../widgets/DockWidgets";
 import { togglePanel } from "../widgets/Tile";
-import { useWeather } from "../hooks/useWeather";
-import { useCalendar } from "../hooks/useCalendar";
-import { useAiUsage } from "../hooks/useAiUsage";
 
 /** Espera antes de fechar a faixa quando o cursor sai da dock (ver o efeito do `mouseleave`). */
 const PREVIEW_CLOSE_DELAY = 200;
@@ -94,26 +89,20 @@ function clickApp(app: DockApp) {
   else ipc.launchApp(app.launchTarget).catch(console.error);
 }
 
-const GITHUB_WIDGETS = ["github-review", "github-mine", "github-commits", "github-contrib"];
-
 export function Dock({ config }: { config: Config }) {
+  return <DockWidgetsProvider config={config}><DockLayout config={config} /></DockWidgetsProvider>;
+}
+
+const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
   const update = useConfig((s) => s.update);
   const snapshot = useWindows();
-  const media = useMedia();
-  const usesGithub = config.widgets.some((w) => w.enabled && GITHUB_WIDGETS.includes(w.kind));
-  const github = useGithub(usesGithub ? config.githubPollMinutes : undefined);
-  const system = useSystemStatus();
-  const enabled = (kind: string) => config.widgets.some((w) => w.enabled && w.kind === kind);
-  const place = config.weatherLocation;
-  const weather = useWeather(enabled("weather"), place ? `${place.latitude},${place.longitude}` : undefined);
-  const calendar = useCalendar(enabled("calendar"));
-  const [bluetooth] = useBluetooth(enabled("bluetooth"));
-  const ai = useAiUsage(enabled("ai-usage") ? config.aiPollMinutes : undefined, config.aiProvider);
   const position = config.dockPosition;
   const vertical = isVertical(position);
   const full = config.dockWidth === "full";
   // O cursor na direção da barra: x nas bordas de cima e de baixo, y nas laterais.
   const mouse = useMotionValue(Infinity);
+  const magnifyContext = useMemo(() => ({ mouse, base: config.iconSize, scale: Math.max(1, config.magnification), position }),
+    [mouse, config.iconSize, config.magnification, position]);
   const barRef = useRef<HTMLDivElement>(null);
   // Janela em prévia: guarda o app pelo `key`, porque a lista de apps é remontada a cada snapshot.
   const [preview, setPreview] = useState<{ key: string; x: number; y: number } | null>(null);
@@ -136,8 +125,13 @@ export function Dock({ config }: { config: Config }) {
     previewSpace(position, !!preview),
     position,
   );
+  const previousApps = useRef<DockApp[]>([]);
   const apps = useMemo(
-    () => buildDockApps(config.pinnedApps, snapshot.windows, config.showRunningUnpinned, installed),
+    () => {
+      const next = buildDockApps(config.pinnedApps, snapshot.windows, config.showRunningUnpinned, installed);
+      previousApps.current = reuseDockApps(previousApps.current, next);
+      return previousApps.current;
+    },
     [config.pinnedApps, snapshot.windows, config.showRunningUnpinned, installed],
   );
   const appsRef = useRef(apps);
@@ -276,8 +270,9 @@ export function Dock({ config }: { config: Config }) {
     return () => subs.forEach((s) => s.then((unlisten) => unlisten()));
   }, [mouse, update]);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const order = resolveOrder(config);
+  const sensorOptions = useMemo(() => ({ activationConstraint: { distance: 8 } }), []);
+  const sensors = useSensors(useSensor(PointerSensor, sensorOptions));
+  const order = useMemo(() => resolveOrder(config), [config]);
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
@@ -295,28 +290,28 @@ export function Dock({ config }: { config: Config }) {
   // A faixa fecha quando o cursor sai dela e do ícone do app dela (para outro ícone, por exemplo).
   // A espera dá tempo de cruzar o vão entre o ícone e a faixa sem ela sumir no caminho.
   const previewLeaveTimer = useRef<number | null>(null);
-  const keepPreview = () => {
+  const keepPreview = useCallback(() => {
     if (previewLeaveTimer.current !== null) window.clearTimeout(previewLeaveTimer.current);
     previewLeaveTimer.current = null;
-  };
-  const releasePreview = () => {
+  }, []);
+  const releasePreview = useCallback(() => {
     keepPreview();
     previewLeaveTimer.current = window.setTimeout(() => {
       previewLeaveTimer.current = null;
       setPreview(null);
     }, PREVIEW_CLOSE_DELAY);
-  };
-  useEffect(() => keepPreview, []);
-  const onPreviewHover = (inside: boolean) => (inside ? keepPreview() : releasePreview());
-  const onIconHover = (app: DockApp, inside: boolean) => {
+  }, [keepPreview]);
+  useEffect(() => keepPreview, [keepPreview]);
+  const onPreviewHover = useCallback((inside: boolean) => (inside ? keepPreview() : releasePreview()), [keepPreview, releasePreview]);
+  const onIconHover = useCallback((app: DockApp, inside: boolean) => {
     if (app.key === preview?.key) onPreviewHover(inside);
-  };
+  }, [preview?.key, onPreviewHover]);
 
   // Só abre a faixa com mais de uma janela: com uma só o clique no ícone já resolve.
-  const showPreview = (app: DockApp, anchor: { x: number; y: number }) => {
+  const showPreview = useCallback((app: DockApp, anchor: { x: number; y: number }) => {
     keepPreview();
     setPreview(app.windows.length > 1 ? { key: app.key, ...anchor } : null);
-  };
+  }, [keepPreview]);
 
   const onBackgroundMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -337,20 +332,10 @@ export function Dock({ config }: { config: Config }) {
     await menu.popup();
   };
 
-  const widgetData: WidgetData = {
-    media,
-    github,
-    system,
-    bluetooth,
-    weather,
-    weatherConfigured: !!config.weatherLocation,
-    calendar,
-    ai,
-  };
   // Numa barra em pé os widgets usam o formato compacto: os largos são horizontais. O mapa de
   // contribuições não tem formato que caiba na espessura, então fica só com o total do ano.
   const renderWidget = (w: WidgetConfig) => (
-    <WidgetView kind={w.kind} size={vertical ? (w.kind === "github-contrib" ? "count" : "small") : w.size} data={widgetData} />
+    <DockWidget kind={w.kind} size={vertical ? (w.kind === "github-contrib" ? "count" : "small") : w.size} />
   );
 
   const pinnedApps = new Map(apps.filter((a) => a.pinned).map((a) => [a.key, a]));
@@ -434,7 +419,7 @@ export function Dock({ config }: { config: Config }) {
         onPointerDown={onPointerDown}
         onContextMenu={onBackgroundMenu}
       >
-        <MagnifyCtx.Provider value={{ mouse, base: config.iconSize, scale: Math.max(1, config.magnification), position }}>
+        <MagnifyCtx.Provider value={magnifyContext}>
           <DndContext sensors={sensors} onDragStart={() => mouse.set(Infinity)} onDragEnd={onDragEnd}>
             <SortableContext items={order} strategy={vertical ? verticalListSortingStrategy : horizontalListSortingStrategy}>
               {order.map(renderItem)}
@@ -460,4 +445,4 @@ export function Dock({ config }: { config: Config }) {
     </div>
     </MagnifyGeometry>
   );
-}
+});
