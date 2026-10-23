@@ -55,6 +55,10 @@ cargo test -- --ignored --nocapture    # smoke tests against the real system
 
 The smoke tests exercise real windows, apps, media sessions, and the GitHub API on the machine that runs them.
 
+### Widget interaction tests
+
+Run `npx playwright install chromium` once, then `npm run test:ui`. These tests click the real widget UI with fixture IPC responses; they never change the host’s hardware settings. Set `PIER_BROWSER_EXECUTABLE` to use an existing Chromium executable. Native device and OS-settings verification is still required on supported desktops.
+
 ### Icons
 
 All platform icons come from `app-icon.svg` and `src-tauri/icons/source/`. To regenerate them, run `./scripts/icons.sh` on macOS (it requires `iconutil`).

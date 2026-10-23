@@ -438,5 +438,16 @@ if (!insideTauri) {
     }`;
   document.head.append(style);
   mockWindows(view === "panel" ? "panel-0" : view);
-  mockIPC((cmd, args) => handlers[cmd]?.((args ?? {}) as Record<string, unknown>) ?? null, { shouldMockEvents: true });
+  // Optional browser-test fixtures; this module is excluded from production builds.
+  const fixtures = window as unknown as {
+    __PIER_TEST_CALLS__?: { command: string; args: unknown }[];
+    __PIER_TEST_RESPONSES__?: Record<string, unknown>;
+    __PIER_TEST_ERRORS__?: Record<string, string>;
+  };
+  mockIPC((cmd, args) => {
+    fixtures.__PIER_TEST_CALLS__?.push({ command: cmd, args: args ?? {} });
+    if (fixtures.__PIER_TEST_ERRORS__?.[cmd]) return Promise.reject(fixtures.__PIER_TEST_ERRORS__[cmd]);
+    if (fixtures.__PIER_TEST_RESPONSES__ && Object.prototype.hasOwnProperty.call(fixtures.__PIER_TEST_RESPONSES__, cmd)) return fixtures.__PIER_TEST_RESPONSES__[cmd];
+    return handlers[cmd]?.((args ?? {}) as Record<string, unknown>) ?? null;
+  }, { shouldMockEvents: true });
 }
