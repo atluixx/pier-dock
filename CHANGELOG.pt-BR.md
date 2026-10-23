@@ -2,6 +2,13 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.16.0
+
+### Correções
+- **Atualizações:** no Linux, **Instalar e reiniciar** abre o Pier de novo depois de instalar a nova versão, em vez de só fechá-lo. No NixOS, uma atualização em AppImage reinicia pelo `appimage-run`.
+- **Som:** o seletor de saída de cada app abre dentro do painel de som, então escolher um dispositivo não fecha mais o seletor nem o painel inteiro. Também funciona pelo teclado (setas, Enter e Esc).
+- **Dock:** clicar em um app que não está fixado não embaralha mais os apps abertos. Eles ficam onde apareceram, e os apps abertos depois entram no fim.
+
 ## 0.15.0
 
 ### Contadores de notificação no Windows
