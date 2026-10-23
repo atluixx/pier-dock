@@ -14,6 +14,7 @@ import { useConfig } from "../store/config";
 import { useWindows } from "../hooks/useWindows";
 import { reuseDockApps } from "./appIdentity";
 import { buildDockApps, type DockApp } from "./apps";
+import { stableOpenApps } from "./runningOrder";
 import { PREVIEW_GAP, barRect, dockMetrics, isVertical, previewSpace } from "./layout";
 import { WindowPreview } from "./WindowPreview";
 import { ClawdPet } from "./ClawdPet";
@@ -129,8 +130,9 @@ const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
   const apps = useMemo(
     () => {
       const next = buildDockApps(config.pinnedApps, snapshot.windows, config.showRunningUnpinned, installed);
-      previousApps.current = reuseDockApps(previousApps.current, next);
-      return previousApps.current;
+      const ordered = stableOpenApps(previousApps.current, reuseDockApps(previousApps.current, next));
+      previousApps.current = ordered;
+      return ordered;
     },
     [config.pinnedApps, snapshot.windows, config.showRunningUnpinned, installed],
   );
