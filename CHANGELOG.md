@@ -2,6 +2,14 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.15.0
+
+### Notification badges on Windows
+On Windows, the red badge on a dock icon now also counts the app's notifications in the Notification Center, and the badge that Store apps like WhatsApp put on the taskbar. It works for apps that don't show a count in the window title, such as Discord and Steam. When both are available, the dock shows the larger number.
+
+### Fixes
+- **Windows:** Store apps that don't set their ID on the window, like WhatsApp, show their real icon and are opened the same way as from the Start menu.
+
 ## 0.14.0
 
 ### Power modes and per-app audio

@@ -2,6 +2,14 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.15.0
+
+### Contadores de notificação no Windows
+No Windows, o contador vermelho no ícone do dock agora também conta as notificações do app na Central de Notificações, e o contador que apps da Store como o WhatsApp põem na barra de tarefas. Funciona para apps que não mostram a contagem no título da janela, como Discord e Steam. Quando os dois existem, o dock mostra o maior número.
+
+### Correções
+- **Windows:** apps da Store que não informam o ID na janela, como o WhatsApp, mostram o ícone real e são abertos do mesmo jeito que pelo Menu Iniciar.
+
 ## 0.14.0
 
 ### Modos de energia e áudio por app
