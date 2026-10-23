@@ -11,7 +11,8 @@ use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORI
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON};
 use windows::Win32::UI::Shell::{
-    SHAppBarMessage, ABE_BOTTOM, ABE_LEFT, ABE_RIGHT, ABE_TOP, ABM_NEW, ABM_QUERYPOS, ABM_REMOVE, ABM_SETPOS, APPBARDATA,
+    SHAppBarMessage, SHQueryUserNotificationState, ABE_BOTTOM, ABE_LEFT, ABE_RIGHT, ABE_TOP, ABM_NEW, ABM_QUERYPOS, ABM_REMOVE,
+    ABM_SETPOS, APPBARDATA, QUNS_BUSY, QUNS_PRESENTATION_MODE, QUNS_RUNNING_D3D_FULL_SCREEN,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     GetAncestor, GetClassNameW, GetCursorPos, GetForegroundWindow, GetWindow, GetWindowLongPtrW, GetWindowRect, GetWindowThreadProcessId,
@@ -21,7 +22,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 
 use super::{
     at_dock_edge, auto_hide, clickable_area, hit_rect, layout, place_window, position, set_visible, want_visible, Band, AUTO_HIDE_NEVER, BOTTOM,
-    DOCK_LABEL, HOVER_GRACE_MS, LEFT, RIGHT, TOP,
+    DOCK_LABEL, FULLSCREEN_ACTIVE, HOVER_GRACE_MS, LEFT, RIGHT, TOP,
 };
 use crate::util::wide_to_string;
 
@@ -29,7 +30,6 @@ static DOCK_HWND: AtomicIsize = AtomicIsize::new(0);
 static APPBAR_REGISTERED: AtomicBool = AtomicBool::new(false);
 /// Monitor em que a AppBar foi registrada.
 static APPBAR_MONITOR: Mutex<Option<Band>> = Mutex::new(None);
-static HIDDEN_FOR_FULLSCREEN: AtomicBool = AtomicBool::new(false);
 
 fn dock_hwnd() -> HWND {
     HWND(DOCK_HWND.load(Ordering::SeqCst) as *mut _)
@@ -294,12 +294,24 @@ fn is_shell_window(hwnd: HWND) -> bool {
     matches!(class.as_str(), "Progman" | "WorkerW" | "Shell_TrayWnd" | "Shell_SecondaryTrayWnd")
 }
 
+/// Tolerância (px) para janelas que estendem além do monitor (o Windows 10 faz isso nas bordas).
+const FULLSCREEN_SLACK: i32 = 2;
+
+/// O shell considera que um app em tela cheia (ou apresentação) está rodando. É global, não por
+/// monitor: só vale junto de uma janela em primeiro plano no monitor da dock.
+fn shell_reports_fullscreen() -> bool {
+    unsafe {
+        SHQueryUserNotificationState()
+            .is_ok_and(|state| state == QUNS_BUSY || state == QUNS_RUNNING_D3D_FULL_SCREEN || state == QUNS_PRESENTATION_MODE)
+    }
+}
+
 /// Esconde a dock enquanto um app ocupa a tela inteira do monitor dela (vídeos, jogos).
 fn start_fullscreen_thread(app: AppHandle) {
     std::thread::spawn(move || {
         let own_pid = std::process::id();
         loop {
-            std::thread::sleep(Duration::from_millis(500));
+            std::thread::sleep(Duration::from_millis(250));
             let Some(window) = app.get_webview_window(DOCK_LABEL) else { continue };
             let fullscreen = unsafe {
                 let fg = GetForegroundWindow();
@@ -312,24 +324,27 @@ fn start_fullscreen_thread(app: AppHandle) {
                     let monitor = MonitorFromWindow(fg, MONITOR_DEFAULTTONEAREST);
                     let mut info = MONITORINFO { cbSize: std::mem::size_of::<MONITORINFO>() as u32, ..Default::default() };
                     let ok = GetWindowRect(fg, &mut rect).is_ok() && GetMonitorInfoW(monitor, &mut info).as_bool();
+                    let on_dock_monitor = monitor == MonitorFromWindow(dock_hwnd(), MONITOR_DEFAULTTONEAREST);
+                    let covers = ok
+                        && rect.left <= info.rcMonitor.left + FULLSCREEN_SLACK
+                        && rect.top <= info.rcMonitor.top + FULLSCREEN_SLACK
+                        && rect.right >= info.rcMonitor.right - FULLSCREEN_SLACK
+                        && rect.bottom >= info.rcMonitor.bottom - FULLSCREEN_SLACK;
                     // Sem área reservada (ocultar automaticamente), uma janela maximizada também cobre
                     // o monitor inteiro, mas não é tela cheia: a dock tem que poder aparecer por cima.
-                    let maximized = IsZoomed(fg).as_bool();
-                    Some(
-                        ok && !maximized
-                            && monitor == MonitorFromWindow(dock_hwnd(), MONITOR_DEFAULTTONEAREST)
-                            && rect.left <= info.rcMonitor.left
-                            && rect.top <= info.rcMonitor.top
-                            && rect.right >= info.rcMonitor.right
-                            && rect.bottom >= info.rcMonitor.bottom,
-                    )
+                    // Com a AppBar reservada uma maximizada nunca cobre o monitor, e apps em tela cheia
+                    // (F11, vídeo) costumam manter o estado maximizado.
+                    let maximized_is_not_fullscreen = auto_hide() != AUTO_HIDE_NEVER && IsZoomed(fg).as_bool();
+                    Some(on_dock_monitor && ((covers && !maximized_is_not_fullscreen) || shell_reports_fullscreen()))
                 }
             };
             // `None`: a própria dock ou o desktop estão em foco; mantém o estado atual.
             let Some(fullscreen) = fullscreen else { continue };
-            if fullscreen != HIDDEN_FOR_FULLSCREEN.load(Ordering::SeqCst) {
-                HIDDEN_FOR_FULLSCREEN.store(fullscreen, Ordering::SeqCst);
+            if fullscreen != FULLSCREEN_ACTIVE.swap(fullscreen, Ordering::SeqCst) {
                 let _ = if fullscreen { window.hide() } else { window.show() };
+                if fullscreen {
+                    set_visible(&window, false);
+                }
                 crate::backdrop::set_hidden(&window, fullscreen || !super::dock_visible());
             }
         }

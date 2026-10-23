@@ -35,6 +35,9 @@ static POSITION: AtomicU8 = AtomicU8::new(BOTTOM);
 static VISIBLE: AtomicBool = AtomicBool::new(false);
 /// A dock está fora da tela de propósito: abrindo o Pier ou trocando de monitor.
 static MOVING: AtomicBool = AtomicBool::new(true);
+/// Um app ocupa a tela inteira do monitor da dock; ela some até ele sair, mesmo com o mouse na borda.
+#[allow(dead_code)]
+static FULLSCREEN_ACTIVE: AtomicBool = AtomicBool::new(false);
 /// Até quando a dock fica à mostra depois de chegar num monitor, mesmo com o "ocultar
 /// automaticamente": sem isso, numa tela com um app em foco ela chegaria escondida e a troca
 /// passaria despercebida.
@@ -334,7 +337,7 @@ fn auto_hide() -> u8 {
 /// A dock deve estar à mostra? `hovering` inclui a folga depois que o mouse sai.
 #[allow(dead_code)]
 fn want_visible(hovering: bool, app_focused: impl FnOnce() -> bool) -> bool {
-    if MOVING.load(Ordering::SeqCst) {
+    if MOVING.load(Ordering::SeqCst) || FULLSCREEN_ACTIVE.load(Ordering::SeqCst) {
         return false;
     }
     if ARRIVED_UNTIL.lock().unwrap().is_some_and(|until| Instant::now() < until) {
