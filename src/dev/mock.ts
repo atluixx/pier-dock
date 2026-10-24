@@ -89,6 +89,8 @@ const config: Config = {
   language: "system",
   autoUpdate: true,
   claudePetEnabled: true,
+  pokemonPetEnabled: false,
+  pokemonPetId: 25,
 };
 
 const windows: WindowsSnapshot = {
@@ -332,6 +334,12 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     const app = apps.find((a) => a.target === args.key);
     return app ? iconDataUrl(app.color, app.init) : iconDataUrl("#2B2B2F", String(args.key).split("/").pop()!.slice(0, 2));
   },
+  pokemon_list: () => [
+    { id: 1, name: "bulbasaur" },
+    { id: 6, name: "charizard" },
+    { id: 25, name: "pikachu" },
+  ],
+  pokemon_sprite: (args) => iconDataUrl("#E8B923", String(args.id)),
   media_state: () => media,
   media_thumbnail: () => null,
   system_status: () => ({

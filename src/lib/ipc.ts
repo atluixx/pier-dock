@@ -28,7 +28,8 @@ export type WidgetKind =
   | "system-usage"
   | "calendar"
   | "ai-usage"
-  | "ai-agents";
+  | "ai-agents"
+  | "pokemon";
 
 export interface WidgetConfig {
   kind: WidgetKind;
@@ -95,6 +96,14 @@ export interface Config {
   autoUpdate: boolean;
   /** Mascote decorativo que anda sobre a borda da dock, reagindo às sessões dos CLIs de IA. */
   claudePetEnabled: boolean;
+  /** Pokémon que anda sobre a borda da dock, com o ícone de time da PokeAPI. */
+  pokemonPetEnabled: boolean;
+  pokemonPetId: number;
+}
+
+export interface PokemonEntry {
+  id: number;
+  name: string;
 }
 
 export interface WindowInfo {
@@ -446,6 +455,8 @@ export const ipc = {
   launchApp: (target: string) => invoke<void>("launch_app", { target }),
   resolveAppPath: (path: string) => invoke<AppEntry>("resolve_app_path", { path }),
   getIcon: (key: string) => invoke<string>("get_icon", { key }),
+  pokemonList: () => invoke<PokemonEntry[]>("pokemon_list"),
+  pokemonSprite: (id: number) => invoke<string>("pokemon_sprite", { id }),
 
   mediaState: () => invoke<MediaState>("media_state"),
   mediaThumbnail: (key: string) => invoke<string | null>("media_thumbnail", { key }),

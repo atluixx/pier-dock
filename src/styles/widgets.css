@@ -995,3 +995,18 @@
 .claude-row {
   gap: 10px;
 }
+
+.pokemon-tile {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--radius-control);
+}
+
+.pokemon-tile-sprite {
+  width: 40px;
+  height: 30px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}

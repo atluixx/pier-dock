@@ -8,6 +8,7 @@ import { UsageWidget } from "./UsageWidget";
 import { CalendarWidget } from "./CalendarWidget";
 import { AiUsageWidget } from "./AiUsageWidget";
 import { AgentSessionsWidget } from "./AgentSessionsWidget";
+import { PokemonWidget } from "./PokemonWidget";
 
 import type { WidgetData } from "./widgetData";
 export type { WidgetData } from "./widgetData";
@@ -59,5 +60,7 @@ export function WidgetView({ kind, size, data }: { kind: WidgetKind; size: Widge
       return <AiUsageWidget data={data.ai} wide={wide} />;
     case "ai-agents":
       return <AgentSessionsWidget />;
+    case "pokemon":
+      return <PokemonWidget />;
   }
 }
