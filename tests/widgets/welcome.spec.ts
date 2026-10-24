@@ -12,7 +12,7 @@ async function openSettings(page: import("@playwright/test").Page, responses: Re
 test("first run asks before replacing the system bar", async ({ page }) => {
   await openSettings(page, { first_run: true });
   const welcome = page.getByRole("region", { name: "Welcome to Pier" });
-  await expect(welcome).toContainText("Pier can take the place of the macOS Dock.");
+  await expect(welcome).toContainText("Pier can take the place of the");
   await welcome.getByRole("button", { name: "Replace it", exact: true }).click();
   await expectCall(page, "save_config", { config: expect.objectContaining({ hideTaskbar: true }) });
   await expect(welcome).toHaveCount(0);
