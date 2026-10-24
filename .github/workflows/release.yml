@@ -85,6 +85,26 @@ jobs:
         working-directory: src-tauri
         run: cargo test --locked
 
+      # Com a assinatura ad-hoc, o macOS trata cada versão como um app novo e pede Acessibilidade,
+      # Gravação de Tela e Áudio de novo a cada atualização. Um certificado fixo (mesmo autoassinado)
+      # mantém a mesma "designated requirement", e as permissões sobrevivem. Sem os secrets, continua ad-hoc.
+      - name: Certificado de assinatura do macOS
+        if: runner.os == 'macOS'
+        env:
+          CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          if [ -z "$CERTIFICATE" ] || [ -z "$SIGNING_IDENTITY" ]; then
+            echo "::warning::Sem APPLE_CERTIFICATE/APPLE_SIGNING_IDENTITY: o app sai com assinatura ad-hoc e as permissões resetam a cada atualização."
+            exit 0
+          fi
+          {
+            echo "APPLE_CERTIFICATE=$CERTIFICATE"
+            echo "APPLE_CERTIFICATE_PASSWORD=$CERTIFICATE_PASSWORD"
+            echo "APPLE_SIGNING_IDENTITY=$SIGNING_IDENTITY"
+          } >> "$GITHUB_ENV"
+
       - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -96,3 +116,12 @@ jobs:
           releaseDraft: true
           uploadWorkflowArtifacts: ${{ github.ref_type != 'tag' }}
           args: ${{ matrix.args }}
+
+      # Só para conferir no log: com o certificado, a requirement cita o certificado em vez de um cdhash.
+      - name: Assinatura do app
+        if: runner.os == 'macOS'
+        continue-on-error: true
+        run: |
+          app=$(find src-tauri/target -path '*/bundle/macos/*.app' -maxdepth 6 | head -1)
+          codesign -dv "$app" 2>&1 | grep -E '^(Authority|Signature|Identifier)'
+          codesign -dr - "$app"
