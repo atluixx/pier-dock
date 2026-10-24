@@ -1,0 +1,30 @@
+Sink #382
+	State: SUSPENDED
+	Name: hdmi3
+	Description: HDMI / DisplayPort 3
+	Ports:
+		[Out] HDMI3: HDMI / DisplayPort 3 (type: HDMI, priority: 700, availability group: HDMI/DP,pcm=5, not available)
+	Active Port: [Out] HDMI3
+Sink #383
+	State: IDLE
+	Name: hdmi2
+	Description: HDMI / DisplayPort 2
+	Ports:
+		[Out] HDMI2: HDMI / DisplayPort 2 (type: HDMI, priority: 600, not available)
+	Active Port: [Out] HDMI2
+Sink #384
+	State: RUNNING
+	Name: hdmi1
+	Description: HDMI / DisplayPort 1
+	Ports:
+		[Out] HDMI1: HDMI / DisplayPort 1 (type: HDMI, priority: 500, not available)
+			Properties:
+				device.icon_name = "video-display"
+	Active Port: [Out] HDMI1
+Sink #385
+	State: SUSPENDED
+	Name: speaker
+	Description: Built-in Speaker
+	Ports:
+		[Out] Speaker: Speaker (type: Speaker, priority: 100, availability unknown)
+	Active Port: [Out] Speaker

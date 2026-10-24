@@ -9,26 +9,44 @@ use crate::util::run;
 
 /// Um item do `pactl list`: `Sink #47` ou `Sink Input #85`, com os campos (`Mute: no`) e as
 /// propriedades (`application.name = "Firefox"`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Availability { Available, Unavailable, Unknown }
+
 #[derive(Debug, Default)]
 struct Block {
     index: u32,
     fields: HashMap<String, String>,
     props: HashMap<String, String>,
+    ports: HashMap<String, Availability>,
 }
 
 fn parse_blocks(output: &str) -> Vec<Block> {
     let mut blocks: Vec<Block> = Vec::new();
+    let mut in_ports = false;
     for line in output.lines() {
         if !line.starts_with(char::is_whitespace) {
             if let Some((_, index)) = line.rsplit_once('#') {
                 if let Ok(index) = index.trim().parse() {
                     blocks.push(Block { index, ..Default::default() });
+                    in_ports = false;
                 }
             }
             continue;
         }
         let Some(block) = blocks.last_mut() else { continue };
         let text = line.trim();
+        let indent: usize = line.chars().take_while(|c| c.is_whitespace()).map(|c| if c == '\t' { 4 } else { 1 }).sum();
+        if in_ports && indent > 4 {
+            // Port metadata may have nested properties; only a port header has depth two.
+            if indent == 8 {
+                if let Some((name, description)) = text.split_once(": ") {
+                    block.ports.insert(name.to_owned(), port_availability(description));
+                }
+            }
+            continue;
+        }
+        in_ports = text == "Ports:";
+        if in_ports { continue; }
         if line.starts_with("\t\t") || line.starts_with("        ") {
             if let Some((key, value)) = text.split_once(" = ") {
                 block.props.insert(key.to_string(), value.trim_matches('"').to_string());
@@ -42,6 +60,31 @@ fn parse_blocks(output: &str) -> Vec<Block> {
         }
     }
     blocks
+}
+
+/// Parse only the final availability field, never words in a device's display name.
+fn port_availability(description: &str) -> Availability {
+    let status = description.rsplit_once(" (")
+        .and_then(|(_, metadata)| metadata.strip_suffix(')'))
+        .and_then(|metadata| metadata.rsplit(',').next()).map(str::trim);
+    match status {
+        Some("not available" | "availability: no") => Availability::Unavailable,
+        Some("available" | "availability: yes") => Availability::Available,
+        _ => Availability::Unknown,
+    }
+}
+
+fn sink_available(sink: &Block) -> bool {
+    if let Some(active) = sink.fields.get("Active Port").and_then(|port| sink.ports.get(port)) {
+        return *active != Availability::Unavailable;
+    }
+    // Virtual/Bluetooth sinks and older pactl versions may not expose ports or jack detection.
+    sink.ports.is_empty() || sink.ports.values().any(|availability| *availability != Availability::Unavailable)
+}
+
+fn with_available_output(id: &str, outputs: &[OutputDevice], apply: impl FnOnce(&str) -> Result<(), String>) -> Result<(), String> {
+    if !outputs.iter().any(|device| device.id == id) { return Err("Audio output is no longer available".into()); }
+    apply(id)
 }
 
 /// `front-left: 32768 /  50% / -18.06 dB,   front-right: …`: o primeiro canal basta.
@@ -59,6 +102,7 @@ fn default_sink() -> Option<String> {
 fn outputs_from(sinks: &[Block], default: Option<&str>) -> Vec<OutputDevice> {
     sinks
         .iter()
+        .filter(|sink| sink_available(sink))
         .filter_map(|sink| {
             let id = sink.fields.get("Name")?.clone();
             let name = sink.fields.get("Description").cloned().unwrap_or_else(|| id.clone());
@@ -73,14 +117,16 @@ pub fn outputs() -> Result<Vec<OutputDevice>, String> {
 }
 
 pub fn set_output(id: &str) -> Result<(), String> {
-    run("pactl", &["set-default-sink", id]).ok_or("falha ao trocar a saída de áudio")?;
-    // O PipeWire já leva os streams para a saída nova; o PulseAudio só usa a padrão nos próximos.
-    if let Some(inputs) = run("pactl", &["list", "short", "sink-inputs"]) {
-        for index in inputs.lines().filter_map(|l| l.split_whitespace().next()) {
-            let _ = run("pactl", &["move-sink-input", index, id]);
+    with_available_output(id, &outputs()?, |id| {
+        run("pactl", &["set-default-sink", id]).ok_or("falha ao trocar a saída de áudio")?;
+        // PipeWire moves streams itself; PulseAudio only applies the default to new streams.
+        if let Some(inputs) = run("pactl", &["list", "short", "sink-inputs"]) {
+            for index in inputs.lines().filter_map(|l| l.split_whitespace().next()) {
+                let _ = run("pactl", &["move-sink-input", index, id]);
+            }
         }
-    }
-    Ok(())
+        Ok(())
+    })
 }
 
 /// Os sink inputs agrupados por app: o Firefox, por exemplo, abre um stream por aba.
@@ -128,10 +174,11 @@ pub fn apps() -> Option<Vec<AppStream>> { state().apps }
 
 /// All validation completes before the first stream is moved.
 fn move_streams(id: &str, output: &str, available: &[OutputDevice], mut move_one: impl FnMut(u32, &str) -> Result<(), String>) -> Result<(), String> {
-    if !available.iter().any(|device| device.id == output) { return Err("Audio output is no longer available".into()); }
-    let indices: Vec<u32> = id.split(',').map(|part| part.parse::<u32>().map_err(|_| "Invalid audio stream".to_string())).collect::<Result<_, _>>()?;
-    for index in indices { move_one(index, output)?; }
-    Ok(())
+    with_available_output(output, available, |output| {
+        let indices: Vec<u32> = id.split(',').map(|part| part.parse::<u32>().map_err(|_| "Invalid audio stream".to_string())).collect::<Result<_, _>>()?;
+        for index in indices { move_one(index, output)?; }
+        Ok(())
+    })
 }
 
 pub fn set_app_output(id: &str, output: &str) -> Result<(), String> {
@@ -234,6 +281,61 @@ Sink Input #90
         assert_eq!(outputs[0].name, "Built-in Audio Analog Stereo");
         assert!(!outputs[0].default);
         assert_eq!(outputs[1], OutputDevice { id: "bluez_output.AA_BB_CC_DD_EE_FF.1".into(), name: "WH-1000XM4".into(), default: true });
+    }
+
+    const PORT_SINKS: &str = include_str!("fixtures/output-availability.txt");
+
+    #[test]
+    fn hides_disconnected_hdmi_ports_but_keeps_idle_builtin_speakers() {
+        // PipeWire UCM advertises four sinks even with all HDMI connectors unplugged.
+        for fixture in [PORT_SINKS.to_owned(), PORT_SINKS.replace('\t', "    ")] {
+            let sinks = parse_blocks(&fixture);
+            assert_eq!(sinks[2].ports.len(), 1, "nested port properties are not additional ports");
+            let outputs = outputs_from(&sinks, Some("speaker"));
+            assert_eq!(outputs, [OutputDevice { id: "speaker".into(), name: "Built-in Speaker".into(), default: true }]);
+            assert!(outputs_from(&sinks, Some("hdmi1")).iter().all(|output| !output.default));
+        }
+    }
+
+    #[test]
+    fn availability_uses_the_active_port_and_preserves_missing_or_unknown_metadata() {
+        let mut sink = Block::default();
+        assert!(sink_available(&sink), "virtual/Bluetooth outputs may have no port metadata");
+        sink.ports.insert("speaker".into(), Availability::Available);
+        sink.ports.insert("headphones".into(), Availability::Unavailable);
+        sink.fields.insert("Active Port".into(), "headphones".into());
+        assert!(!sink_available(&sink), "another port being available cannot make the active disconnected port audible");
+        sink.fields.insert("Active Port".into(), "speaker".into());
+        sink.fields.insert("State".into(), "SUSPENDED".into());
+        assert!(sink_available(&sink), "suspended means idle, not disconnected");
+        sink.fields.remove("Active Port");
+        assert!(sink_available(&sink));
+        sink.ports.insert("speaker".into(), Availability::Unavailable);
+        assert!(!sink_available(&sink), "without an active port, all explicitly unavailable ports are hidden");
+        sink.ports.insert("speaker".into(), Availability::Unknown);
+        assert!(sink_available(&sink));
+    }
+
+    #[test]
+    fn reads_only_the_port_metadata_availability_field() {
+        assert_eq!(port_availability("HDMI (priority: 500, available)"), Availability::Available);
+        assert_eq!(port_availability("HDMI (priority: 500, not available)"), Availability::Unavailable);
+        assert_eq!(port_availability("Headphones (priority: 100, availability: no)"), Availability::Unavailable);
+        assert_eq!(port_availability("A device named not available (priority: 100, availability unknown)"), Availability::Unknown);
+        assert_eq!(port_availability("Older port description without availability"), Availability::Unknown);
+    }
+
+    #[test]
+    fn disconnected_routes_are_rejected_before_any_audio_mutation() {
+        let outputs = outputs_from(&parse_blocks(PORT_SINKS), None);
+        assert!(with_available_output("hdmi1", &outputs, |_| panic!("must not change the default")).is_err());
+        assert!(move_streams("85,86", "hdmi1", &outputs, |_, _| panic!("must not move any stream")).is_err());
+        let mut selected = None;
+        with_available_output("speaker", &outputs, |id| { selected = Some(id.to_owned()); Ok(()) }).unwrap();
+        assert_eq!(selected.as_deref(), Some("speaker"));
+        let mut moved = Vec::new();
+        move_streams("85", "speaker", &outputs, |index, _| { moved.push(index); Ok(()) }).unwrap();
+        assert_eq!(moved, [85]);
     }
 
     #[test]
