@@ -88,6 +88,10 @@ jobs:
       # Com a assinatura ad-hoc, o macOS trata cada versão como um app novo e pede Acessibilidade,
       # Gravação de Tela e Áudio de novo a cada atualização. Um certificado fixo (mesmo autoassinado)
       # mantém a mesma "designated requirement", e as permissões sobrevivem. Sem os secrets, continua ad-hoc.
+      #
+      # O certificado é importado aqui, e o Tauri recebe só o nome: com APPLE_CERTIFICATE ele mesmo
+      # importa, mas depois só aceita certificados confiáveis com nome da Apple ("Developer ID
+      # Application: …") e recusa um autoassinado. O codesign assina com ele normalmente.
       - name: Certificado de assinatura do macOS
         if: runner.os == 'macOS'
         env:
@@ -99,11 +103,20 @@ jobs:
             echo "::warning::Sem APPLE_CERTIFICATE/APPLE_SIGNING_IDENTITY: o app sai com assinatura ad-hoc e as permissões resetam a cada atualização."
             exit 0
           fi
-          {
-            echo "APPLE_CERTIFICATE=$CERTIFICATE"
-            echo "APPLE_CERTIFICATE_PASSWORD=$CERTIFICATE_PASSWORD"
-            echo "APPLE_SIGNING_IDENTITY=$SIGNING_IDENTITY"
-          } >> "$GITHUB_ENV"
+          keychain="$RUNNER_TEMP/pier-signing.keychain-db"
+          keychain_password=$(openssl rand -base64 24)
+          certificate="$RUNNER_TEMP/pier-signing.p12"
+          echo "$CERTIFICATE" | base64 --decode > "$certificate"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$certificate" -k "$keychain" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$certificate"
+          # Sem isto o codesign esperaria uma confirmação na interface para usar a chave.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          security find-identity -p codesigning "$keychain"
+          echo "APPLE_SIGNING_IDENTITY=$SIGNING_IDENTITY" >> "$GITHUB_ENV"
 
       - uses: tauri-apps/tauri-action@v1
         env:
