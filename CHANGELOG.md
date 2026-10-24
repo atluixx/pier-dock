@@ -2,6 +2,12 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.19.0
+
+### Pokémon on your dock
+- **AI agents:** the mascot that walks the dock while a session runs can now be a Pokémon instead of Clawd. In the **AI agents** widget options, pick **Mascot** and then the Pokémon. It gets a status dot that follows the lead session, it jumps when a session asks for permission, a click still opens the sessions, and the widget's dock icon follows your choice.
+- **Pokémon widget:** pick up to 10 Pokémon instead of one. They all walk along the dock edge, each at its own pace, and the first one is the icon in the dock. Settings lists the ones you chose, with a button to remove each and a counter, and stops adding at 10. Your current Pokémon carries over.
+
 ## 0.18.0
 
 ### Updates that wait for you
