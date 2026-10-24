@@ -357,6 +357,22 @@ html[data-reduced-effects="true"] .dock-bar {
   background: var(--fill-active);
 }
 
+.has-update {
+  position: relative;
+}
+
+.update-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 1.5px var(--surface-icon);
+}
+
 /* A área do separador é mais larga que a linha, para dar para arrastá-lo. */
 .divider-item {
   height: 28px;

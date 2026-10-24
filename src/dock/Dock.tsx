@@ -7,11 +7,12 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { latestSender, sameHitRect } from "./hitRect";
 import { Menu } from "@tauri-apps/api/menu";
-import { ipc, type AppEntry, type Config, type WidgetConfig } from "../lib/ipc";
+import { ipc, type AppEntry, type Config, type UpdateInfo, type WidgetConfig } from "../lib/ipc";
 import { labels, os, widgetSupported } from "../lib/platform";
 import { dict } from "../i18n";
 import { useConfig } from "../store/config";
 import { useWindows } from "../hooks/useWindows";
+import { usePendingUpdate } from "../hooks/usePendingUpdate";
 import { reuseDockApps } from "./appIdentity";
 import { buildDockApps, type DockApp } from "./apps";
 import { stableOpenApps } from "./runningOrder";
@@ -30,34 +31,55 @@ import { togglePanel } from "../widgets/Tile";
 /** Espera antes de fechar a faixa quando o cursor sai da dock (ver o efeito do `mouseleave`). */
 const PREVIEW_CLOSE_DELAY = 200;
 
+const openUpdateSettings = () => void ipc.openSettings("general").catch(console.error);
+
+function updateMenuItems(update: UpdateInfo | null) {
+  return update ? [{ id: "update", text: dict().dock.updateAvailable(update.version), action: openUpdateSettings }] : [];
+}
+
+/** Aviso de versão nova no canto do botão de apps; abre a aba Geral, onde a instalação é confirmada. */
+function UpdateDot({ version }: { version: string }) {
+  const label = dict().dock.updateAvailable(version);
+  return (
+    <button
+      className="update-dot"
+      aria-label={label}
+      title={label}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={openUpdateSettings}
+    />
+  );
+}
+
 /** Abre o lançador de apps do sistema (Menu Iniciar, Launchpad, grade de apps do GNOME). */
-function StartButton({ onRemove }: { onRemove: () => void }) {
+function StartButton({ onRemove, update }: { onRemove: () => void; update: UpdateInfo | null }) {
   const onContextMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const menu = await Menu.new({ items: [{ id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
+    const menu = await Menu.new({ items: [...updateMenuItems(update), { id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
     await menu.popup();
   };
   return (
-    <SortableItem id={START_KEY} className="widget-slot" onContextMenu={onContextMenu}>
+    <SortableItem id={START_KEY} className={update ? "widget-slot has-update" : "widget-slot"} onContextMenu={onContextMenu}>
       <button className="launcher-button" aria-label={labels().startButton} title={labels().startButton} onClick={() => ipc.openShell("start")}>
         <Search size={18} strokeWidth={2} aria-hidden />
       </button>
+      {update && <UpdateDot version={update.version} />}
     </SortableItem>
   );
 }
 
 /** Lançador de apps do Pier: abre a grade de instalados acima do botão (ver `popovers/Launcher`). */
-function LauncherButton({ onRemove }: { onRemove: () => void }) {
+function LauncherButton({ onRemove, update }: { onRemove: () => void; update: UpdateInfo | null }) {
   const ref = useRef<HTMLButtonElement>(null);
   const onContextMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const menu = await Menu.new({ items: [{ id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
+    const menu = await Menu.new({ items: [...updateMenuItems(update), { id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
     await menu.popup();
   };
   return (
-    <SortableItem id={LAUNCHER_KEY} className="widget-slot" onContextMenu={onContextMenu}>
+    <SortableItem id={LAUNCHER_KEY} className={update ? "widget-slot has-update" : "widget-slot"} onContextMenu={onContextMenu}>
       <button
         ref={ref}
         className="launcher-button"
@@ -67,6 +89,7 @@ function LauncherButton({ onRemove }: { onRemove: () => void }) {
       >
         <LayoutGrid size={18} strokeWidth={2} aria-hidden />
       </button>
+      {update && <UpdateDot version={update.version} />}
     </SortableItem>
   );
 }
@@ -98,6 +121,7 @@ export function Dock({ config }: { config: Config }) {
 const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
   const update = useConfig((s) => s.update);
   const snapshot = useWindows();
+  const pendingUpdate = usePendingUpdate();
   const position = config.dockPosition;
   const vertical = isVertical(position);
   const full = config.dockWidth === "full";
@@ -321,6 +345,7 @@ const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
     const t = dict().dock;
     const menu = await Menu.new({
       items: [
+        ...updateMenuItems(pendingUpdate),
         { id: "settings", text: t.dockSettings, action: () => ipc.openSettings() },
         { id: "divider", text: t.addDivider, action: () => update((c) => addDivider(c)) },
         ...(config.showStartButton
@@ -354,9 +379,12 @@ const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
     return n >= 1 && n <= 9 ? n : undefined;
   };
 
+  // Um aviso só: no lançador do Pier, ou no botão Iniciar se o lançador estiver oculto. Sem
+  // nenhum dos dois, fica o item no menu do fundo da dock e na bandeja.
+  const updateHost = config.showLauncher ? LAUNCHER_KEY : START_KEY;
   const renderItem = (key: string) => {
-    if (key === START_KEY) return <StartButton key={key} onRemove={() => remove(key)} />;
-    if (key === LAUNCHER_KEY) return <LauncherButton key={key} onRemove={() => remove(key)} />;
+    if (key === START_KEY) return <StartButton key={key} onRemove={() => remove(key)} update={updateHost === key ? pendingUpdate : null} />;
+    if (key === LAUNCHER_KEY) return <LauncherButton key={key} onRemove={() => remove(key)} update={updateHost === key ? pendingUpdate : null} />;
     if (isDivider(key)) return <Divider key={key} id={key} onRemove={() => remove(key)} />;
     const app = pinnedApps.get(key);
     if (app)

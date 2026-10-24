@@ -521,7 +521,7 @@ export const ipc = {
     invoke<void>("open_panel", { kind, anchorX, anchorY, width, height }),
   closePanel: () => invoke<void>("close_panel"),
   focusPanel: () => invoke<void>("focus_panel"),
-  openSettings: () => invoke<void>("open_settings"),
+  openSettings: (tab?: string) => invoke<void>("open_settings", { tab }),
   openWhatsNew: () => invoke<void>("open_whats_new"),
 
   platformInfo: () => invoke<PlatformInfo>("platform_info"),
@@ -533,6 +533,7 @@ export const ipc = {
 
   checkUpdate: () => invoke<UpdateInfo | null>("check_update"),
   installUpdate: () => invoke<void>("install_update"),
+  pendingUpdate: () => invoke<UpdateInfo | null>("pending_update"),
 
   reportEnvironment: () => invoke<ReportEnvironment>("report_environment"),
   recentLogs: () => invoke<string>("recent_logs"),
