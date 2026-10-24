@@ -356,6 +356,7 @@ export const en: Dict = {
     windows: (n) => `${n} windows`,
     running: "open",
     notifications: (n) => `${n} notifications`,
+    updateAvailable: (version) => `Update to ${version} available`,
   },
   preview: {
     label: (name) => `Windows of ${name}`,
@@ -623,8 +624,8 @@ export const en: Dict = {
     language: "Language",
     languageSystem: "System",
     replaceBar: "Replace the system bar",
-    autoUpdate: "Update automatically",
-    autoUpdateHint: "When it starts, Pier installs the new version and restarts on its own.",
+    autoUpdate: "Check for updates automatically",
+    autoUpdateHint: "Pier lets you know when a new version is out. It only restarts when you choose to install it.",
     dockMonitor: "Show the dock on",
     primaryMonitor: "Main display",
     followCursor: "Follow the cursor",

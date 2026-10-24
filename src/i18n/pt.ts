@@ -356,6 +356,7 @@ export const pt = {
     windows: (n: number) => `${n} janelas`,
     running: "aberto",
     notifications: (n: number) => `${n} notificações`,
+    updateAvailable: (version: string) => `Atualização para ${version} disponível`,
   },
   preview: {
     label: (name: string) => `Janelas de ${name}`,
@@ -623,8 +624,8 @@ export const pt = {
     language: "Idioma",
     languageSystem: "Sistema",
     replaceBar: "Substituir a barra do sistema",
-    autoUpdate: "Atualizar automaticamente",
-    autoUpdateHint: "Ao abrir, o Pier instala a versão nova e reinicia sozinho.",
+    autoUpdate: "Procurar atualizações automaticamente",
+    autoUpdateHint: "O Pier avisa quando sai uma versão nova. Ele só reinicia quando você escolhe instalar.",
     dockMonitor: "Mostrar a dock em",
     primaryMonitor: "Monitor principal",
     followCursor: "Seguir o cursor",

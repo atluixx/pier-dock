@@ -262,6 +262,7 @@ fn main() {
             permissions::permission_action,
             updater::check_update,
             updater::install_update,
+            updater::pending_update,
             report::report_environment,
             report::recent_logs,
             report::report_issue,

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { Activity, GitBranch, LayoutGrid, Menu, Palette } from "lucide-react";
 import { ipc, type PlatformInfo } from "../lib/ipc";
+import { currentView } from "../lib/view";
 import { keys, labels, os } from "../lib/platform";
 import { useConfig } from "../store/config";
 import { ActionFooter, type Action } from "../ui/ActionFooter";
@@ -25,18 +27,29 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
+const tabId = (id: string) => TABS.find((t) => t.id === id)?.id;
+
 const OS_NAMES = { windows: "Windows", linux: "Linux", macos: "macOS" };
 
 export function Settings() {
   const config = useConfig((s) => s.config)!;
   const update = useConfig((s) => s.update);
   const t = useT();
-  const [tab, setTab] = useState<TabId>("apps");
+  const [tab, setTab] = useState<TabId>(() => tabId(currentView.kind) ?? "apps");
   const [platform, setPlatform] = useState<PlatformInfo | null>(null);
   const [footer, setFooter] = useState<TabFooter | null>(null);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const refreshPlatform = () => void ipc.platformInfo().then(setPlatform).catch(() => {});
   useEffect(refreshPlatform, []);
+  useEffect(() => {
+    const unlisten = listen<string>("settings-tab", (e) => {
+      const id = tabId(e.payload);
+      if (id) setTab(id);
+    });
+    return () => {
+      unlisten.then((f) => f());
+    };
+  }, []);
 
   // Setas e Home/End andam entre as abas, como num tablist nativo.
   const onTabKey = (e: React.KeyboardEvent) => {

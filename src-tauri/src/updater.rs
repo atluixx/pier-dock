@@ -1,6 +1,6 @@
-//! Atualização automática pelo GitHub Releases (o `latest.json` que o workflow de release publica).
-//! A versão encontrada ao abrir é instalada sozinha (se `auto_update` estiver ligado); as das
-//! checagens seguintes aparecem no menu da bandeja e na aba Geral das configurações.
+//! Atualização pelo GitHub Releases (o `latest.json` que o workflow de release publica). Com
+//! `auto_update` ligado, a versão nova só é anunciada (bandeja, dock e aba Geral): a dock substitui
+//! a barra do sistema, então reiniciar sem o usuário pedir levaria qualquer regressão a todos de uma vez.
 
 use std::sync::Mutex;
 #[cfg(not(debug_assertions))]
@@ -43,6 +43,7 @@ async fn check(app: &AppHandle) -> Result<Option<UpdateInfo>, String> {
     let info = update.as_ref().map(|u| UpdateInfo { version: u.version.clone(), notes: u.body.clone() });
     *app.state::<UpdateState>().pending.lock().unwrap() = update;
     if let Some(info) = &info {
+        log::info!("update {} available", info.version);
         announce(app, info);
     }
     Ok(info)
@@ -64,7 +65,7 @@ fn announce(app: &AppHandle, info: &UpdateInfo) {
             }
         }
     }
-    let _ = app.emit_to(crate::panels::SETTINGS_LABEL, "update-available", info.clone());
+    let _ = app.emit("update-available", info.clone());
 }
 
 fn update_label(app: &AppHandle, version: &str) -> String {
@@ -86,6 +87,14 @@ pub async fn check_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> 
     check(&app).await
 }
 
+/// A versão já encontrada, para a dock mostrar o aviso depois de recarregar.
+#[tauri::command]
+pub fn pending_update(app: AppHandle) -> Option<UpdateInfo> {
+    let state = app.state::<UpdateState>();
+    let pending = state.pending.lock().unwrap();
+    pending.as_ref().map(|u| UpdateInfo { version: u.version.clone(), notes: u.body.clone() })
+}
+
 #[tauri::command]
 pub async fn install_update(app: AppHandle) -> Result<(), String> {
     let pending = app.state::<UpdateState>().pending.lock().unwrap().take();
@@ -93,6 +102,7 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
         Some(update) => update,
         None => app.updater().err_str()?.check().await.err_str()?.ok_or("Nenhuma atualização disponível")?,
     };
+    log::info!("installing update {}", update.version);
     #[cfg(target_os = "linux")]
     let relaunch = relaunch::prepare(&app.env()).err_str()?;
     let bytes = update.download(|_, _| {}, || {}).await.err_str()?;
@@ -131,32 +141,19 @@ pub fn finish_restart(app: &AppHandle) {
     let _ = app;
 }
 
-/// No Linux só o AppImage: no `.deb` o plugin instala com `pkexec`, que pediria a senha no boot.
-#[cfg(not(debug_assertions))]
-fn install_on_launch(app: &AppHandle) -> bool {
-    let enabled = app.state::<crate::config::ConfigState>().0.lock().unwrap().auto_update;
-    enabled && (cfg!(not(target_os = "linux")) || std::env::var_os("APPIMAGE").is_some())
-}
-
 /// Procura atualização um pouco depois de abrir (para não disputar com a inicialização) e depois
-/// a cada 12h. Só a da primeira checagem é instalada sozinha: as seguintes reiniciariam a dock no
-/// meio do uso.
+/// a cada 12h, enquanto `auto_update` estiver ligado.
 #[cfg(not(debug_assertions))]
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || {
         std::thread::sleep(Duration::from_secs(30));
-        let mut on_launch = true;
         loop {
-            match tauri::async_runtime::block_on(check(&app)) {
-                Ok(Some(_)) if on_launch && install_on_launch(&app) => {
-                    if let Err(e) = tauri::async_runtime::block_on(install_update(app.clone())) {
-                        log::error!("falha ao instalar a atualização: {e}");
-                    }
+            let enabled = app.state::<crate::config::ConfigState>().0.lock().unwrap().auto_update;
+            if enabled {
+                if let Err(e) = tauri::async_runtime::block_on(check(&app)) {
+                    log::warn!("falha ao procurar atualização: {e}");
                 }
-                Ok(_) => {}
-                Err(e) => log::warn!("falha ao procurar atualização: {e}"),
             }
-            on_launch = false;
             std::thread::sleep(CHECK_INTERVAL);
         }
     });

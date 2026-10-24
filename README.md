@@ -53,9 +53,9 @@ The installers aren't code-signed yet, so your system warns you the first time y
 
 ### Updates
 
-Pier checks for updates shortly after it starts and every 12 hours. When a new version is available, select **Update to x.y.z** in the tray menu, or select **Install and restart** in **Settings** > **General**.
+Pier checks for updates shortly after it starts and every 12 hours, and never restarts on its own. When a new version is available, a dot appears on the app launcher (or on the start button when the launcher is hidden). Select the dot, or **Update to x.y.z available** in the menu of the dock background, to open **Settings** > **General**, and then select **Install and restart**. You can also select **Update to x.y.z** in the tray menu. To stop checking, turn off **Check for updates automatically** in **Settings** > **General**.
 
-Automatic updates work with the Windows installer, the macOS app, and the AppImage. If you installed the `.deb` package, download and install each new version from the releases page.
+In-app updates work with the Windows installer, the macOS app, and the AppImage. If you installed the `.deb` package, download and install each new version from the releases page.
 
 On Linux, the AppImage restarts from its current location with the previous bundle’s library and GTK paths cleared. Restart replaces the running process so launcher/container supervisors remain attached. On NixOS, an existing `appimage-run` in the host PATH is reused, including when an update replaces a standalone native binary with an AppImage.
 

@@ -53,9 +53,9 @@ Os instaladores ainda não têm assinatura de código, então o sistema avisa na
 
 ### Atualizações
 
-O Pier procura atualizações logo depois de abrir e a cada 12 horas. Quando houver uma versão nova, clique em **Atualizar para x.y.z** no menu da bandeja ou em **Instalar e reiniciar** em **Configurações** > **Geral**.
+O Pier procura atualizações logo depois de abrir e a cada 12 horas, e nunca reinicia sozinho. Quando houver uma versão nova, aparece um ponto no lançador de apps (ou no botão Iniciar, se o lançador estiver oculto). Clique no ponto, ou em **Atualização para x.y.z disponível** no menu do fundo da dock, para abrir **Configurações** > **Geral**, e depois em **Instalar e reiniciar**. Também dá para clicar em **Atualizar para x.y.z** no menu da bandeja. Para parar de procurar, desligue **Procurar atualizações automaticamente** em **Configurações** > **Geral**.
 
-A atualização automática funciona com o instalador do Windows, com o app do macOS e com o AppImage. Se você instalou o pacote `.deb`, baixe e instale cada versão nova pela página de releases.
+A atualização pelo app funciona com o instalador do Windows, com o app do macOS e com o AppImage. Se você instalou o pacote `.deb`, baixe e instale cada versão nova pela página de releases.
 
 No Linux, o AppImage reinicia a partir da localização atual, removendo os caminhos de bibliotecas e GTK do pacote anterior. O reinício substitui o processo atual para manter o vínculo com o lançador ou contêiner. No NixOS, o `appimage-run` existente no PATH do sistema é reutilizado, inclusive quando a atualização substitui um binário nativo por um AppImage.
 

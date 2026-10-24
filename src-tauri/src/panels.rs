@@ -172,8 +172,18 @@ pub fn close_panel(app: AppHandle) {
 }
 
 pub fn open_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
+    open_settings_tab(app, "")
+}
+
+/// `tab` vazio: a aba inicial. Com a janela já aberta, a aba é trocada por evento.
+fn open_settings_tab(app: &AppHandle, tab: &str) -> tauri::Result<WebviewWindow> {
     let title = crate::i18n::settings_title(crate::i18n::current(app));
-    app_window(app, SETTINGS_LABEL, "", title, (1040.0, 720.0), (880.0, 600.0))
+    let existed = app.get_webview_window(SETTINGS_LABEL).is_some();
+    let window = app_window(app, SETTINGS_LABEL, tab, title, (1040.0, 720.0), (880.0, 600.0))?;
+    if existed && !tab.is_empty() {
+        let _ = app.emit_to(SETTINGS_LABEL, "settings-tab", tab);
+    }
+    Ok(window)
 }
 
 /// Novidades das versões depois de `since` (vazio: só a atual), lidas do changelog pelo frontend.
@@ -318,8 +328,8 @@ pub fn apply_settings_material(app: &AppHandle) {
 }
 
 #[tauri::command]
-pub async fn open_settings(app: AppHandle) -> Result<(), String> {
-    open_settings_window(&app).map(|_| ()).err_str()
+pub async fn open_settings(app: AppHandle, tab: Option<String>) -> Result<(), String> {
+    open_settings_tab(&app, tab.as_deref().unwrap_or("")).map(|_| ()).err_str()
 }
 
 #[tauri::command]
