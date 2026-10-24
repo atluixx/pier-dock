@@ -124,7 +124,7 @@ pub fn hide() {
     // nosso "autohide", então mantemos o original salvo.
     if !path.exists() {
         let saved = SavedState { original_state: get_state() };
-        let _ = std::fs::write(&path, serde_json::to_string(&saved).unwrap_or_default());
+        let _ = crate::util::write_atomic(&path, serde_json::to_string(&saved).unwrap_or_default());
     }
     set_state(ABS_AUTOHIDE);
     set_visible(false);

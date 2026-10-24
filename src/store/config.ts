@@ -5,6 +5,8 @@ import { resolveLang, setLang, type Lang } from "../i18n";
 
 interface ConfigStore {
   config: Config | null;
+  /** Por que a config não carregou; a janela mostra o erro e tenta de novo. */
+  loadError: string | null;
   load: () => Promise<void>;
   update: (patch: Partial<Config> | ((c: Config) => Partial<Config>)) => Promise<void>;
 }
@@ -14,11 +16,18 @@ const applyLanguage = (config: Config) => setLang(resolveLang(config.language, s
 
 export const useConfig = create<ConfigStore>((set, get) => ({
   config: null,
+  loadError: null,
   load: async () => {
-    const [config, system] = await Promise.all([ipc.getConfig(), ipc.systemLanguage().catch((): Lang => "en")]);
-    systemLang = system;
-    applyLanguage(config);
-    set({ config });
+    systemLang = await ipc.systemLanguage().catch((): Lang => "en");
+    try {
+      const config = await ipc.getConfig();
+      applyLanguage(config);
+      set({ config, loadError: null });
+    } catch (e) {
+      console.error("could not load the config", e);
+      setLang(systemLang);
+      set({ loadError: String(e) });
+    }
   },
   update: async (patch) => {
     const current = get().config;
@@ -26,7 +35,16 @@ export const useConfig = create<ConfigStore>((set, get) => ({
     const next = { ...current, ...(typeof patch === "function" ? patch(current) : patch) };
     applyLanguage(next);
     set({ config: next });
-    await ipc.saveConfig(next);
+    try {
+      await ipc.saveConfig(next);
+    } catch (e) {
+      // O Rust só troca a config dele depois de gravar: se falhou, a tela volta a mostrar o que vale.
+      console.error("could not save the config", e);
+      if (get().config === next) {
+        applyLanguage(current);
+        set({ config: current });
+      }
+    }
   },
 }));
 

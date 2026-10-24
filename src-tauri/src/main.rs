@@ -164,6 +164,7 @@ fn main() {
         })
         .build();
 
+    let (config, config_issue) = config::load_first_run_aware();
     let app = tauri::Builder::default()
         .plugin(report::log_plugin())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -175,7 +176,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(shortcuts)
-        .manage(config::ConfigState(Mutex::new(config::load_first_run_aware())))
+        .manage(config::ConfigState(Mutex::new(config)))
         .manage(updater::UpdateState::default())
         .invoke_handler(tauri::generate_handler![
             quit_app,
@@ -268,7 +269,10 @@ fn main() {
             report::recent_logs,
             report::report_issue,
         ])
-        .setup(|app| {
+        .setup(move |app| {
+            if let Some(issue) = &config_issue {
+                log::error!("{issue}");
+            }
             // Sem ícone no Dock nem barra de menus: a dock é o app.
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);

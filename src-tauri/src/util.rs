@@ -1,4 +1,5 @@
-use std::path::PathBuf;
+use std::io::Write;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 #[cfg(target_os = "linux")]
@@ -103,6 +104,19 @@ pub fn wide_to_string(buf: &[u16]) -> String {
     String::from_utf16_lossy(&buf[..len])
 }
 
+/// Grava num arquivo temporário ao lado e troca pelo nome final: se o processo cair no meio (um
+/// reinício de atualização, um crash), o arquivo antigo continua inteiro em vez de ficar pela metade.
+pub fn write_atomic(path: &Path, contents: impl AsRef<[u8]>) -> std::io::Result<()> {
+    let mut tmp = path.as_os_str().to_owned();
+    tmp.push(".tmp");
+    let tmp = PathBuf::from(tmp);
+    let mut file = std::fs::File::create(&tmp)?;
+    file.write_all(contents.as_ref())?;
+    file.sync_all()?;
+    drop(file);
+    std::fs::rename(&tmp, path)
+}
+
 /// Converte erros de qualquer tipo em String, que é o que os comandos Tauri devolvem ao frontend.
 pub trait ErrStr<T> {
     fn err_str(self) -> Result<T, String>;
@@ -116,7 +130,19 @@ impl<T, E: std::fmt::Display> ErrStr<T> for Result<T, E> {
 
 #[cfg(test)]
 mod tests {
-    use super::reject_network_path;
+    use super::{reject_network_path, write_atomic};
+
+    #[test]
+    fn write_atomic_replaces_the_file_and_leaves_no_temp() {
+        let dir = std::env::temp_dir().join(format!("pier-write-atomic-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("state.json");
+        write_atomic(&path, "old").unwrap();
+        write_atomic(&path, "new").unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "new");
+        assert!(!dir.join("state.json.tmp").exists());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[test]
     fn rejects_network_paths() {

@@ -1,3 +1,4 @@
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 
@@ -5,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State, WebviewWindow};
 use tauri_plugin_dialog::DialogExt;
 
-use crate::util::{data_dir, ErrStr};
+use crate::util::{data_dir, write_atomic, ErrStr};
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
@@ -226,7 +227,7 @@ impl Config {
 
 pub struct ConfigState(pub Mutex<Config>);
 
-fn config_path() -> std::path::PathBuf {
+fn config_path() -> PathBuf {
     data_dir().join("config.json")
 }
 
@@ -234,11 +235,11 @@ fn config_path() -> std::path::PathBuf {
 static FRESH_INSTALL: AtomicBool = AtomicBool::new(false);
 
 /// A config do primeiro uso: a barra do sistema só some depois que o usuário aceita, nas boas-vindas.
-pub fn load_first_run_aware() -> Config {
+pub fn load_first_run_aware() -> (Config, Option<String>) {
     let fresh = !config_path().exists();
     FRESH_INSTALL.store(fresh, Ordering::Relaxed);
-    let config = load();
-    if fresh { Config { hide_taskbar: false, ..config } } else { config }
+    let (config, issue) = load();
+    (if fresh { Config { hide_taskbar: false, ..config } } else { config }, issue)
 }
 
 /// As boas-vindas aparecem até a primeira config ser gravada.
@@ -247,12 +248,48 @@ pub fn first_run() -> bool {
     FRESH_INSTALL.load(Ordering::Relaxed) && !config_path().exists()
 }
 
-pub fn load() -> Config {
-    std::fs::read_to_string(config_path())
-        .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .and_then(|v| read(v).ok())
-        .unwrap_or_default()
+/// `config.json` + `.suffix`, na mesma pasta.
+fn sibling(path: &Path, suffix: &str) -> PathBuf {
+    let mut name = path.as_os_str().to_owned();
+    name.push(format!(".{suffix}"));
+    PathBuf::from(name)
+}
+
+/// A config salva e, se o arquivo estava ilegível, o que foi feito com ele. O aviso volta para quem
+/// chama porque o log ainda não existe quando a config é lida.
+pub fn load() -> (Config, Option<String>) {
+    load_from(&config_path())
+}
+
+fn load_from(path: &Path) -> (Config, Option<String>) {
+    let error = match read_file(path) {
+        Ok(Some(config)) => return (config, None),
+        Ok(None) => return (Config::default(), None),
+        Err(e) => e,
+    };
+    // Um arquivo ilegível nunca é sobrescrito: fica de lado para o usuário recuperar, e a cópia da
+    // gravação anterior entra no lugar.
+    let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+    let kept = sibling(path, &format!("corrupt-{secs}"));
+    let _ = std::fs::rename(path, &kept);
+    let problem = format!("{} could not be read ({error}), kept as {}", path.display(), kept.display());
+    match read_file(&sibling(path, "bak")) {
+        Ok(Some(config)) => {
+            let restored = serde_json::to_string_pretty(&config).map_err(|e| e.to_string()).and_then(|json| write_atomic(path, json).err_str());
+            (config, Some(format!("{problem}; restored the backup{}", restored.err().map(|e| format!(" (not saved: {e})")).unwrap_or_default())))
+        }
+        _ => (Config::default(), Some(format!("{problem}; no usable backup, using the defaults"))),
+    }
+}
+
+/// `Ok(None)`: o arquivo não existe (instalação nova).
+fn read_file(path: &Path) -> Result<Option<Config>, String> {
+    let text = match std::fs::read_to_string(path) {
+        Ok(text) => text,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(e) => return Err(e.to_string()),
+    };
+    read(serde_json::from_str(&text).err_str()?).map(Some)
 }
 
 /// Uma config salva, com as migrações e os widgets que surgiram depois dela.
@@ -334,8 +371,16 @@ fn migrate(mut value: serde_json::Value) -> serde_json::Value {
 }
 
 fn persist(config: &Config) -> Result<(), String> {
+    persist_to(&config_path(), config)
+}
+
+fn persist_to(path: &Path, config: &Config) -> Result<(), String> {
     let json = serde_json::to_string_pretty(config).err_str()?;
-    std::fs::write(config_path(), json).err_str()
+    // A gravação anterior vira o backup que o `load` usa se esta ficar ilegível.
+    if path.exists() {
+        let _ = std::fs::copy(path, sibling(path, "bak"));
+    }
+    write_atomic(path, json).err_str()
 }
 
 #[tauri::command]
@@ -413,6 +458,72 @@ pub fn apply(app: &AppHandle, state: &ConfigState, config: Config) -> Result<(),
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("pier-config-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    fn leftovers(dir: &Path) -> Vec<String> {
+        let mut names: Vec<_> = std::fs::read_dir(dir).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
+        names.sort();
+        names
+    }
+
+    #[test]
+    fn missing_config_is_a_fresh_install() {
+        let dir = temp_dir("missing");
+        let (config, issue) = load_from(&dir.join("config.json"));
+        assert_eq!(config, Config::default());
+        assert!(issue.is_none());
+        assert!(leftovers(&dir).is_empty());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn persist_keeps_the_previous_save_as_backup() {
+        let dir = temp_dir("persist");
+        let path = dir.join("config.json");
+        persist_to(&path, &Config { icon_size: 40, ..Config::default() }).unwrap();
+        persist_to(&path, &Config { icon_size: 56, ..Config::default() }).unwrap();
+        assert_eq!(load_from(&path).0.icon_size, 56);
+        assert_eq!(read_file(&sibling(&path, "bak")).unwrap().unwrap().icon_size, 40);
+        assert_eq!(leftovers(&dir), ["config.json", "config.json.bak"]);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn unreadable_config_is_kept_aside_and_the_backup_restored() {
+        let dir = temp_dir("restore");
+        let path = dir.join("config.json");
+        persist_to(&path, &Config { icon_size: 40, ..Config::default() }).unwrap();
+        persist_to(&path, &Config { icon_size: 56, ..Config::default() }).unwrap();
+        std::fs::write(&path, r#"{"iconSize": 56, "widg"#).unwrap();
+        let (config, issue) = load_from(&path);
+        assert_eq!(config.icon_size, 40);
+        assert!(issue.unwrap().contains("restored the backup"));
+        assert_eq!(read_file(&path).unwrap().unwrap().icon_size, 40);
+        let corrupt = leftovers(&dir).into_iter().find(|n| n.starts_with("config.json.corrupt-")).unwrap();
+        assert_eq!(std::fs::read_to_string(dir.join(corrupt)).unwrap(), r#"{"iconSize": 56, "widg"#);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn unreadable_config_without_backup_falls_back_to_defaults_without_deleting_it() {
+        let dir = temp_dir("nobackup");
+        let path = dir.join("config.json");
+        std::fs::write(&path, "not json").unwrap();
+        let (config, issue) = load_from(&path);
+        assert_eq!(config, Config::default());
+        assert!(issue.unwrap().contains("using the defaults"));
+        assert!(!path.exists());
+        let names = leftovers(&dir);
+        assert_eq!(names.len(), 1);
+        assert_eq!(std::fs::read_to_string(dir.join(&names[0])).unwrap(), "not json");
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[test]
     fn config_roundtrip() {

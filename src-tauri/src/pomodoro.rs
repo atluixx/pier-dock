@@ -215,7 +215,7 @@ fn stats_path() -> std::path::PathBuf {
 fn save_stats(timer: &Timer) {
     let stats = Stats { date: timer.today.clone(), focus_today_ms: timer.focus_today_ms };
     if let Ok(json) = serde_json::to_string(&stats) {
-        let _ = std::fs::write(stats_path(), json);
+        let _ = crate::util::write_atomic(&stats_path(), json);
     }
 }
 
