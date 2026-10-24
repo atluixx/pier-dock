@@ -8,6 +8,7 @@ import { useConfig } from "../store/config";
 import { ActionFooter, type Action } from "../ui/ActionFooter";
 import { Logo } from "../ui/Logo";
 import { PlatformNotice } from "./PlatformNotice";
+import { Welcome } from "./Welcome";
 import type { TabFooter, TabProps } from "./shared";
 import { AppsTab } from "./tabs/AppsTab";
 import { WidgetsTab } from "./tabs/WidgetsTab";
@@ -41,6 +42,10 @@ export function Settings() {
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const refreshPlatform = () => void ipc.platformInfo().then(setPlatform).catch(() => {});
   useEffect(refreshPlatform, []);
+  const [firstRun, setFirstRun] = useState(false);
+  useEffect(() => {
+    ipc.firstRun().then(setFirstRun).catch(() => {});
+  }, []);
   useEffect(() => {
     const unlisten = listen<string>("settings-tab", (e) => {
       const id = tabId(e.payload);
@@ -102,6 +107,7 @@ export function Settings() {
         </div>
       </header>
       <PlatformNotice platform={platform} refresh={refreshPlatform} />
+      {firstRun && <Welcome platform={platform} update={props.update} done={() => setFirstRun(false)} />}
       <main className="settings-main" id="settings-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
         <Content {...props} />
       </main>

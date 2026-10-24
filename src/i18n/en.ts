@@ -357,6 +357,7 @@ export const en: Dict = {
     running: "open",
     notifications: (n) => `${n} notifications`,
     updateAvailable: (version) => `Update to ${version} available`,
+    setupNeeded: "Finish setting up Pier",
   },
   preview: {
     label: (name) => `Windows of ${name}`,
@@ -715,6 +716,18 @@ export const en: Dict = {
     failed: (message) => `Couldn't send it: ${message}`,
     close: "Close",
     done: "Done",
+  },
+  welcome: {
+    title: "Welcome to Pier",
+    replaceQuestion: {
+      windows: "Pier can take the place of the Windows taskbar. Hide the taskbar while Pier is open? You can change this later in General.",
+      linux: "Pier can take the place of the GNOME Dash. Hide the Dash while Pier is open? You can change this later in General.",
+      macos: "Pier can take the place of the macOS Dock. Hide the Dock while Pier is open? You can change this later in General.",
+    },
+    ready: "Pin your apps in Apps and choose what the dock shows in Widgets.",
+    replace: "Replace it",
+    keepBoth: "Keep both",
+    gotIt: "Got it",
   },
   notice: {
     extensionInstalled: "Extension installed. Log out and back in for GNOME to load it.",

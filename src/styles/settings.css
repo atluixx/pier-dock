@@ -106,6 +106,39 @@ html:is([data-view="settings"], [data-view="whats-new"])[data-material="solid"] 
   color: var(--text-warning);
 }
 
+.welcome {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 16px 24px 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--fill);
+  border: 1px solid var(--divider);
+}
+
+.welcome-text {
+  flex: 1;
+}
+
+.welcome-text h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.welcome-text p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* Botões */
 .btn {
   display: inline-flex;

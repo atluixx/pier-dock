@@ -357,11 +357,11 @@ html[data-reduced-effects="true"] .dock-bar {
   background: var(--fill-active);
 }
 
-.has-update {
+.has-attention {
   position: relative;
 }
 
-.update-dot {
+.attention-dot {
   position: absolute;
   top: -2px;
   right: -2px;
@@ -371,6 +371,10 @@ html[data-reduced-effects="true"] .dock-bar {
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 0 1.5px var(--surface-icon);
+}
+
+.attention-dot[data-tone="setup"] {
+  background: var(--warning);
 }
 
 /* A área do separador é mais larga que a linha, para dar para arrastá-lo. */
