@@ -81,7 +81,7 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, anchor_y: f
 
     let label = format!("panel-{}", PANEL_COUNTER.fetch_add(1, Ordering::SeqCst));
     let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App("index.html".into()))
-        .initialization_script(&view_script("panel", &kind))
+        .initialization_script(view_script("panel", &kind))
         .title("Pier")
         .decorations(false)
         .transparent(true)
@@ -219,7 +219,7 @@ fn app_window(app: &AppHandle, label: &str, kind: &str, title: &str, size: (f64,
         return Ok(window);
     }
     let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
-        .initialization_script(&view_script(label, kind))
+        .initialization_script(view_script(label, kind))
         .title(title)
         .inner_size(size.0, size.1)
         .min_inner_size(min_size.0, min_size.1)
@@ -240,8 +240,8 @@ fn app_window(app: &AppHandle, label: &str, kind: &str, title: &str, size: (f64,
     #[cfg(target_os = "macos")]
     set_regular_policy(app, true);
     // Os eventos do sistema ignoram o próprio processo, então a lista de janelas é avisada daqui.
-    let handle = app.clone();
-    let closing = label.to_owned();
+    #[cfg(target_os = "macos")]
+    let (handle, closing) = (app.clone(), label.to_owned());
     window.on_window_event(move |event| match event {
         WindowEvent::Focused(_) | WindowEvent::Resized(_) | WindowEvent::Destroyed => {
             if matches!(event, WindowEvent::Destroyed) {

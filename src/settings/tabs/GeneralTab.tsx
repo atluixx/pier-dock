@@ -89,6 +89,8 @@ export function GeneralTab({ config, update, platform }: TabProps) {
     return () => {
       unlisten.then((f) => f());
     };
+    // Uma checagem ao abrir a aba; as próximas vêm do botão ou do evento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const refreshSystem = useCallback(() => {

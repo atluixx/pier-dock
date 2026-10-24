@@ -109,7 +109,7 @@ pub fn control(id: &str, action: &str, position_ms: Option<f64>) -> Result<(), S
         }
         let manager = SessionManager::RequestAsync()?.get()?;
         for session in manager.GetSessions()? {
-            if session.SourceAppUserModelId()?.to_string() != id {
+            if session.SourceAppUserModelId()? != id {
                 continue;
             }
             match action {

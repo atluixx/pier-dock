@@ -12,6 +12,7 @@ pub struct PowerProfiles {
     can_set: bool,
 }
 
+#[cfg_attr(target_os = "macos", allow(dead_code))]
 fn normalize(profiles: impl IntoIterator<Item = String>, active: Option<String>) -> PowerProfiles {
     let found: Vec<_> = profiles.into_iter().collect();
     let profiles: Vec<_> = MODES.iter().filter(|mode| found.iter().any(|p| p == **mode)).map(|s| s.to_string()).collect();

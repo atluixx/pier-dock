@@ -121,7 +121,7 @@ fn scan(files: Vec<PathBuf>, now: DateTime<Utc>) -> (Vec<Event>, Limits) {
             event.model = model.clone();
             let seen_at = event.when.with_timezone(&Utc);
             if let Some(rate_limits) = rate_limits {
-                if limits.seen_at.map_or(true, |at| seen_at > at) {
+                if limits.seen_at.is_none_or(|at| seen_at > at) {
                     limits = Limits { windows: parse_limits(&rate_limits, now), seen_at: Some(seen_at) };
                 }
             }
@@ -144,7 +144,7 @@ pub fn snapshot() -> AiUsage {
         windows: limits.windows,
         age_min,
         // Sem nenhuma leitura de limites o dado conta como velho, como no Claude Code sem cache.
-        stale: age_min.map_or(true, |min| min > STALE_MINUTES),
+        stale: age_min.is_none_or(|min| min > STALE_MINUTES),
         block_tokens: active_block(&events, now_local),
         fetched_at: now_ms(),
         ..Default::default()

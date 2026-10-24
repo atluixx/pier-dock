@@ -323,6 +323,7 @@ export function WidgetsTab({ config, update, setFooter }: TabProps) {
       ],
     });
     // `actions` só repassa ao `update` do store, que não muda; o rodapé depende só destes valores.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, supported.length, active, t]);
   useEffect(() => () => setFooter(null), [setFooter]);
 

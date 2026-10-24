@@ -343,6 +343,7 @@ export function PokemonOptions({ config, update }: OptionsProps) {
 
   useEffect(() => {
     ipc.pokemonList().then(setList).catch((e) => setStatus(common.error(String(e))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const iconShown = config.widgets.some((w) => w.kind === "pokemon" && w.enabled);

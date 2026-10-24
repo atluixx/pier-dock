@@ -108,7 +108,7 @@ pub fn status() -> WifiState {
     let radio = wifi_radio();
     let Ok(wlan) = Wlan::open() else { return WifiState::default() };
     let Some(interface) = wlan.interface() else { return WifiState::default() };
-    let enabled = radio.as_ref().map_or(true, |r| r.State().is_ok_and(|s| s == RadioState::On));
+    let enabled = radio.as_ref().is_none_or(|r| r.State().is_ok_and(|s| s == RadioState::On));
     let mut state = WifiState { available: true, enabled, can_toggle: radio.is_some(), can_connect: true, ..Default::default() };
     if !enabled {
         return state;

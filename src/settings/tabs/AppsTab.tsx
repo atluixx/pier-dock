@@ -45,11 +45,11 @@ export function AppsTab({ config, update }: TabProps) {
   };
 
   const q = query.trim().toLowerCase();
-  const pinnedIds = new Set(config.pinnedApps.map((p) => p.id));
+  const pinnedIds = useMemo(() => new Set(config.pinnedApps.map((p) => p.id)), [config.pinnedApps]);
   const visibleItems = items.filter((k) => !q || nameOf(k).toLowerCase().includes(q));
   const results = useMemo(
     () => (installed ?? []).filter((a) => !pinnedIds.has(a.id) && (!q || a.name.toLowerCase().includes(q))).slice(0, 80),
-    [installed, q, config.pinnedApps],
+    [installed, q, pinnedIds],
   );
 
   const move = (key: string, delta: -1 | 1) => {

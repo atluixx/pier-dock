@@ -265,7 +265,7 @@ async fn fetch(token: &str) -> Result<GithubData, String> {
         .await
         .err_str()?;
     if let Some(message) = response.pointer("/errors/0/message").and_then(Value::as_str) {
-        if response.get("data").map_or(true, Value::is_null) {
+        if response.get("data").is_none_or(Value::is_null) {
             return Err(message.to_string());
         }
     }

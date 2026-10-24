@@ -63,6 +63,7 @@ pub fn position() -> u8 {
 }
 
 /// Nome da borda, como o frontend e a extensão do GNOME o conhecem.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub fn edge_name() -> &'static str {
     match position() {
         TOP => "top",
@@ -535,6 +536,7 @@ fn reserved_hit(layout: Layout, window: (f64, f64)) -> HitRect {
 }
 
 /// Faixa fina na borda da tela que revela a dock escondida, em pixels da janela.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub fn reveal_strip(thickness: f64, window: (f64, f64)) -> (f64, f64, f64, f64) {
     match position() {
         TOP => (0.0, 0.0, window.0, thickness),
@@ -569,8 +571,8 @@ pub fn at_dock_edge(cx: f64, cy: f64, window: Band, scale: f64) -> bool {
 
 /// Onde a janela da dock fica, em pixels físicos de tela.
 #[derive(Clone, Copy, Debug)]
-// O macOS não reserva área de trabalho, então só posiciona a janela.
-#[cfg_attr(target_os = "macos", allow(dead_code))]
+// O macOS não reserva área de trabalho, então só posiciona a janela; o Windows usa só a faixa.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 struct Placement {
     x: i32,
     y: i32,

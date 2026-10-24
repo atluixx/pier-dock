@@ -8,11 +8,12 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -22,6 +23,30 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm test
+      # Os testes de UI e o clippy rodam no CI; instalar o Chromium aqui deixava o release lento.
+      # A tag só sai se o CI deste mesmo commit passou (espera ele terminar, se ainda estiver rodando).
+      - name: CI passou neste commit
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 60); do
+            run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" --event push --limit 1 --json status,conclusion,url --jq '.[0] // empty')
+            status=$(jq -r '.status // empty' <<<"$run")
+            if [ "$status" = "completed" ]; then
+              conclusion=$(jq -r .conclusion <<<"$run")
+              if [ "$conclusion" = "success" ]; then
+                echo "CI passou: $(jq -r .url <<<"$run")"
+                exit 0
+              fi
+              echo "::error::O CI deste commit terminou com '$conclusion': $(jq -r .url <<<"$run"). Rode de novo ou corrija antes de publicar."
+              exit 1
+            fi
+            echo "CI ${status:-ainda não começou}, esperando…"
+            sleep 30
+          done
+          echo "::error::O CI deste commit não terminou em 30 minutos."
+          exit 1
       - name: Tag igual à versão do package.json
         if: github.ref_type == 'tag'
         run: |
@@ -31,8 +56,9 @@ jobs:
             exit 1
           fi
       # O app mostra estas notas depois de atualizar; sem a seção da versão, a janela não abre.
+      # Uma prévia (vX.Y.Z-beta.N) não passa pelo updater e usa as notas da versão final.
       - name: Novidades da versão no changelog
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' && !contains(github.ref_name, '-')
         run: |
           version=$(node -p "require('./package.json').version")
           for file in CHANGELOG.md CHANGELOG.pt-BR.md; do
@@ -127,6 +153,8 @@ jobs:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           releaseName: Pier ${{ github.ref_name }}
           releaseDraft: true
+          # O updater lê `releases/latest`, que ignora prereleases: uma prévia só chega a quem baixa.
+          prerelease: ${{ contains(github.ref_name, '-') }}
           uploadWorkflowArtifacts: ${{ github.ref_type != 'tag' }}
           args: ${{ matrix.args }}
 

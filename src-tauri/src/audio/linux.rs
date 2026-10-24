@@ -170,6 +170,8 @@ pub fn state() -> AudioState {
     AudioState { outputs, apps, apps_need_permission: false, can_route_apps }
 }
 
+// No Linux o estado sai inteiro de `state()`; esta só serve ao smoke test comum às plataformas.
+#[cfg_attr(not(test), allow(dead_code))]
 pub fn apps() -> Option<Vec<AppStream>> { state().apps }
 
 /// All validation completes before the first stream is moved.

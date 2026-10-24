@@ -82,9 +82,17 @@ All platform icons come from `app-icon.svg` and `src-tauri/icons/source/`. To re
 
 - Keep each pull request small and focused on one change.
 - Title it in the [Conventional Commits](https://www.conventionalcommits.org) style, `type(scope): summary`, for example `feat(dock): …` or `fix(windows): …`. Pull requests are squash-merged, so the title becomes the commit message.
-- CI runs `npm run build` and `npm test`, and `cargo test --locked` on Windows, macOS, and Linux. Run them locally before you open the pull request.
+- CI runs `npm run build`, `npm run lint`, `npm test`, and `npm run test:ui`, and `cargo clippy --locked -- -D warnings` and `cargo test --locked` on Windows, macOS, and Linux. Run them locally before you open the pull request.
 - If the change is visible to users, update `README.md` and `README.pt-BR.md`.
 - Don't change the version in `package.json` or `src-tauri/Cargo.toml`, and don't add version sections to the changelogs. The maintainer picks the version and writes the release notes when publishing a release, and CI rejects pull requests that change them.
+
+## Releases
+
+Every stable release reaches every user, so stable versions go out at most once a week and only after a soak.
+
+- Ship work in progress as a preview: `scripts/release.sh X.Y.Z-beta.N`. The release workflow publishes it as a GitHub prerelease. The updater only reads the latest stable release, so a preview only reaches people who download it.
+- Promote to `X.Y.Z` after the preview has run for a few days with no new regressions.
+- The tag's release check waits for the CI run of the tagged commit and fails if that run didn't pass.
 
 ## License
 

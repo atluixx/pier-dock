@@ -31,6 +31,8 @@ export function ReportDialog({ kind, onClose }: { kind: ReportKind; onClose: () 
       .then((s) => setConnected(s.source !== null))
       .catch(() => setConnected(false));
     if (kind === "bug") ipc.reportEnvironment().then(setEnv).catch(console.error);
+    // Só ao abrir: o `kind` não muda enquanto o diálogo está aberto.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleLogs = (on: boolean) => {

@@ -109,7 +109,7 @@ pub fn init(window: &WebviewWindow) {
 pub fn apply_layout(window: &WebviewWindow) {
     let Some(p) = place_window(window) else { return };
     // A AppBar de um monitor não se muda para outro com `ABM_SETPOS`: registra de novo.
-    if std::mem::replace(&mut *APPBAR_MONITOR.lock().unwrap(), Some(p.monitor)) != Some(p.monitor) {
+    if APPBAR_MONITOR.lock().unwrap().replace(p.monitor) != Some(p.monitor) {
         remove_appbar();
     }
     if auto_hide() == AUTO_HIDE_NEVER {

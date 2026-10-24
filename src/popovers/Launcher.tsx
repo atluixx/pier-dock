@@ -45,7 +45,7 @@ export function Launcher() {
     input.current?.focus();
   }, []);
 
-  const launcherPinned = config?.launcherPinned ?? [];
+  const launcherPinned = useMemo(() => config?.launcherPinned ?? [], [config?.launcherPinned]);
   const pinned = useMemo(() => new Set(launcherPinned.map((p) => p.id)), [launcherPinned]);
   const inDock = useMemo(() => new Set((config?.pinnedApps ?? []).map((p) => p.id)), [config?.pinnedApps]);
   // A galeria fica na ordem em que os apps foram fixados, não na alfabética.
