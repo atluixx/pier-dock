@@ -22,7 +22,9 @@ use crate::util::{com_init, wide_to_string, windows_dir, ErrStr};
 fn resolve_known_folder(parsing: &str) -> Option<String> {
     let rest = parsing.strip_prefix('{')?;
     let (guid, tail) = rest.split_once('}')?;
-    let guid = GUID::try_from(guid).ok()?;
+    // `GUID::try_from(&str)` cai no `From`, que entra em pânico com um texto malformado.
+    let hex: String = guid.chars().filter(|&c| c != '-').collect();
+    let guid = GUID::from_u128(u128::from_str_radix(&hex, 16).ok().filter(|_| hex.len() == 32)?);
     unsafe {
         let base = SHGetKnownFolderPath(&guid, KF_FLAG_DEFAULT, None).ok()?;
         let path = base.to_string().ok();

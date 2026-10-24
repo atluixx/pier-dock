@@ -7,8 +7,11 @@ use tauri::AppHandle;
 
 use crate::util::ErrStr;
 
+#[cfg_attr(target_os = "linux", allow(dead_code))]
 const GRANTED: &str = "granted";
+#[cfg_attr(target_os = "linux", allow(dead_code))]
 const DENIED: &str = "denied";
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const NOT_DETERMINED: &str = "not-determined";
 /// O sistema só diz quando o app envolvido está aberto (a Automação do Spotify e do Música).
 #[cfg_attr(not(target_os = "macos"), allow(dead_code))]

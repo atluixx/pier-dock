@@ -240,8 +240,8 @@ fn app_window(app: &AppHandle, label: &str, kind: &str, title: &str, size: (f64,
     #[cfg(target_os = "macos")]
     set_regular_policy(app, true);
     // Os eventos do sistema ignoram o próprio processo, então a lista de janelas é avisada daqui.
-    let handle = app.clone();
-    let closing = label.to_owned();
+    #[cfg(target_os = "macos")]
+    let (handle, closing) = (app.clone(), label.to_owned());
     window.on_window_event(move |event| match event {
         WindowEvent::Focused(_) | WindowEvent::Resized(_) | WindowEvent::Destroyed => {
             if matches!(event, WindowEvent::Destroyed) {

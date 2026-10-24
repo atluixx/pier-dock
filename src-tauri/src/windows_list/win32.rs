@@ -314,7 +314,7 @@ pub fn thumbnail(id: i64) -> Option<Vec<u8>> {
         let _ = DeleteDC(dc);
         let mut pixels = pixels?;
         // BGRA do GDI, com o alfa zerado na maior parte das janelas.
-        for px in pixels.chunks_exact_mut(4) {
+        for px in pixels.as_chunks_mut::<4>().0 {
             px.swap(0, 2);
             px[3] = 255;
         }
