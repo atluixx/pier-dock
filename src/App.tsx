@@ -30,14 +30,18 @@ export function App() {
     ipc.platformInfo().then((p) => setGlassSupported(p.glass)).catch(() => setGlassSupported(false));
   }, []);
 
+  const accent = config?.accent;
+  const material = config?.material;
+  const glassOpacity = config?.glassOpacity;
+  const reducedEffects = config?.reducedEffects;
   useEffect(() => {
-    if (!config) return;
+    if (accent === undefined) return;
     const root = document.documentElement;
-    root.dataset.accent = config.accent;
-    root.dataset.reducedEffects = String(config.reducedEffects);
-    root.dataset.material = config.material === "glass" && glassSupported && !config.reducedEffects ? "glass" : "solid";
-    root.style.setProperty("--dock-opacity", String(config.glassOpacity));
-  }, [config?.accent, config?.material, config?.glassOpacity, config?.reducedEffects, glassSupported]);
+    root.dataset.accent = accent;
+    root.dataset.reducedEffects = String(reducedEffects);
+    root.dataset.material = material === "glass" && glassSupported && !reducedEffects ? "glass" : "solid";
+    root.style.setProperty("--dock-opacity", String(glassOpacity));
+  }, [accent, material, glassOpacity, reducedEffects, glassSupported]);
 
   if (!config) return loadError ? <LoadError retry={load} /> : null;
   if (currentView.view === "panel") return <Popover kind={currentView.kind} />;

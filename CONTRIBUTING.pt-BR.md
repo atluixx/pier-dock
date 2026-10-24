@@ -82,9 +82,17 @@ Os ícones de todas as plataformas saem de `app-icon.svg` e `src-tauri/icons/sou
 
 - Mantenha cada pull request pequeno e focado em uma mudança.
 - Use um título no estilo [Conventional Commits](https://www.conventionalcommits.org/pt-br), `tipo(escopo): resumo`, por exemplo `feat(dock): …` ou `fix(windows): …`, em inglês. Os pull requests entram com squash, então o título vira a mensagem do commit.
-- O CI roda `npm run build` e `npm test`, e `cargo test --locked` no Windows, no macOS e no Linux. Rode tudo localmente antes de abrir o pull request.
+- O CI roda `npm run build`, `npm run lint`, `npm test` e `npm run test:ui`, e `cargo clippy --locked -- -D warnings` e `cargo test --locked` no Windows, no macOS e no Linux. Rode tudo localmente antes de abrir o pull request.
 - Se a mudança aparece para o usuário, atualize o `README.md` e o `README.pt-BR.md`.
 - Não altere a versão no `package.json` nem no `src-tauri/Cargo.toml`, e não adicione seções de versão nos changelogs. Quem mantém o projeto escolhe a versão e escreve as novidades ao publicar, e o CI recusa pull requests que mudam isso.
+
+## Releases
+
+Cada release estável chega a todos os usuários. Por isso, versões estáveis saem no máximo uma vez por semana, e só depois de um período de teste.
+
+- O trabalho em andamento sai como prévia: `scripts/release.sh X.Y.Z-beta.N`. O workflow de release publica como prerelease no GitHub. O updater só lê a última release estável, então a prévia só chega a quem baixar.
+- Promova para `X.Y.Z` depois que a prévia rodar alguns dias sem regressões novas.
+- O check da tag espera o CI do commit marcado e falha se ele não passou.
 
 ## Licença
 

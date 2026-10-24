@@ -25,6 +25,7 @@ jobs:
       - run: npm ci
       # tsc + vite build
       - run: npm run build
+      - run: npm run lint
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run test:ui
@@ -45,6 +46,8 @@ jobs:
           cache: npm
 
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - uses: swatinem/rust-cache@v2
         with:
@@ -60,6 +63,10 @@ jobs:
       # O Tauri embute o frontend (`frontendDist`) na compilação, então o dist precisa existir.
       - run: npm ci
       - run: npm run build
+
+      - name: cargo clippy
+        working-directory: src-tauri
+        run: cargo clippy --locked -- -D warnings
 
       - name: cargo test
         working-directory: src-tauri

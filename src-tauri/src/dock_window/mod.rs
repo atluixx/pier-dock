@@ -63,6 +63,7 @@ pub fn position() -> u8 {
 }
 
 /// Nome da borda, como o frontend e a extensão do GNOME o conhecem.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub fn edge_name() -> &'static str {
     match position() {
         TOP => "top",
@@ -535,6 +536,7 @@ fn reserved_hit(layout: Layout, window: (f64, f64)) -> HitRect {
 }
 
 /// Faixa fina na borda da tela que revela a dock escondida, em pixels da janela.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub fn reveal_strip(thickness: f64, window: (f64, f64)) -> (f64, f64, f64, f64) {
     match position() {
         TOP => (0.0, 0.0, window.0, thickness),

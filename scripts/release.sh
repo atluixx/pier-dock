@@ -5,8 +5,8 @@ set -e
 cd "$(dirname "$0")/.."
 
 VERSION=${1#v}
-if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-  echo "uso: $0 X.Y.Z" >&2
+if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+  echo "uso: $0 X.Y.Z ou X.Y.Z-beta.N" >&2
   exit 1
 fi
 if [ -n "$(git status --porcelain)" ]; then

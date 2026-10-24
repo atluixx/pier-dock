@@ -99,6 +99,8 @@ export function WindowPreview({ app, anchor, position, onClose, onHoverChange }:
     return () => {
       cancelled = true;
     };
+    // `ids` muda só quando a lista de janelas muda; `windows` é um array novo a cada snapshot.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids]);
 
   useEffect(() => {
