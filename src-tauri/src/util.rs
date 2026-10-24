@@ -92,7 +92,7 @@ pub fn reject_network_path(path: &str) -> Result<(), String> {
             && chars.next().is_some_and(|c| c.is_ascii_alphabetic())
             && chars.next() == Some(':');
         if !local_extended {
-            return Err("caminhos de rede não são permitidos".into());
+            return Err(crate::i18n::tr("caminhos de rede não são permitidos", "network paths aren't allowed").into());
         }
     }
     Ok(())

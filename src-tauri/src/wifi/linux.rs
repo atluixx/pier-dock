@@ -143,8 +143,8 @@ pub fn status() -> WifiState {
 }
 
 pub fn scan() -> Result<(), String> {
-    let conn = dbus::system().ok_or("D-Bus do sistema indisponível")?;
-    let device = wifi_device(conn).ok_or("sem interface Wi-Fi")?;
+    let conn = dbus::system().ok_or(crate::i18n::tr("D-Bus do sistema indisponível", "system D-Bus unavailable"))?;
+    let device = wifi_device(conn).ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     let options: HashMap<&str, Value> = HashMap::new();
     // Falha se uma busca acabou de rodar; o resultado anterior continua valendo.
     let _ = proxy(conn, device.as_str(), WIRELESS)?.call::<_, _, ()>("RequestScan", &(options,));
@@ -152,7 +152,7 @@ pub fn scan() -> Result<(), String> {
 }
 
 pub fn set_enabled(enabled: bool) -> Result<(), String> {
-    let conn = dbus::system().ok_or("D-Bus do sistema indisponível")?;
+    let conn = dbus::system().ok_or(crate::i18n::tr("D-Bus do sistema indisponível", "system D-Bus unavailable"))?;
     proxy(conn, NM_PATH, NM)?.set_property("WirelessEnabled", enabled).map_err(|e| e.to_string())
 }
 
@@ -174,8 +174,8 @@ fn wait_activated(conn: &Connection, active: &OwnedObjectPath) -> bool {
 }
 
 pub fn connect(ssid: &str, password: Option<&str>) -> Result<(), String> {
-    let conn = dbus::system().ok_or("D-Bus do sistema indisponível")?;
-    let device = wifi_device(conn).ok_or("sem interface Wi-Fi")?;
+    let conn = dbus::system().ok_or(crate::i18n::tr("D-Bus do sistema indisponível", "system D-Bus unavailable"))?;
+    let device = wifi_device(conn).ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     let nm = proxy(conn, NM_PATH, NM)?;
     let root = ObjectPath::try_from("/").expect("caminho fixo");
 
@@ -184,7 +184,7 @@ pub fn connect(ssid: &str, password: Option<&str>) -> Result<(), String> {
         return if wait_activated(conn, &active) { Ok(()) } else { Err(ERR_AUTH.into()) };
     }
 
-    let ap = access_points(conn, &device).into_iter().filter(|ap| ap.ssid == ssid).max_by_key(|ap| ap.strength).ok_or("rede não encontrada")?;
+    let ap = access_points(conn, &device).into_iter().filter(|ap| ap.ssid == ssid).max_by_key(|ap| ap.strength).ok_or(crate::i18n::tr("rede não encontrada", "network not found"))?;
     let mut settings: HashMap<&str, HashMap<&str, Value>> = HashMap::new();
     match (ap.security, password) {
         (Security::Enterprise, _) => return Err(ERR_UNSUPPORTED.into()),
@@ -208,8 +208,8 @@ pub fn connect(ssid: &str, password: Option<&str>) -> Result<(), String> {
 }
 
 pub fn disconnect() -> Result<(), String> {
-    let conn = dbus::system().ok_or("D-Bus do sistema indisponível")?;
-    let device = wifi_device(conn).ok_or("sem interface Wi-Fi")?;
+    let conn = dbus::system().ok_or(crate::i18n::tr("D-Bus do sistema indisponível", "system D-Bus unavailable"))?;
+    let device = wifi_device(conn).ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     let active: OwnedObjectPath = proxy(conn, device.as_str(), DEVICE)?.get_property("ActiveConnection").map_err(|e| e.to_string())?;
     if active.as_str() == "/" {
         return Ok(());

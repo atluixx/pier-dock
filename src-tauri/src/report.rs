@@ -227,7 +227,7 @@ async fn create(token: &str, kind: Kind, title: &str, body: &str) -> Result<Stri
         let message = json.get("message").and_then(Value::as_str).unwrap_or_default();
         return Err(format!("{} {message}", status.as_u16()).trim().to_string());
     }
-    json.get("html_url").and_then(Value::as_str).map(String::from).ok_or_else(|| "resposta do GitHub sem html_url".into())
+    json.get("html_url").and_then(Value::as_str).map(String::from).ok_or_else(|| crate::i18n::tr("resposta do GitHub sem html_url", "GitHub's response has no html_url").into())
 }
 
 async fn send_anonymous(kind: Kind, title: &str, body: &str) -> Result<String, String> {
@@ -239,7 +239,7 @@ async fn send_anonymous(kind: Kind, title: &str, body: &str) -> Result<String, S
         let message = json.get("error").and_then(Value::as_str).unwrap_or_default();
         return Err(format!("{} {message}", status.as_u16()).trim().to_string());
     }
-    json.get("url").and_then(Value::as_str).map(String::from).ok_or_else(|| "resposta do servidor sem url".into())
+    json.get("url").and_then(Value::as_str).map(String::from).ok_or_else(|| crate::i18n::tr("resposta do servidor sem url", "the server's response has no url").into())
 }
 
 #[derive(Serialize, Debug)]
@@ -266,7 +266,7 @@ pub async fn report_issue(app: AppHandle, kind: String, title: String, descripti
     let kind = Kind::parse(&kind)?;
     let title = title.trim();
     if title.is_empty() {
-        return Err("o título está vazio".into());
+        return Err(crate::i18n::tr("o título está vazio", "the title is empty").into());
     }
     let env = (kind == Kind::Bug).then(|| environment(&app));
     let logs = logs.as_deref().filter(|l| !l.trim().is_empty());

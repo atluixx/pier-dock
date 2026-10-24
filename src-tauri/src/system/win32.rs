@@ -165,15 +165,15 @@ pub fn bluetooth() -> Bluetooth {
 }
 
 pub fn connect_bluetooth(_id: &str) -> Result<(), String> {
-    Err("o Windows não permite conectar dispositivos Bluetooth por apps".into())
+    Err(crate::i18n::tr("o Windows não permite conectar dispositivos Bluetooth por apps", "Windows doesn't let apps connect Bluetooth devices").into())
 }
 
 pub fn disconnect_bluetooth(_id: &str) -> Result<(), String> {
-    Err("o Windows não permite desconectar dispositivos Bluetooth por apps".into())
+    Err(crate::i18n::tr("o Windows não permite desconectar dispositivos Bluetooth por apps", "Windows doesn't let apps disconnect Bluetooth devices").into())
 }
 
 pub fn set_bluetooth(powered: bool) -> Result<(), String> {
-    let radio = bluetooth_radio().ok_or("sem adaptador Bluetooth")?;
+    let radio = bluetooth_radio().ok_or(crate::i18n::tr("sem adaptador Bluetooth", "no Bluetooth adapter"))?;
     radio.SetStateAsync(if powered { RadioState::On } else { RadioState::Off }).err_str()?.get().err_str()?;
     Ok(())
 }
@@ -275,7 +275,7 @@ fn click_tray_chevron() -> Result<(), String> {
         click_win10(button);
         return Ok(());
     }
-    let chevron = wait_tray_chevron().ok_or("seta da bandeja não encontrada")?;
+    let chevron = wait_tray_chevron().ok_or(crate::i18n::tr("seta da bandeja não encontrada", "tray arrow not found"))?;
     invoke(&chevron).err_str()
 }
 
@@ -316,7 +316,7 @@ fn close_tray_overflow(overflow: HWND) -> Result<(), String> {
     unsafe {
         let _ = ShowWindowAsync(overflow, SW_HIDE);
     }
-    poll(Duration::from_millis(500), closed).ok_or_else(|| "não foi possível fechar a bandeja".into())
+    poll(Duration::from_millis(500), closed).ok_or_else(|| crate::i18n::tr("não foi possível fechar a bandeja", "couldn't close the tray").into())
 }
 
 /// Abre a gaveta de ícones ocultos ancorada em `(anchor_x, anchor_y)` (pixels físicos de tela).
@@ -348,7 +348,7 @@ fn toggle_tray(anchor_x: i32, anchor_y: i32, edge: u8) -> Result<(), String> {
         }
         return result;
     }
-    let overflow = with_taskbar(show_tray_overflow).ok_or("não foi possível abrir a bandeja")?;
+    let overflow = with_taskbar(show_tray_overflow).ok_or(crate::i18n::tr("não foi possível abrir a bandeja", "couldn't open the tray"))?;
     unsafe {
         let mut rect = RECT::default();
         if GetWindowRect(overflow, &mut rect).is_ok() {

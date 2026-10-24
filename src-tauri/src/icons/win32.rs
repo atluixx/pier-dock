@@ -71,8 +71,8 @@ pub fn extract(key: &str) -> Result<(Vec<u8>, &'static str), String> {
     unsafe {
         let _ = DeleteObject(hbmp);
     }
-    let (w, h, pixels) = rgba.ok_or("falha ao ler o bitmap do ícone")?;
-    let img = image::RgbaImage::from_raw(w, h, pixels).ok_or("bitmap inválido")?;
+    let (w, h, pixels) = rgba.ok_or(crate::i18n::tr("falha ao ler o bitmap do ícone", "couldn't read the icon bitmap"))?;
+    let img = image::RgbaImage::from_raw(w, h, pixels).ok_or(crate::i18n::tr("bitmap inválido", "invalid bitmap"))?;
     let mut png = Vec::new();
     img.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png).err_str()?;
     Ok((png, "image/png"))

@@ -56,7 +56,7 @@ pub fn status() -> WifiState {
 }
 
 pub fn scan() -> Result<(), String> {
-    let interface = interface().ok_or("sem interface Wi-Fi")?;
+    let interface = interface().ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     let found = unsafe { interface.scanForNetworksWithName_error(None) }.map_err(|e| e.localizedDescription().to_string())?;
     let mut redacted = false;
     let mut networks = Vec::new();
@@ -73,17 +73,17 @@ pub fn scan() -> Result<(), String> {
 }
 
 pub fn set_enabled(enabled: bool) -> Result<(), String> {
-    let interface = interface().ok_or("sem interface Wi-Fi")?;
+    let interface = interface().ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     unsafe { interface.setPower_error(enabled) }.map_err(|e| e.localizedDescription().to_string())
 }
 
 pub fn connect(ssid: &str, password: Option<&str>) -> Result<(), String> {
-    let interface = interface().ok_or("sem interface Wi-Fi")?;
+    let interface = interface().ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     let Some(password) = password else {
         // Sem senha (rede salva ou aberta): o `networksetup` usa a senha guardada no Keychain do
         // sistema, que o CoreWLAN não lê sem pedir acesso ao usuário.
-        let name = unsafe { interface.interfaceName() }.map(|n| n.to_string()).ok_or("sem interface Wi-Fi")?;
-        let output = run("/usr/sbin/networksetup", &["-setairportnetwork", &name, ssid]).ok_or("falha ao conectar")?;
+        let name = unsafe { interface.interfaceName() }.map(|n| n.to_string()).ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
+        let output = run("/usr/sbin/networksetup", &["-setairportnetwork", &name, ssid]).ok_or(crate::i18n::tr("falha ao conectar", "couldn't connect"))?;
         // Ele sai com 0 mesmo quando falha e só avisa na saída ("Could not find network…").
         return if output.trim().is_empty() { Ok(()) } else { Err(ERR_AUTH.into()) };
     };
@@ -98,7 +98,7 @@ pub fn connect(ssid: &str, password: Option<&str>) -> Result<(), String> {
 }
 
 pub fn disconnect() -> Result<(), String> {
-    let interface = interface().ok_or("sem interface Wi-Fi")?;
+    let interface = interface().ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     unsafe { interface.disassociate() };
     Ok(())
 }

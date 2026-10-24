@@ -165,6 +165,7 @@ fn main() {
         .build();
 
     let (config, config_issue) = config::load_first_run_aware();
+    i18n::remember(i18n::resolve(&config.language));
     let app = tauri::Builder::default()
         .plugin(report::log_plugin())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {

@@ -140,7 +140,7 @@ pub fn run(app: &AppHandle) {
 }
 
 pub fn control(id: &str, action: &str, position_ms: Option<f64>) -> Result<(), String> {
-    let proxy = player(id).ok_or("player não encontrado")?;
+    let proxy = player(id).ok_or(crate::i18n::tr("player não encontrado", "player not found"))?;
     let call = |method: &str| proxy.call_method(method, &()).map(|_| ()).map_err(|e| e.to_string());
     match action {
         "toggle" => call("PlayPause"),

@@ -68,15 +68,15 @@ pub fn volume() -> Result<Volume, String> {
     osascript("set s to get volume settings\nreturn (output volume of s as text) & \",\" & (output muted of s as text)")
         .as_deref()
         .and_then(parse_volume)
-        .ok_or_else(|| "esta saída de áudio não tem controle de volume".into())
+        .ok_or_else(|| crate::i18n::tr("esta saída de áudio não tem controle de volume", "this audio output has no volume control").into())
 }
 
 pub fn set_volume(level: Option<f32>, muted: Option<bool>) -> Result<(), String> {
     if let Some(level) = level {
-        osascript(&format!("set volume output volume {}", (level * 100.0).round() as u32)).ok_or("falha ao ajustar o volume")?;
+        osascript(&format!("set volume output volume {}", (level * 100.0).round() as u32)).ok_or(crate::i18n::tr("falha ao ajustar o volume", "couldn't set the volume"))?;
     }
     if let Some(muted) = muted {
-        osascript(&format!("set volume output muted {muted}")).ok_or("falha ao silenciar")?;
+        osascript(&format!("set volume output muted {muted}")).ok_or(crate::i18n::tr("falha ao silenciar", "couldn't mute"))?;
     }
     Ok(())
 }
@@ -128,7 +128,7 @@ pub fn disconnect_bluetooth(id: &str) -> Result<(), String> {
 }
 
 pub fn set_bluetooth(_powered: bool) -> Result<(), String> {
-    Err("o macOS não permite ligar o Bluetooth por apps".into())
+    Err(crate::i18n::tr("o macOS não permite ligar o Bluetooth por apps", "macOS doesn't let apps turn Bluetooth on").into())
 }
 
 /// Clica num item da barra de menus do Central de Controle pelo identificador (que, ao

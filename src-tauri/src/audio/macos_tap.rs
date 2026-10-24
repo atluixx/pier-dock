@@ -300,7 +300,7 @@ fn cf_key(key: &CStr) -> CFString {
 }
 
 fn create(group: &AppGroup, output: &str, gain: f32) -> Result<AppTap, String> {
-    let fns = tap_fns().ok_or("process taps indisponíveis")?;
+    let fns = tap_fns().ok_or(crate::i18n::tr("process taps indisponíveis", "process taps unavailable"))?;
     let objects: Vec<_> = group.objects.iter().map(|&o| NSNumber::new_u32(o)).collect();
     let uuid = NSUUID::new();
     let description = unsafe {

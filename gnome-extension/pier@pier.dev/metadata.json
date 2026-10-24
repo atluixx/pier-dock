@@ -1,7 +1,7 @@
 {
   "uuid": "pier@pier.dev",
   "name": "Pier",
-  "description": "Ponte entre o GNOME Shell e o Pier: lista e foca janelas, mostra a área de trabalho, reserva espaço na tela, esconde o Dash e registra os atalhos Ctrl+Alt+1..9.",
+  "description": "Connects GNOME Shell to Pier: lists and focuses windows, shows the desktop, reserves screen space, hides the Dash, and registers the Ctrl+Alt+1..9 shortcuts.",
   "shell-version": ["45", "46", "47", "48", "49"],
   "version": 4
 }

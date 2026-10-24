@@ -467,7 +467,7 @@ export const en: Dict = {
       },
       bluetooth: { summary: "Paired devices, connection and battery.", name: "Bluetooth", description: "Whether it's on and how many devices are connected. Clicking opens the paired devices, with each one's battery when the system reports it: click one to connect." },
       battery: { summary: "Charge and whether it's charging.", name: "Battery", description: "Charge level and whether it's charging. Hidden on computers without a battery." },
-      clock: { summary: "Time and date.", name: "Clock", description: "Time and date. Clicking opens the notification center." },
+      clock: { summary: "Time and date.", name: "Clock", description: "Time and date. Clicking opens a month calendar." },
       "show-desktop": { summary: "Minimizes everything and shows the desktop.", name: "Desktop", description: "Minimizes all windows and shows the desktop. Clicking again brings them back." },
       weather: { summary: "Current temperature and conditions.", name: "Weather", description: "Current temperature and conditions. Clicking opens the hourly and 5-day forecast." },
       pomodoro: { summary: "Focus cycles with a progress ring.",
@@ -551,6 +551,7 @@ export const en: Dict = {
     changeLink: "Change link",
     connect: "Connect",
     icalAddress: "iCal address",
+    icalPlaceholder: "https://… or webcal://…",
     calendarHint: (keychain) =>
       `Google Calendar: Calendar settings → Secret address in iCal format. Outlook: Calendar → Shared calendars → Publish a calendar (ICS link). The address is stored ${keychain}.`,
     agentIntegrationLabel: "AI integrations",

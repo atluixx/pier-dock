@@ -467,7 +467,7 @@ export const pt = {
       },
       bluetooth: { summary: "Dispositivos pareados, conexão e bateria.", name: "Bluetooth", description: "Se está ligado e quantos dispositivos estão conectados. O clique abre os pareados, com a bateria de cada um quando o sistema informa: clique num deles para conectar." },
       battery: { summary: "Carga e se está carregando.", name: "Bateria", description: "Carga e se está carregando. Some em computadores sem bateria." },
-      clock: { summary: "Hora e data.", name: "Relógio", description: "Hora e data. O clique abre a central de notificações." },
+      clock: { summary: "Hora e data.", name: "Relógio", description: "Hora e data. O clique abre o calendário do mês." },
       "show-desktop": { summary: "Minimiza tudo e mostra a área de trabalho.", name: "Área de trabalho", description: "Minimiza todas as janelas e mostra a área de trabalho. Clicar de novo traz as janelas de volta." },
       weather: { summary: "Temperatura e condição agora.", name: "Clima", description: "Temperatura e condição agora. O clique abre a previsão por hora e para os próximos 5 dias." },
       pomodoro: { summary: "Ciclos de foco com o anel de progresso.",
@@ -551,6 +551,7 @@ export const pt = {
     changeLink: "Trocar link",
     connect: "Conectar",
     icalAddress: "Endereço iCal",
+    icalPlaceholder: "https://… ou webcal://…",
     calendarHint: (keychain: string) =>
       `Google Agenda: Configurações da agenda → Endereço secreto no formato iCal. Outlook: Calendário → Calendários compartilhados → Publicar um calendário (link ICS). O endereço fica guardado ${keychain}.`,
     agentIntegrationLabel: "Integrações das IAs",

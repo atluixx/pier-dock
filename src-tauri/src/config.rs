@@ -303,7 +303,7 @@ pub fn parse(json: &str) -> Result<Config, String> {
     let value: serde_json::Value = serde_json::from_str(json).err_str()?;
     let is_config = value.as_object().is_some_and(|o| o.contains_key("widgets") || o.contains_key("pinnedApps"));
     if !is_config {
-        return Err("o arquivo não é uma configuração do Pier".into());
+        return Err(crate::i18n::tr("o arquivo não é uma configuração do Pier", "the file isn't a Pier configuration").into());
     }
     read(value)
 }
