@@ -7,10 +7,12 @@ import { Dock } from "./dock/Dock";
 import { Popover } from "./popovers/Popover";
 import { Settings } from "./settings/Settings";
 import { WhatsNew } from "./whats-new/WhatsNew";
+import { LoadError } from "./ui/LoadError";
 
 export function App() {
   const config = useConfig((s) => s.config);
   const load = useConfig((s) => s.load);
+  const loadError = useConfig((s) => s.loadError);
   // Assinar o idioma aqui re-renderiza a árvore toda, inclusive o que formata fora de hooks.
   const lang = useLang((s) => s.lang);
 
@@ -37,7 +39,7 @@ export function App() {
     root.style.setProperty("--dock-opacity", String(config.glassOpacity));
   }, [config?.accent, config?.material, config?.glassOpacity, config?.reducedEffects, glassSupported]);
 
-  if (!config) return null;
+  if (!config) return loadError ? <LoadError retry={load} /> : null;
   if (currentView.view === "panel") return <Popover kind={currentView.kind} />;
   if (currentView.view === "settings") return <Settings />;
   if (currentView.view === "whats-new") return <WhatsNew since={currentView.kind || null} />;

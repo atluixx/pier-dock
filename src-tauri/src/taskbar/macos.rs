@@ -56,7 +56,7 @@ pub fn hide() {
             SavedState { autohide: read_default("autohide"), autohide_delay: delay }
         };
         let Ok(json) = serde_json::to_string(&saved) else { return };
-        if std::fs::write(&path, json).is_err() {
+        if crate::util::write_atomic(&path, json).is_err() {
             return;
         }
     }

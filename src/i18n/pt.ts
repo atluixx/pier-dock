@@ -12,6 +12,8 @@ export const pt = {
     dragInDock: "Ou arraste na própria dock",
     positionOf: (position: number, total: number) => `${position} de ${total}`,
     error: (message: string) => `Erro: ${message}`,
+    loadFailed: "Não foi possível carregar as configurações do Pier.",
+    tryAgain: "Tentar de novo",
     updatedAgo: (ago: string) => `Atualizado ${ago}`,
     play: "Tocar",
     pause: "Pausar",

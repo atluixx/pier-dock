@@ -16,6 +16,8 @@ export const en: Dict = {
     dragInDock: "Or drag it in the dock itself",
     positionOf: (position, total) => `${position} of ${total}`,
     error: (message) => `Error: ${message}`,
+    loadFailed: "Couldn't load Pier's settings.",
+    tryAgain: "Try again",
     updatedAgo: (ago) => `Updated ${ago}`,
     play: "Play",
     pause: "Pause",
