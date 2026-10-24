@@ -285,15 +285,22 @@ export function WidgetsTab({ config, update, setFooter }: TabProps) {
       update((c) => {
         const flag = PET_FLAGS[kind];
         const on = c.widgets.some((w) => w.kind === kind && inUse(c, w));
-        return {
-          widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, enabled: !on } : w)),
-          ...(flag && on ? { [flag]: false } : {}),
-        };
+        const extra = flag && on ? { [flag]: false } : {};
+        if (on) return { widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, enabled: false } : w)), ...extra };
+        // O recém-ligado entra logo depois do último da dock, como na ordem dela (`resolveOrder`).
+        const target = c.widgets.find((w) => w.kind === kind);
+        if (!target) return {};
+        const rest = c.widgets.filter((w) => w.kind !== kind);
+        const end = rest.reduce((last, w, i) => (w.enabled ? i : last), -1) + 1;
+        return { widgets: [...rest.slice(0, end), { ...target, enabled: true }, ...rest.slice(end)] };
       }),
     set: (kind, patch) => update((c) => ({ widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, ...patch } : w)) })),
   };
 
-  const supported = config.widgets.filter((w) => widgetSupported(w.kind));
+  // Os em uso vêm primeiro; a ordenação é estável, então cada grupo mantém a ordem da dock.
+  const supported = config.widgets
+    .filter((w) => widgetSupported(w.kind))
+    .sort((a, b) => Number(inUse(config, b)) - Number(inUse(config, a)));
   const active = supported.filter((w) => inUse(config, w)).length;
   const q = query.trim().toLowerCase();
   const visible = supported.filter((w) => {
