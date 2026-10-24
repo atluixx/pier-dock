@@ -13,6 +13,7 @@ import { dict } from "../i18n";
 import { useConfig } from "../store/config";
 import { useWindows } from "../hooks/useWindows";
 import { usePendingUpdate } from "../hooks/usePendingUpdate";
+import { useSetupNeeded } from "../hooks/useSetupNeeded";
 import { reuseDockApps } from "./appIdentity";
 import { buildDockApps, type DockApp } from "./apps";
 import { stableOpenApps } from "./runningOrder";
@@ -31,55 +32,71 @@ import { togglePanel } from "../widgets/Tile";
 /** Espera antes de fechar a faixa quando o cursor sai da dock (ver o efeito do `mouseleave`). */
 const PREVIEW_CLOSE_DELAY = 200;
 
-const openUpdateSettings = () => void ipc.openSettings("general").catch(console.error);
-
-function updateMenuItems(update: UpdateInfo | null) {
-  return update ? [{ id: "update", text: dict().dock.updateAvailable(update.version), action: openUpdateSettings }] : [];
+/** Algo que pede o usuário: configuração pendente do sistema ou versão nova. */
+interface Attention {
+  id: string;
+  tone: "setup" | "update";
+  label: string;
+  open: () => void;
 }
 
-/** Aviso de versão nova no canto do botão de apps; abre a aba Geral, onde a instalação é confirmada. */
-function UpdateDot({ version }: { version: string }) {
-  const label = dict().dock.updateAvailable(version);
+function attentionItems(setupNeeded: boolean, update: UpdateInfo | null): Attention[] {
+  const t = dict().dock;
+  return [
+    // O aviso de configuração aparece em todas as abas.
+    ...(setupNeeded ? [{ id: "setup", tone: "setup" as const, label: t.setupNeeded, open: () => void ipc.openSettings().catch(console.error) }] : []),
+    // A instalação é confirmada na aba Geral.
+    ...(update
+      ? [{ id: "update", tone: "update" as const, label: t.updateAvailable(update.version), open: () => void ipc.openSettings("general").catch(console.error) }]
+      : []),
+  ];
+}
+
+const attentionMenuItems = (attention: Attention[]) => attention.map((a) => ({ id: a.id, text: a.label, action: a.open }));
+
+/** Ponto no canto do botão de apps com o aviso mais importante; o menu do botão lista todos. */
+function AttentionDot({ attention }: { attention: Attention }) {
   return (
     <button
-      className="update-dot"
-      aria-label={label}
-      title={label}
+      className="attention-dot"
+      data-tone={attention.tone}
+      aria-label={attention.label}
+      title={attention.label}
       onPointerDown={(e) => e.stopPropagation()}
-      onClick={openUpdateSettings}
+      onClick={attention.open}
     />
   );
 }
 
 /** Abre o lançador de apps do sistema (Menu Iniciar, Launchpad, grade de apps do GNOME). */
-function StartButton({ onRemove, update }: { onRemove: () => void; update: UpdateInfo | null }) {
+function StartButton({ onRemove, attention }: { onRemove: () => void; attention: Attention[] }) {
   const onContextMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const menu = await Menu.new({ items: [...updateMenuItems(update), { id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
+    const menu = await Menu.new({ items: [...attentionMenuItems(attention), { id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
     await menu.popup();
   };
   return (
-    <SortableItem id={START_KEY} className={update ? "widget-slot has-update" : "widget-slot"} onContextMenu={onContextMenu}>
+    <SortableItem id={START_KEY} className={attention.length ? "widget-slot has-attention" : "widget-slot"} onContextMenu={onContextMenu}>
       <button className="launcher-button" aria-label={labels().startButton} title={labels().startButton} onClick={() => ipc.openShell("start")}>
         <Search size={18} strokeWidth={2} aria-hidden />
       </button>
-      {update && <UpdateDot version={update.version} />}
+      {attention[0] && <AttentionDot attention={attention[0]} />}
     </SortableItem>
   );
 }
 
 /** Lançador de apps do Pier: abre a grade de instalados acima do botão (ver `popovers/Launcher`). */
-function LauncherButton({ onRemove, update }: { onRemove: () => void; update: UpdateInfo | null }) {
+function LauncherButton({ onRemove, attention }: { onRemove: () => void; attention: Attention[] }) {
   const ref = useRef<HTMLButtonElement>(null);
   const onContextMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const menu = await Menu.new({ items: [...updateMenuItems(update), { id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
+    const menu = await Menu.new({ items: [...attentionMenuItems(attention), { id: "remove", text: dict().dock.removeFromDock, action: onRemove }] });
     await menu.popup();
   };
   return (
-    <SortableItem id={LAUNCHER_KEY} className={update ? "widget-slot has-update" : "widget-slot"} onContextMenu={onContextMenu}>
+    <SortableItem id={LAUNCHER_KEY} className={attention.length ? "widget-slot has-attention" : "widget-slot"} onContextMenu={onContextMenu}>
       <button
         ref={ref}
         className="launcher-button"
@@ -89,7 +106,7 @@ function LauncherButton({ onRemove, update }: { onRemove: () => void; update: Up
       >
         <LayoutGrid size={18} strokeWidth={2} aria-hidden />
       </button>
-      {update && <UpdateDot version={update.version} />}
+      {attention[0] && <AttentionDot attention={attention[0]} />}
     </SortableItem>
   );
 }
@@ -122,6 +139,8 @@ const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
   const update = useConfig((s) => s.update);
   const snapshot = useWindows();
   const pendingUpdate = usePendingUpdate();
+  const setupNeeded = useSetupNeeded();
+  const attention = attentionItems(setupNeeded, pendingUpdate);
   const position = config.dockPosition;
   const vertical = isVertical(position);
   const full = config.dockWidth === "full";
@@ -345,7 +364,7 @@ const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
     const t = dict().dock;
     const menu = await Menu.new({
       items: [
-        ...updateMenuItems(pendingUpdate),
+        ...attentionMenuItems(attention),
         { id: "settings", text: t.dockSettings, action: () => ipc.openSettings() },
         { id: "divider", text: t.addDivider, action: () => update((c) => addDivider(c)) },
         ...(config.showStartButton
@@ -379,12 +398,12 @@ const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
     return n >= 1 && n <= 9 ? n : undefined;
   };
 
-  // Um aviso só: no lançador do Pier, ou no botão Iniciar se o lançador estiver oculto. Sem
-  // nenhum dos dois, fica o item no menu do fundo da dock e na bandeja.
-  const updateHost = config.showLauncher ? LAUNCHER_KEY : START_KEY;
+  // Um ponto só: no lançador do Pier, ou no botão Iniciar se o lançador estiver oculto. Sem
+  // nenhum dos dois, os avisos ficam no menu do fundo da dock.
+  const attentionHost = config.showLauncher ? LAUNCHER_KEY : START_KEY;
   const renderItem = (key: string) => {
-    if (key === START_KEY) return <StartButton key={key} onRemove={() => remove(key)} update={updateHost === key ? pendingUpdate : null} />;
-    if (key === LAUNCHER_KEY) return <LauncherButton key={key} onRemove={() => remove(key)} update={updateHost === key ? pendingUpdate : null} />;
+    if (key === START_KEY) return <StartButton key={key} onRemove={() => remove(key)} attention={attentionHost === key ? attention : []} />;
+    if (key === LAUNCHER_KEY) return <LauncherButton key={key} onRemove={() => remove(key)} attention={attentionHost === key ? attention : []} />;
     if (isDivider(key)) return <Divider key={key} id={key} onRemove={() => remove(key)} />;
     const app = pinnedApps.get(key);
     if (app)

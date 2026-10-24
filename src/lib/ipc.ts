@@ -523,6 +523,7 @@ export const ipc = {
   focusPanel: () => invoke<void>("focus_panel"),
   openSettings: (tab?: string) => invoke<void>("open_settings", { tab }),
   openWhatsNew: () => invoke<void>("open_whats_new"),
+  firstRun: () => invoke<boolean>("first_run"),
 
   platformInfo: () => invoke<PlatformInfo>("platform_info"),
   systemLanguage: () => invoke<Lang>("system_language"),

@@ -1,3 +1,4 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
@@ -227,6 +228,23 @@ pub struct ConfigState(pub Mutex<Config>);
 
 fn config_path() -> std::path::PathBuf {
     data_dir().join("config.json")
+}
+
+/// Abriu sem config salva: instalação nova (ou ninguém mexeu em nada ainda).
+static FRESH_INSTALL: AtomicBool = AtomicBool::new(false);
+
+/// A config do primeiro uso: a barra do sistema só some depois que o usuário aceita, nas boas-vindas.
+pub fn load_first_run_aware() -> Config {
+    let fresh = !config_path().exists();
+    FRESH_INSTALL.store(fresh, Ordering::Relaxed);
+    let config = load();
+    if fresh { Config { hide_taskbar: false, ..config } } else { config }
+}
+
+/// As boas-vindas aparecem até a primeira config ser gravada.
+#[tauri::command]
+pub fn first_run() -> bool {
+    FRESH_INSTALL.load(Ordering::Relaxed) && !config_path().exists()
 }
 
 pub fn load() -> Config {

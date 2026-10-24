@@ -357,6 +357,7 @@ export const pt = {
     running: "aberto",
     notifications: (n: number) => `${n} notificações`,
     updateAvailable: (version: string) => `Atualização para ${version} disponível`,
+    setupNeeded: "Terminar de configurar o Pier",
   },
   preview: {
     label: (name: string) => `Janelas de ${name}`,
@@ -715,6 +716,18 @@ export const pt = {
     failed: (message: string) => `Não deu para enviar: ${message}`,
     close: "Fechar",
     done: "Concluir",
+  },
+  welcome: {
+    title: "Boas-vindas ao Pier",
+    replaceQuestion: {
+      windows: "O Pier pode ficar no lugar da barra de tarefas do Windows. Esconder a barra de tarefas enquanto o Pier estiver aberto? Dá para mudar depois em Geral.",
+      linux: "O Pier pode ficar no lugar do Dash do GNOME. Esconder o Dash enquanto o Pier estiver aberto? Dá para mudar depois em Geral.",
+      macos: "O Pier pode ficar no lugar do Dock do macOS. Esconder o Dock enquanto o Pier estiver aberto? Dá para mudar depois em Geral.",
+    },
+    ready: "Fixe seus apps em Apps e escolha o que a dock mostra em Widgets.",
+    replace: "Substituir",
+    keepBoth: "Manter os dois",
+    gotIt: "Entendi",
   },
   notice: {
     extensionInstalled: "Extensão instalada. Encerre a sessão e entre de novo para o GNOME carregá-la.",

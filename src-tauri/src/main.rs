@@ -175,7 +175,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(shortcuts)
-        .manage(config::ConfigState(Mutex::new(config::load())))
+        .manage(config::ConfigState(Mutex::new(config::load_first_run_aware())))
         .manage(updater::UpdateState::default())
         .invoke_handler(tauri::generate_handler![
             quit_app,
@@ -184,6 +184,7 @@ fn main() {
             config::export_config,
             config::import_config,
             config::reset_config,
+            config::first_run,
             dock_window::set_dock_layout,
             dock_window::set_hit_rect,
             dock_window::set_pet_rect,
@@ -292,6 +293,9 @@ fn main() {
 
             if let Some(dock) = app.get_webview_window(dock_window::DOCK_LABEL) {
                 dock_window::init(&dock);
+            }
+            if config::first_run() {
+                let _ = panels::open_settings_window(&handle);
             }
             dock_window::start_monitor_watch(handle.clone());
             // O painel não recebe foco no macOS (o app nunca fica ativo), então "perder o foco" não
