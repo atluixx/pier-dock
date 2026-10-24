@@ -22,7 +22,7 @@ test("a config that fails to load shows an error and recovers on retry", async (
 test("a failed save puts the previous value back", async ({ page }) => {
   await openSettings(page, { save_config: "disk full" });
   await page.getByRole("tab", { name: "General", exact: true }).click();
-  const autoUpdate = page.getByRole("switch", { name: "Update automatically", exact: true });
+  const autoUpdate = page.getByRole("switch", { name: "Check for updates automatically", exact: true });
   await expect(autoUpdate).toHaveAttribute("aria-checked", "true");
   await autoUpdate.click();
   await expectCall(page, "save_config", { config: expect.objectContaining({ autoUpdate: false }) });
