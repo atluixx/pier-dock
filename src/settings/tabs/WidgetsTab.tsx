@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, Search, Settings, X } from "lucide-react";
-import type { BluetoothState, WidgetConfig, WidgetKind, WidgetSize } from "../../lib/ipc";
+import type { BluetoothState, Config, WidgetConfig, WidgetKind, WidgetSize } from "../../lib/ipc";
 import { os, widgetSupported } from "../../lib/platform";
 import { moveAmong, widgetKey } from "../../dock/order";
 import { useGithub } from "../../hooks/useGithub";
@@ -10,7 +10,7 @@ import { useWeather } from "../../hooks/useWeather";
 import { useCalendar } from "../../hooks/useCalendar";
 import { useAiUsage } from "../../hooks/useAiUsage";
 import { RESIZABLE, WidgetView, formatsOf, type WidgetData } from "../../widgets/WidgetView";
-import { AgentSessionsOptions, AiUsageOptions, CalendarOptions, PomodoroOptions, WeatherOptions } from "./WidgetOptions";
+import { AgentSessionsOptions, AiUsageOptions, CalendarOptions, PokemonOptions, PomodoroOptions, WeatherOptions } from "./WidgetOptions";
 import { Card, Row } from "../../ui/Card";
 import { Segmented } from "../../ui/Segmented";
 import { Switch } from "../../ui/Switch";
@@ -39,9 +39,24 @@ const WIDGETS: Record<WidgetKind, { group: Group; tint: [string, string] }> = {
   calendar: { group: "productivity", tint: ["#1E2A6A", "#2A1E5A"] },
   "ai-usage": { group: "productivity", tint: ["#5A2E1E", "#20242C"] },
   "ai-agents": { group: "productivity", tint: ["#3A2E1E", "#20242C"] },
+  pokemon: { group: "fun", tint: ["#3A3A12", "#1E2A4A"] },
 };
 
 const isWidget = (key: string) => key.startsWith("widget:");
+
+/** Widgets que também têm um mascote andando pela dock; com só o mascote ligado, o ícone fica
+ * desligado (`enabled: false`), mas o widget está em uso. */
+const PET_FLAGS: Partial<Record<WidgetKind, "claudePetEnabled" | "pokemonPetEnabled">> = {
+  "ai-agents": "claudePetEnabled",
+  pokemon: "pokemonPetEnabled",
+};
+
+const petOn = (config: Config, kind: WidgetKind) => {
+  const flag = PET_FLAGS[kind];
+  return !!flag && config[flag];
+};
+
+const inUse = (config: Config, widget: WidgetConfig) => widget.enabled || petOn(config, widget.kind);
 
 /** Com o widget desligado o Bluetooth não é consultado (no macOS isso pede permissão). */
 const SAMPLE_BLUETOOTH: BluetoothState = { available: true, powered: true, canToggle: false, canConnect: false, devices: [] };
@@ -122,12 +137,12 @@ interface WidgetActions {
   set: (kind: WidgetKind, patch: Partial<WidgetConfig>) => void;
 }
 
-function WidgetCard({ widget, data, actions, onConfigure }: { widget: WidgetConfig; data: WidgetData; actions: WidgetActions; onConfigure: () => void }) {
+function WidgetCard({ widget, active, data, actions, onConfigure }: { widget: WidgetConfig; active: boolean; data: WidgetData; actions: WidgetActions; onConfigure: () => void }) {
   const t = useT().widgets;
   const info = t.info[widget.kind];
   const sizes = RESIZABLE.has(widget.kind) ? formatsOf(widget.kind) : [widget.size];
   return (
-    <article className={`widget-card ${widget.enabled ? "" : "off"}`} data-kind={widget.kind} aria-label={info.name}>
+    <article className={`widget-card ${active ? "" : "off"}`} data-kind={widget.kind} aria-label={info.name}>
       <Stage kind={widget.kind} sizes={sizes} data={data} />
       <div className="widget-card-text">
         <span className="widget-card-title">
@@ -137,9 +152,9 @@ function WidgetCard({ widget, data, actions, onConfigure }: { widget: WidgetConf
         <span className="widget-card-summary">{info.summary}</span>
       </div>
       <div className="widget-card-actions">
-        <Switch checked={widget.enabled} label={t.show(info.name)} onChange={() => actions.toggle(widget.kind)} />
+        <Switch checked={active} label={t.show(info.name)} onChange={() => actions.toggle(widget.kind)} />
         <span className="widget-card-state" aria-hidden>
-          {widget.enabled ? t.stateOn : t.stateOff}
+          {active ? t.stateOn : t.stateOff}
         </span>
         <button className="icon-button bordered widget-card-configure" aria-label={t.configure(info.name)} onClick={onConfigure}>
           <Settings size={15} />
@@ -215,6 +230,7 @@ function WidgetDialog({
             {widget.kind === "calendar" && <CalendarOptions />}
             {widget.kind === "ai-usage" && <AiUsageOptions config={config} update={update} />}
             {widget.kind === "ai-agents" && <AgentSessionsOptions config={config} update={update} />}
+            {widget.kind === "pokemon" && <PokemonOptions config={config} update={update} />}
             {widget.enabled && (
               <Row label={t.position} description={common.dragInDock}>
                 <span className="row-value">{common.positionOf(position, enabled.length)}</span>
@@ -229,7 +245,7 @@ function WidgetDialog({
           </Card>
         </div>
         <footer className="widget-dialog-footer">
-          <Switch checked={widget.enabled} label={t.show(info.name)} onChange={() => actions.toggle(widget.kind)} />
+          <Switch checked={inUse(config, widget)} label={t.show(info.name)} onChange={() => actions.toggle(widget.kind)} />
           <span aria-hidden>{t.showInDock}</span>
           <button className="btn btn-primary" onClick={close}>
             {t.done}
@@ -265,12 +281,20 @@ export function WidgetsTab({ config, update, setFooter }: TabProps) {
   };
 
   const actions: WidgetActions = {
-    toggle: (kind) => update((c) => ({ widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, enabled: !w.enabled } : w)) })),
+    toggle: (kind) =>
+      update((c) => {
+        const flag = PET_FLAGS[kind];
+        const on = c.widgets.some((w) => w.kind === kind && inUse(c, w));
+        return {
+          widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, enabled: !on } : w)),
+          ...(flag && on ? { [flag]: false } : {}),
+        };
+      }),
     set: (kind, patch) => update((c) => ({ widgets: c.widgets.map((w) => (w.kind === kind ? { ...w, ...patch } : w)) })),
   };
 
   const supported = config.widgets.filter((w) => widgetSupported(w.kind));
-  const active = supported.filter((w) => w.enabled).length;
+  const active = supported.filter((w) => inUse(config, w)).length;
   const q = query.trim().toLowerCase();
   const visible = supported.filter((w) => {
     if (!q) return true;
@@ -312,7 +336,7 @@ export function WidgetsTab({ config, update, setFooter }: TabProps) {
         {visible.length ? (
           <div className="gallery-grid">
             {visible.map((w) => (
-              <WidgetCard key={w.kind} widget={w} data={data} actions={actions} onConfigure={() => setOpen(w.kind)} />
+              <WidgetCard key={w.kind} widget={w} active={inUse(config, w)} data={data} actions={actions} onConfigure={() => setOpen(w.kind)} />
             ))}
           </div>
         ) : (

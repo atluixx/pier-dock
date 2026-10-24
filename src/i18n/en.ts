@@ -328,6 +328,7 @@ export const en: Dict = {
       "system-usage": "System usage",
       calendar: "Calendar",
       "ai-usage": "AI usage",
+      pokemon: "Pokémon",
       "ai-agents": "AI sessions",
       bluetooth: "Bluetooth",
       launcher: "App launcher",
@@ -446,7 +447,7 @@ export const en: Dict = {
       windows: "Windows media controls (SMTC)",
       linux: "MPRIS-compatible players",
     },
-    groups: { nowPlaying: "Now playing", github: "GitHub", system: "System", productivity: "Productivity" },
+    groups: { nowPlaying: "Now playing", github: "GitHub", system: "System", productivity: "Productivity", fun: "Fun" },
     info: {
       media: { summary: "What's playing, with controls.", name: "Media", description: "Shows and controls what's playing on Spotify, YouTube Music and other players." },
       "github-mine": { summary: "Pull requests you opened.", name: "Pull requests", description: "Your open pull requests, with their checks status." },
@@ -481,6 +482,12 @@ export const en: Dict = {
         name: "AI usage",
         description:
           "How much of the limit has been used in the 5h session and the week (Claude Code) or in the plan's window (Codex CLI), plus today's tokens. Reads the AIs' local files; nothing goes over the network.",
+      },
+      pokemon: {
+        summary: "A Pokémon of your choice walking the dock.",
+        name: "Pokémon",
+        description:
+          "Shows the party icon of the Pokémon you pick, from PokeAPI (up to #809). It can sit in the dock as an icon, walk along its edge, or both.",
       },
       "ai-agents": {
         summary: "AI CLI sessions walking the dock.",
@@ -561,6 +568,12 @@ export const en: Dict = {
     agentDisplayLabel: "Show in dock",
     agentDisplay: { icon: "Icon", both: "Icon and Clawd", pet: "Clawd only" },
     petHint: "A small mascot that walks the dock while a session runs, jumps when one needs permission, and rests when idle.",
+    pokemonHint: "A small Pokémon that walks along the dock edge.",
+    pokemonDisplay: { icon: "Icon", both: "Icon and walking", pet: "Walking only" },
+    pokemonChoose: "Choose Pokémon",
+    pokemonSearch: "Search by name or number",
+    pokemonNone: "No Pokémon found.",
+    pokemonRange: "Party icons exist for #1 to #809.",
   },
   githubTab: {
     widgets: {

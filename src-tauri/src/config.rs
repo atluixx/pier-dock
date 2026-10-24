@@ -120,6 +120,9 @@ pub struct Config {
     /// Mascote decorativo que anda sobre a borda da dock, reagindo às sessões dos CLIs de IA (ver
     /// `agent_sessions.rs`). Puramente visual; sem hooks instalados fica só parado.
     pub claude_pet_enabled: bool,
+    /// Pokémon que anda sobre a borda da dock, com o ícone de time da PokeAPI (ver `pokemon.rs`).
+    pub pokemon_pet_enabled: bool,
+    pub pokemon_pet_id: u32,
 }
 
 fn widget(kind: &str, size: &str) -> WidgetConfig {
@@ -180,6 +183,7 @@ impl Default for Config {
                 disabled("calendar", "wide"),
                 disabled("ai-usage", "small"),
                 disabled("ai-agents", "small"),
+                disabled("pokemon", "small"),
                 disabled("show-desktop", "small"),
             ],
             material: "glass".into(),
@@ -207,6 +211,8 @@ impl Default for Config {
             language: "system".into(),
             auto_update: true,
             claude_pet_enabled: false,
+            pokemon_pet_enabled: false,
+            pokemon_pet_id: 25,
         }
     }
 }

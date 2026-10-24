@@ -17,6 +17,7 @@ mod notifications;
 mod panels;
 mod permissions;
 mod platform;
+mod pokemon;
 mod pomodoro;
 mod power;
 mod report;
@@ -186,6 +187,8 @@ fn main() {
             dock_window::set_dock_layout,
             dock_window::set_hit_rect,
             dock_window::set_pet_rect,
+            pokemon::pokemon_list,
+            pokemon::pokemon_sprite,
             dock_window::set_preview_glass,
             dock_window::dock_visible,
             dock_window::set_dock_hover,

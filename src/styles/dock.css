@@ -668,3 +668,40 @@ html[data-reduced-effects="true"] .dock-bar {
   .dock-bar button { transition: none; }
   .dock-bar .tooltip { animation: none; }
 }
+
+/* A caixa do pet entra 6px na barra e o ícone tem 2px transparentes sob os pés: alinha pela base e
+   sobe 4px para os pés ficarem na borda da dock. */
+.pokemon-pet .claude-pet-facing {
+  align-items: flex-end;
+}
+
+.pokemon-pet-sprite {
+  width: 40px;
+  height: 30px;
+  flex: none;
+  margin-bottom: 4px;
+  object-fit: contain;
+  object-position: bottom;
+  image-rendering: pixelated;
+  user-select: none;
+}
+
+.pokemon-pet-sprite.walking {
+  animation: pokemon-pet-hop 0.5s steps(2, jump-none) infinite;
+}
+
+@keyframes pokemon-pet-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pokemon-pet-sprite.walking {
+    animation: none;
+  }
+}

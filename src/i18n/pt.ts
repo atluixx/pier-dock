@@ -328,6 +328,7 @@ export const pt = {
       "system-usage": "Uso do sistema",
       calendar: "Agenda",
       "ai-usage": "Uso de IA",
+      pokemon: "Pokémon",
       "ai-agents": "Sessões de IA",
       bluetooth: "Bluetooth",
       launcher: "Lançador de apps",
@@ -446,7 +447,7 @@ export const pt = {
       windows: "Controles de mídia do Windows (SMTC)",
       linux: "Players compatíveis com MPRIS",
     },
-    groups: { nowPlaying: "Tocando agora", github: "GitHub", system: "Sistema", productivity: "Produtividade" },
+    groups: { nowPlaying: "Tocando agora", github: "GitHub", system: "Sistema", productivity: "Produtividade", fun: "Enfeites" },
     info: {
       media: { summary: "O que está tocando, com controles.", name: "Mídia", description: "Mostra e controla o que está tocando no Spotify, YouTube Music e outros players." },
       "github-mine": { summary: "PRs abertos por você.", name: "Pull requests", description: "Seus pull requests abertos, com o estado dos checks." },
@@ -481,6 +482,12 @@ export const pt = {
         name: "Uso de IA",
         description:
           "Quanto do limite já foi usado na sessão de 5h e na semana (Claude Code) ou na janela do plano (Codex CLI), mais os tokens do dia. Lê os arquivos locais das IAs; nada vai para a rede.",
+      },
+      pokemon: {
+        summary: "Um Pokémon da sua escolha andando pela dock.",
+        name: "Pokémon",
+        description:
+          "Mostra o ícone de time do Pokémon escolhido, vindo da PokeAPI (até o #809). Pode ficar na dock como ícone, andar pela borda dela, ou os dois.",
       },
       "ai-agents": {
         summary: "As sessões dos CLIs de IA andando no dock.",
@@ -561,6 +568,12 @@ export const pt = {
     agentDisplayLabel: "Mostrar na dock",
     agentDisplay: { icon: "Ícone", both: "Ícone e Clawd", pet: "Só o Clawd" },
     petHint: "Um bichinho que anda pela dock enquanto uma sessão roda, pula quando uma pede permissão, e descansa quando está tudo parado.",
+    pokemonHint: "Um Pokémon pequeno que anda pela borda da dock.",
+    pokemonDisplay: { icon: "Ícone", both: "Ícone e andando", pet: "Só andando" },
+    pokemonChoose: "Escolher Pokémon",
+    pokemonSearch: "Buscar por nome ou número",
+    pokemonNone: "Nenhum Pokémon encontrado.",
+    pokemonRange: "Há ícones de time do #1 ao #809.",
   },
   githubTab: {
     widgets: {

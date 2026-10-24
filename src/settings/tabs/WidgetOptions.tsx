@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ipc, type AgentIntegration, type AgentProviderId, type AiProvider, type WeatherLocation } from "../../lib/ipc";
+import { ipc, type AgentIntegration, type AgentProviderId, type AiProvider, type PokemonEntry, type WeatherLocation } from "../../lib/ipc";
+import { usePokemonSprite } from "../../hooks/usePokemonSprite";
 import { AI_PROVIDERS, providerName } from "../../lib/aiUsage";
 import { labels } from "../../lib/platform";
 import { useCalendar } from "../../hooks/useCalendar";
@@ -311,6 +312,87 @@ export function CalendarOptions() {
           </form>
         </div>
       )}
+    </>
+  );
+}
+
+export const matchPokemon = (list: PokemonEntry[], query: string, limit = 8): PokemonEntry[] => {
+  const q = query.trim().toLowerCase().replace(/^#/, "");
+  if (!q) return [];
+  return list.filter((p) => p.name.includes(q) || String(p.id) === q).slice(0, limit);
+};
+
+function PokemonChoice({ pokemon, onPick }: { pokemon: PokemonEntry; onPick: () => void }) {
+  const src = usePokemonSprite(pokemon.id);
+  return (
+    <button className="choice" onClick={onPick}>
+      <span>
+        {src && <img src={src} alt="" width={40} height={30} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} />} {pokemon.name}
+      </span>
+      <span className="row-description">#{pokemon.id}</span>
+    </button>
+  );
+}
+
+/** Ícone na dock, Pokémon andando, ou os dois; como o "Mostrar na dock" das sessões de IA. */
+export function PokemonOptions({ config, update }: OptionsProps) {
+  const [list, setList] = useState<PokemonEntry[]>([]);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const { widgetOptions: t, common } = useT();
+
+  useEffect(() => {
+    ipc.pokemonList().then(setList).catch((e) => setStatus(common.error(String(e))));
+  }, []);
+
+  const iconShown = config.widgets.some((w) => w.kind === "pokemon" && w.enabled);
+  const display: AgentDisplay = config.pokemonPetEnabled ? (iconShown ? "both" : "pet") : "icon";
+  const setDisplay = (next: AgentDisplay) =>
+    update((c) => ({
+      pokemonPetEnabled: next !== "icon",
+      widgets: c.widgets.map((w) => (w.kind === "pokemon" ? { ...w, enabled: next !== "pet" } : w)),
+    }));
+
+  const current = list.find((p) => p.id === config.pokemonPetId);
+  const results = matchPokemon(list, query);
+
+  return (
+    <>
+      <Row label={t.pokemonChoose} description={current ? `#${current.id} ${current.name}` : `#${config.pokemonPetId}`} />
+      <div className="row row-stack">
+        <form className="token-form" onSubmit={(e) => e.preventDefault()}>
+          <label className="visually-hidden" htmlFor="pokemon">
+            {t.pokemonSearch}
+          </label>
+          <input id="pokemon" className="text-input" placeholder={t.pokemonSearch} value={query} onChange={(e) => setQuery(e.target.value)} />
+          <p className="field-hint" role="status">
+            {status ?? (query.trim() && !results.length ? t.pokemonNone : t.pokemonRange)}
+          </p>
+        </form>
+        {results.length > 0 && (
+          <ul className="choice-list" aria-label={t.pokemonSearch}>
+            {results.map((p) => (
+              <li key={p.id}>
+                <PokemonChoice
+                  pokemon={p}
+                  onPick={() => {
+                    update({ pokemonPetId: p.id });
+                    setQuery("");
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <Row label={t.agentDisplayLabel} description={t.pokemonHint}>
+        <Segmented
+          label={t.agentDisplayLabel}
+          value={display}
+          onChange={setDisplay}
+          options={(["icon", "both", "pet"] as const).map((value) => ({ value, label: t.pokemonDisplay[value] }))}
+        />
+      </Row>
     </>
   );
 }
