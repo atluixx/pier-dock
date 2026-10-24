@@ -2,6 +2,21 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.18.0
+
+### Updates that wait for you
+- **Updates:** Pier no longer installs an update and restarts on its own. When a new version is out, a dot appears on the app launcher (or on the start button when the launcher is hidden), and **Update to x.y.z available** is added to the dock menus. Select either to open **Settings** > **General**, and then select **Install and restart**. The tray item still installs right away. **Check for updates automatically** now turns the background checks on or off.
+- **macOS:** Pier is now signed with a fixed certificate, so macOS keeps the Accessibility, Screen Recording and system audio permissions between updates. After this update it asks for them one last time.
+
+### First launch
+- On a fresh install Pier no longer hides the Windows taskbar, the GNOME Dash or the macOS Dock right away. It opens **Settings** with a welcome card that asks first.
+- While the GNOME extension or macOS Accessibility still needs setting up, an amber dot on the app launcher opens **Settings**, where the notice says what to do. Before, you could only see it by opening **Settings**.
+
+### Fixes
+- **Settings:** an unreadable config file is no longer replaced with the defaults. It is kept as `config.json.corrupt-<time>` and the previous save is restored. Saves are atomic, so an update or a crash in the middle of one can't leave a half-written file. If the settings can't load, the window shows an error and retries instead of staying blank, and a setting that fails to save goes back to its previous value.
+- **Language:** errors from the system, like "no Wi-Fi interface", follow the interface language instead of always being in Portuguese. The iCal address placeholder, the clock widget description and the GNOME extension description are fixed too.
+- **Windows:** an app entry with a malformed folder ID could break the app list. It is skipped now.
+
 ## 0.17.0
 
 ### Pokémon on your dock

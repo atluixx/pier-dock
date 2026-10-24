@@ -2,6 +2,21 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.18.0
+
+### Atualizações que esperam você
+- **Atualizações:** o Pier não instala mais uma atualização e reinicia sozinho. Quando sai uma versão nova, aparece um ponto no lançador de apps (ou no botão Iniciar, se o lançador estiver oculto), e **Atualização para x.y.z disponível** entra nos menus da dock. Clique em qualquer um para abrir **Configurações** > **Geral** e depois em **Instalar e reiniciar**. O item da bandeja continua instalando na hora. **Procurar atualizações automaticamente** agora liga ou desliga as checagens em segundo plano.
+- **macOS:** o Pier agora é assinado com um certificado fixo, então o macOS mantém as permissões de Acessibilidade, Gravação de Tela e áudio do sistema entre as atualizações. Depois desta atualização ele pede essas permissões uma última vez.
+
+### Primeira abertura
+- Numa instalação nova o Pier não esconde mais a barra de tarefas do Windows, o Dash do GNOME nem o Dock do macOS de cara. Ele abre as **Configurações** com um card de boas-vindas que pergunta antes.
+- Enquanto a extensão do GNOME ou a Acessibilidade do macOS ainda precisa ser configurada, um ponto âmbar no lançador de apps abre as **Configurações**, onde o aviso diz o que fazer. Antes, só dava para ver abrindo as **Configurações**.
+
+### Correções
+- **Configurações:** um arquivo de configuração ilegível não é mais trocado pelo padrão. Ele fica guardado como `config.json.corrupt-<hora>` e a gravação anterior é restaurada. As gravações são atômicas, então uma atualização ou um travamento no meio de uma não deixa o arquivo pela metade. Se as configurações não carregarem, a janela mostra o erro e tenta de novo em vez de ficar em branco, e uma configuração que não grava volta ao valor anterior.
+- **Idioma:** os erros do sistema, como "sem interface Wi-Fi", seguem o idioma da interface em vez de virem sempre em português. O exemplo do endereço iCal, a descrição do widget de relógio e a descrição da extensão do GNOME também foram corrigidos.
+- **Windows:** um app com o ID de pasta malformado podia quebrar a lista de apps. Agora ele é ignorado.
+
 ## 0.17.0
 
 ### Pokémon na sua dock
