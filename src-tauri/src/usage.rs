@@ -217,7 +217,7 @@ pub async fn quit_app_processes(name: String) -> Result<u32, String> {
         let own = sysinfo::get_current_pid().ok();
         let own_name = own.and_then(|pid| sys.process(pid)).map(|p| app_name(&p.name().to_string_lossy(), p.exe()));
         if own_name.as_deref() == Some(name.as_str()) {
-            return Err("o Pier não pode encerrar a si mesmo".to_string());
+            return Err(crate::i18n::tr("o Pier não pode encerrar a si mesmo", "Pier can't quit itself").to_string());
         }
         let mut count = 0;
         for process in sys.processes().values() {

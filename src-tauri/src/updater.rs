@@ -100,7 +100,7 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
     let pending = app.state::<UpdateState>().pending.lock().unwrap().take();
     let update = match pending {
         Some(update) => update,
-        None => app.updater().err_str()?.check().await.err_str()?.ok_or("Nenhuma atualização disponível")?,
+        None => app.updater().err_str()?.check().await.err_str()?.ok_or(crate::i18n::tr("Nenhuma atualização disponível", "No update available"))?,
     };
     log::info!("installing update {}", update.version);
     #[cfg(target_os = "linux")]

@@ -132,7 +132,7 @@ pub fn run(app: &AppHandle) {
 
 pub fn control(id: &str, action: &str, position_ms: Option<f64>) -> Result<(), String> {
     // Só os players conhecidos: o id vem do frontend e acaba dentro de um script.
-    let p = player(id).filter(|p| running(p)).ok_or("player não encontrado")?;
+    let p = player(id).filter(|p| running(p)).ok_or(crate::i18n::tr("player não encontrado", "player not found"))?;
     let command = match action {
         "toggle" => "playpause".to_string(),
         "next" => "next track".to_string(),

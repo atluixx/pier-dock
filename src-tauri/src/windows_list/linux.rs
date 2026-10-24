@@ -128,7 +128,7 @@ pub fn close(id: i64) {
 /// `showDesktop` do KWin (KDE).
 pub fn toggle_desktop() -> Result<(), String> {
     if is_x11_session() {
-        return x11::get().map(|x| x.toggle_showing_desktop()).ok_or_else(|| "sem conexão com o X11".into());
+        return x11::get().map(|x| x.toggle_showing_desktop()).ok_or_else(|| crate::i18n::tr("sem conexão com o X11", "no X11 connection").into());
     }
     if let Some(shell) = gnome_shell::shell() {
         if shell.version().unwrap_or(0) >= gnome_shell::SHOW_DESKTOP_VERSION {
@@ -140,8 +140,8 @@ pub fn toggle_desktop() -> Result<(), String> {
 
 /// KDE Plasma no Wayland: o KWin expõe o estado e a ação de mostrar a área de trabalho no D-Bus.
 fn kwin_toggle_desktop() -> Result<(), String> {
-    let conn = dbus::session().ok_or("sem acesso ao D-Bus da sessão")?;
-    let kwin = dbus::proxy(conn, "org.kde.KWin", "/KWin", "org.kde.KWin").ok_or("nem a extensão do GNOME nem o KWin responderam")?;
+    let conn = dbus::session().ok_or(crate::i18n::tr("sem acesso ao D-Bus da sessão", "no access to the session D-Bus"))?;
+    let kwin = dbus::proxy(conn, "org.kde.KWin", "/KWin", "org.kde.KWin").ok_or(crate::i18n::tr("nem a extensão do GNOME nem o KWin responderam", "neither the GNOME extension nor KWin responded"))?;
     let showing: bool = kwin.get_property("showingDesktop").map_err(|e| e.to_string())?;
     kwin.call_method("showDesktop", &(!showing,)).map(|_| ()).map_err(|e| e.to_string())
 }

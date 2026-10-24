@@ -168,8 +168,8 @@ pub async fn open_tray(app: tauri::AppHandle, anchor_x: f64, anchor_y: f64) -> R
     #[cfg(windows)]
     {
         use tauri::Manager;
-        let dock = app.get_webview_window(crate::dock_window::DOCK_LABEL).ok_or("dock não encontrada")?;
-        let reserved = crate::dock_window::reserved_rect(&dock).ok_or("monitor não encontrado")?;
+        let dock = app.get_webview_window(crate::dock_window::DOCK_LABEL).ok_or(crate::i18n::tr("dock não encontrada", "dock not found"))?;
+        let reserved = crate::dock_window::reserved_rect(&dock).ok_or(crate::i18n::tr("monitor não encontrado", "monitor not found"))?;
         let dock_pos = dock.outer_position().err_str()?;
         let scale = reserved.scale;
         // O ponto de ancoragem fica um pouco fora da faixa reservada; a gaveta cresce para dentro
@@ -187,7 +187,7 @@ pub async fn open_tray(app: tauri::AppHandle, anchor_x: f64, anchor_y: f64) -> R
     #[cfg(not(windows))]
     {
         let _ = (app, anchor_x, anchor_y);
-        Err("a bandeja só existe no Windows".into())
+        Err(crate::i18n::tr("a bandeja só existe no Windows", "the tray only exists on Windows").into())
     }
 }
 

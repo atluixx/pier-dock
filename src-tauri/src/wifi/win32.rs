@@ -127,12 +127,12 @@ pub fn status() -> WifiState {
 
 pub fn scan() -> Result<(), String> {
     let wlan = Wlan::open()?;
-    let interface = wlan.interface().ok_or("sem interface Wi-Fi")?;
+    let interface = wlan.interface().ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     check(unsafe { WlanScan(wlan.0, &interface, None, None, None) })
 }
 
 pub fn set_enabled(enabled: bool) -> Result<(), String> {
-    let radio = wifi_radio().ok_or("sem rádio Wi-Fi")?;
+    let radio = wifi_radio().ok_or(crate::i18n::tr("sem rádio Wi-Fi", "no Wi-Fi radio"))?;
     radio.SetStateAsync(if enabled { RadioState::On } else { RadioState::Off }).err_str()?.get().err_str()?;
     Ok(())
 }
@@ -171,9 +171,9 @@ fn authentication(auth: DOT11_AUTH_ALGORITHM) -> Option<&'static str> {
 
 pub fn connect(ssid: &str, password: Option<&str>) -> Result<(), String> {
     let wlan = Wlan::open()?;
-    let interface = wlan.interface().ok_or("sem interface Wi-Fi")?;
+    let interface = wlan.interface().ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     let networks = wlan.networks(&interface).map_err(|code| check(code).unwrap_err())?;
-    let target = networks.iter().filter(|n| n.ssid == ssid).max_by_key(|n| n.quality).ok_or("rede não encontrada")?;
+    let target = networks.iter().filter(|n| n.ssid == ssid).max_by_key(|n| n.quality).ok_or(crate::i18n::tr("rede não encontrada", "network not found"))?;
 
     let mut created = false;
     let profile = if password.is_none() && !target.profile.is_empty() {
@@ -217,7 +217,7 @@ pub fn connect(ssid: &str, password: Option<&str>) -> Result<(), String> {
 
 pub fn disconnect() -> Result<(), String> {
     let wlan = Wlan::open()?;
-    let interface = wlan.interface().ok_or("sem interface Wi-Fi")?;
+    let interface = wlan.interface().ok_or(crate::i18n::tr("sem interface Wi-Fi", "no Wi-Fi interface"))?;
     check(unsafe { WlanDisconnect(wlan.0, &interface, None) })
 }
 

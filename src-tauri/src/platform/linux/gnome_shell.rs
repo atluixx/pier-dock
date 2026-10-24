@@ -236,7 +236,7 @@ pub fn extension_installed() -> bool {
 /// Wayland o Shell só carrega extensões novas no próximo login.
 pub fn install_extension() -> Result<(), String> {
     remove_legacy_extension();
-    let dir = extension_dir().ok_or("pasta de dados do usuário não encontrada")?;
+    let dir = extension_dir().ok_or(crate::i18n::tr("pasta de dados do usuário não encontrada", "user data folder not found"))?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     std::fs::write(dir.join("metadata.json"), METADATA_JSON).map_err(|e| e.to_string())?;
     std::fs::write(dir.join("extension.js"), EXTENSION_JS).map_err(|e| e.to_string())?;
@@ -259,7 +259,7 @@ fn remove_legacy_extension() {
 
 fn enable_in_settings() -> Result<(), String> {
     let current = crate::util::run("gsettings", &["get", "org.gnome.shell", "enabled-extensions"])
-        .ok_or("não foi possível ler as extensões habilitadas")?;
+        .ok_or(crate::i18n::tr("não foi possível ler as extensões habilitadas", "couldn't read the enabled extensions"))?;
     let mut list = parse_gvariant_strv(&current);
     if !list.iter().any(|u| u == UUID) {
         list.push(UUID.to_string());
@@ -267,7 +267,7 @@ fn enable_in_settings() -> Result<(), String> {
     let value = format!("[{}]", list.iter().map(|u| format!("'{u}'")).collect::<Vec<_>>().join(", "));
     crate::util::run("gsettings", &["set", "org.gnome.shell", "enabled-extensions", &value])
         .map(|_| ())
-        .ok_or_else(|| "não foi possível habilitar a extensão".into())
+        .ok_or_else(|| crate::i18n::tr("não foi possível habilitar a extensão", "couldn't enable the extension").into())
 }
 
 /// `@as []` ou `['a@b', 'c@d']` → lista.

@@ -1,6 +1,8 @@
 //! Idioma da interface: português ou inglês. A config guarda "system", "pt" ou "en"; "system" segue
 //! o idioma do sistema (português se começar com `pt`, inglês para todo o resto).
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use tauri::menu::MenuItem;
 use tauri::{AppHandle, Manager, Wry};
 
@@ -45,6 +47,18 @@ pub fn resolve(setting: &str) -> Lang {
     }
 }
 
+/// O idioma atual para quem não tem o `AppHandle` (erros dos comandos, que o frontend mostra como
+/// vêm). Acompanha a config: definido ao abrir e a cada troca de idioma.
+static ENGLISH: AtomicBool = AtomicBool::new(true);
+
+pub fn remember(lang: Lang) {
+    ENGLISH.store(lang == Lang::En, Ordering::Relaxed);
+}
+
+pub fn tr(pt: &'static str, en: &'static str) -> &'static str {
+    if ENGLISH.load(Ordering::Relaxed) { en } else { pt }
+}
+
 pub fn current(app: &AppHandle) -> Lang {
     resolve(&app.state::<ConfigState>().0.lock().unwrap().language)
 }
@@ -73,6 +87,7 @@ pub fn tray_labels(lang: Lang) -> [&'static str; 3] {
 /// Reaplica o idioma no que o Rust desenha: menu da bandeja e título da janela de configurações.
 pub fn apply(app: &AppHandle) {
     let lang = current(app);
+    remember(lang);
     if let Some(items) = app.try_state::<TrayItems>() {
         let [settings, reload, quit] = tray_labels(lang);
         let _ = items.settings.set_text(settings);
@@ -88,6 +103,14 @@ pub fn apply(app: &AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn backend_errors_follow_the_remembered_language() {
+        remember(Lang::Pt);
+        assert_eq!(tr("rede não encontrada", "network not found"), "rede não encontrada");
+        remember(Lang::En);
+        assert_eq!(tr("rede não encontrada", "network not found"), "network not found");
+    }
 
     #[test]
     fn locale_mapping() {

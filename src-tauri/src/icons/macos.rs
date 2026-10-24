@@ -24,9 +24,9 @@ pub fn extract(key: &str) -> Result<(Vec<u8>, &'static str), String> {
     image.setSize(size);
     let mut rect = NSRect::new(NSPoint::new(0.0, 0.0), size);
     let cg_image = unsafe { image.CGImageForProposedRect_context_hints(&mut rect, None, None) }
-        .ok_or("falha ao renderizar o ícone")?;
+        .ok_or(crate::i18n::tr("falha ao renderizar o ícone", "couldn't render the icon"))?;
     let rep = NSBitmapImageRep::initWithCGImage(NSBitmapImageRep::alloc(), &cg_image);
     let png = unsafe { rep.representationUsingType_properties(NSBitmapImageFileType::PNG, &NSDictionary::new()) }
-        .ok_or("falha ao gerar o PNG do ícone")?;
+        .ok_or(crate::i18n::tr("falha ao gerar o PNG do ícone", "couldn't encode the icon PNG"))?;
     Ok((png.to_vec(), "image/png"))
 }

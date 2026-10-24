@@ -302,7 +302,7 @@ export function CalendarOptions() {
             <label className="visually-hidden" htmlFor="ical">
               {t.icalAddress}
             </label>
-            <input id="ical" className="text-input" type="password" placeholder="https://… ou webcal://…" value={url} onChange={(e) => setUrl(e.target.value)} />
+            <input id="ical" className="text-input" type="password" placeholder={t.icalPlaceholder} value={url} onChange={(e) => setUrl(e.target.value)} />
             <button className="btn btn-primary" type="submit" disabled={!url.trim()}>
               {common.save}
             </button>

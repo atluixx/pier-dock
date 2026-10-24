@@ -55,8 +55,8 @@ pub async fn open_panel(app: AppHandle, kind: String, anchor_x: f64, anchor_y: f
     if close_open_panel(&app).as_deref() == Some(kind.as_str()) {
         return Ok(());
     }
-    let dock = app.get_webview_window(DOCK_LABEL).ok_or("dock não encontrada")?;
-    let reserved = reserved_rect(&dock).ok_or("monitor não encontrado")?;
+    let dock = app.get_webview_window(DOCK_LABEL).ok_or(crate::i18n::tr("dock não encontrada", "dock not found"))?;
+    let reserved = reserved_rect(&dock).ok_or(crate::i18n::tr("monitor não encontrado", "monitor not found"))?;
     let dock_pos = dock.outer_position().err_str()?;
 
     let scale = reserved.scale;

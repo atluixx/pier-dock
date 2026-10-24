@@ -78,7 +78,7 @@ pub fn volume() -> Result<Volume, String> {
     let level = run("pactl", &["get-sink-volume", "@DEFAULT_SINK@"])
         .as_deref()
         .and_then(parse_volume_percent)
-        .ok_or("não foi possível ler o volume (pactl)")?;
+        .ok_or(crate::i18n::tr("não foi possível ler o volume (pactl)", "couldn't read the volume (pactl)"))?;
     let muted = run("pactl", &["get-sink-mute", "@DEFAULT_SINK@"]).is_some_and(|out| out.contains("yes"));
     Ok(Volume { level, muted })
 }
@@ -86,10 +86,10 @@ pub fn volume() -> Result<Volume, String> {
 pub fn set_volume(level: Option<f32>, muted: Option<bool>) -> Result<(), String> {
     if let Some(level) = level {
         let percent = format!("{}%", (level * 100.0).round() as u32);
-        run("pactl", &["set-sink-volume", "@DEFAULT_SINK@", &percent]).ok_or("falha ao ajustar o volume")?;
+        run("pactl", &["set-sink-volume", "@DEFAULT_SINK@", &percent]).ok_or(crate::i18n::tr("falha ao ajustar o volume", "couldn't set the volume"))?;
     }
     if let Some(muted) = muted {
-        run("pactl", &["set-sink-mute", "@DEFAULT_SINK@", if muted { "1" } else { "0" }]).ok_or("falha ao silenciar")?;
+        run("pactl", &["set-sink-mute", "@DEFAULT_SINK@", if muted { "1" } else { "0" }]).ok_or(crate::i18n::tr("falha ao silenciar", "couldn't mute"))?;
     }
     Ok(())
 }
@@ -162,18 +162,18 @@ pub fn bluetooth() -> Bluetooth {
 }
 
 pub fn set_bluetooth(powered: bool) -> Result<(), String> {
-    let conn = dbus::system().ok_or("sem acesso ao D-Bus do sistema")?;
-    let objects = bluez_objects().ok_or("BlueZ indisponível")?;
+    let conn = dbus::system().ok_or(crate::i18n::tr("sem acesso ao D-Bus do sistema", "no access to the system D-Bus"))?;
+    let objects = bluez_objects().ok_or(crate::i18n::tr("BlueZ indisponível", "BlueZ unavailable"))?;
     for (path, _) in objects.iter().filter(|(_, i)| i.contains_key("org.bluez.Adapter1")) {
-        let adapter = dbus::proxy(conn, BLUEZ, path, "org.bluez.Adapter1").ok_or("adaptador não encontrado")?;
+        let adapter = dbus::proxy(conn, BLUEZ, path, "org.bluez.Adapter1").ok_or(crate::i18n::tr("adaptador não encontrado", "adapter not found"))?;
         adapter.set_property("Powered", powered).map_err(|e| e.to_string())?;
     }
     Ok(())
 }
 
 fn call_device(id: &str, method: &str) -> Result<(), String> {
-    let conn = dbus::system().ok_or("sem acesso ao D-Bus do sistema")?;
-    let device = dbus::proxy(conn, BLUEZ, id, "org.bluez.Device1").ok_or("dispositivo não encontrado")?;
+    let conn = dbus::system().ok_or(crate::i18n::tr("sem acesso ao D-Bus do sistema", "no access to the system D-Bus"))?;
+    let device = dbus::proxy(conn, BLUEZ, id, "org.bluez.Device1").ok_or(crate::i18n::tr("dispositivo não encontrado", "device not found"))?;
     device.call_method(method, &()).map(drop).map_err(|e| e.to_string())
 }
 

@@ -347,9 +347,9 @@ pub fn focus_agent_session(provider: String, session_id: String) -> Result<(), S
         .unwrap()
         .iter()
         .find(|a| a.provider == provider && a.session_id == session_id)
-        .ok_or("sessão não encontrada")?
+        .ok_or(crate::i18n::tr("sessão não encontrada", "session not found"))?
         .window_id
-        .ok_or("não achei a janela desta sessão")?;
+        .ok_or(crate::i18n::tr("não achei a janela desta sessão", "couldn't find this session's window"))?;
     windows_list::activate_window(window_id);
     Ok(())
 }
@@ -443,7 +443,7 @@ fn add_pier_hooks(settings: &mut Value, format: HookFormat, command: &str) -> Re
         list.push(json!({ "hooks": [hook] }));
     }
     if format == HookFormat::Gemini {
-        let hooks_config = obj.entry("hooksConfig").or_insert_with(|| json!({})).as_object_mut().ok_or("settings.json do Gemini: \"hooksConfig\" não é um objeto")?;
+        let hooks_config = obj.entry("hooksConfig").or_insert_with(|| json!({})).as_object_mut().ok_or(crate::i18n::tr("settings.json do Gemini: \"hooksConfig\" não é um objeto", "Gemini settings.json: \"hooksConfig\" isn't an object"))?;
         hooks_config.insert("enabled".into(), true.into());
     }
     Ok(())
@@ -539,7 +539,7 @@ pub fn install_agent_integration(provider: String) -> Result<(), String> {
         "gemini" => install_hooks(HookFormat::Gemini, "gemini"),
         "opencode" => {
             let path = opencode_plugin_path();
-            fs::create_dir_all(path.parent().ok_or("caminho de plugin inválido")?).err_str()?;
+            fs::create_dir_all(path.parent().ok_or(crate::i18n::tr("caminho de plugin inválido", "invalid plugin path"))?).err_str()?;
             fs::write(path, OPENCODE_PLUGIN).err_str()
         }
         _ => Err(format!("integração desconhecida: {provider}")),

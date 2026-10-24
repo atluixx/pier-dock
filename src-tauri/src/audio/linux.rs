@@ -112,13 +112,13 @@ fn outputs_from(sinks: &[Block], default: Option<&str>) -> Vec<OutputDevice> {
 }
 
 pub fn outputs() -> Result<Vec<OutputDevice>, String> {
-    let sinks = run("pactl", &["list", "sinks"]).ok_or("não foi possível listar as saídas (pactl)")?;
+    let sinks = run("pactl", &["list", "sinks"]).ok_or(crate::i18n::tr("não foi possível listar as saídas (pactl)", "couldn't list the outputs (pactl)"))?;
     Ok(outputs_from(&parse_blocks(&sinks), default_sink().as_deref()))
 }
 
 pub fn set_output(id: &str) -> Result<(), String> {
     with_available_output(id, &outputs()?, |id| {
-        run("pactl", &["set-default-sink", id]).ok_or("falha ao trocar a saída de áudio")?;
+        run("pactl", &["set-default-sink", id]).ok_or(crate::i18n::tr("falha ao trocar a saída de áudio", "couldn't switch the audio output"))?;
         // PipeWire moves streams itself; PulseAudio only applies the default to new streams.
         if let Some(inputs) = run("pactl", &["list", "short", "sink-inputs"]) {
             for index in inputs.lines().filter_map(|l| l.split_whitespace().next()) {
@@ -213,10 +213,10 @@ pub fn set_app_volume(id: &str, level: Option<f32>, muted: Option<bool>) -> Resu
         index.parse::<u32>().map_err(|_| format!("stream inválido: {index}"))?;
         if let Some(level) = level {
             let percent = format!("{}%", (level * 100.0).round() as u32);
-            run("pactl", &["set-sink-input-volume", index, &percent]).ok_or("falha ao ajustar o volume do app")?;
+            run("pactl", &["set-sink-input-volume", index, &percent]).ok_or(crate::i18n::tr("falha ao ajustar o volume do app", "couldn't set the app's volume"))?;
         }
         if let Some(muted) = muted {
-            run("pactl", &["set-sink-input-mute", index, if muted { "1" } else { "0" }]).ok_or("falha ao silenciar o app")?;
+            run("pactl", &["set-sink-input-mute", index, if muted { "1" } else { "0" }]).ok_or(crate::i18n::tr("falha ao silenciar o app", "couldn't mute the app"))?;
         }
     }
     Ok(())
