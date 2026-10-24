@@ -2,6 +2,18 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.17.0
+
+### Pokémon on your dock
+A new **Pokémon** widget, in the new **Fun** group, shows the party menu icon of the Pokémon you pick, from PokeAPI. Search by name or number (#1 to #809, the ones that have a party icon). Like the AI sessions widget, it can sit in the dock as an icon, walk along the dock edge, or both. It faces the way it walks, with its feet on the edge, and it works alongside Clawd.
+
+### Widgets
+- **Settings:** the widget gallery lists the widgets in use first. Turning one on moves it to the end of the active ones, where it shows up in the dock.
+- **Settings:** with **Clawd only** or **Walking only**, the widget card shows as on instead of off.
+
+### Fixes
+- **Sound:** on Linux (PulseAudio/PipeWire), outputs that aren't plugged in, like HDMI ports with nothing connected, are no longer listed, so you can't pick one and lose the sound.
+
 ## 0.16.0
 
 ### Fixes

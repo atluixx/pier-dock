@@ -2,6 +2,18 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.17.0
+
+### Pokémon na sua dock
+Um novo widget, **Pokémon**, no novo grupo **Enfeites**, mostra o ícone de time do Pokémon que você escolher, vindo da PokeAPI. Busque por nome ou número (#1 ao #809, os que têm ícone de time). Como o widget de sessões de IA, ele pode ficar na dock como ícone, andar pela borda dela, ou os dois. Ele olha para o lado em que anda, com os pés na borda, e funciona junto com o Clawd.
+
+### Widgets
+- **Configurações:** a galeria de widgets lista primeiro os que estão em uso. Ao ligar um, ele vai para o fim dos ativos, onde aparece na dock.
+- **Configurações:** com **Só o Clawd** ou **Só andando**, o card do widget aparece como ligado, em vez de desligado.
+
+### Correções
+- **Som:** no Linux (PulseAudio/PipeWire), saídas que não estão conectadas, como portas HDMI sem nada ligado, não aparecem mais na lista, então não dá para escolher uma e ficar sem som.
+
 ## 0.16.0
 
 ### Correções
