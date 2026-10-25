@@ -2,6 +2,12 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.20.0
+
+### Aparência e feedback redesenhados
+- **Configurações:** a aba **Aparência** ganhou um novo layout. A pré-visualização ao vivo fica no topo, e os ajustes estão em três cards de mesma altura: **Estilo** (material, opacidade, efeitos reduzidos, tamanho dos ícones e cor de destaque), **Dock** (posição, largura e altura do painel) e **Comportamento** (ocultar automaticamente, ampliação e apps abertos). Tudo cabe na janela de configurações padrão sem rolar. Os textos explicativos saíram, e os avisos sobre sistema sem vidro e sobre **Nunca** ocultar a dock continuam. A pré-visualização agora mostra a posição da dock e a ampliação, e o modo de ocultar **Com app em uso** passou a se chamar **Inteligente**.
+- **Reportar um problema:** o diálogo tem um novo visual, com um aviso de que o relato vira uma issue pública no GitHub e um botão **Cancelar**. Depois do envio, uma confirmação mostra a issue criada, com o repositório e o número, e um botão para abri-la. Quando o GitHub abre no navegador em vez disso, a confirmação avisa, e **Enviar outro** começa um novo relato.
+
 ## 0.19.0
 
 ### Pokémon na sua dock
