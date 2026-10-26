@@ -159,7 +159,7 @@ If hover animation feels sluggish, try **Settings > Appearance > Reduce visual e
 
 ### The taskbar or Dock doesn't come back
 
-Pier restores the native taskbar (or the macOS Dock) when it quits. If the process is killed, run the following command to restore it:
+Pier restores the native taskbar (or the macOS Dock) when it quits. On Windows a small helper process also restores the taskbar when Pier is killed, for example from Task Manager. If the taskbar is still missing (or on macOS), run the following command to restore it:
 
 ```sh
 %LOCALAPPDATA%\Pier\pier.exe --restore-taskbar                # Windows

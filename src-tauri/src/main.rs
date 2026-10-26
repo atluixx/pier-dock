@@ -152,6 +152,11 @@ fn main() {
         taskbar::restore();
         return;
     }
+    #[cfg(windows)]
+    if let Some(pid) = std::env::args().skip_while(|a| a != "--guard-taskbar").nth(1).and_then(|p| p.parse().ok()) {
+        taskbar::run_guardian(pid);
+        return;
+    }
     taskbar::install_crash_guards();
 
     let shortcuts = tauri_plugin_global_shortcut::Builder::new()

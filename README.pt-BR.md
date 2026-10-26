@@ -159,7 +159,7 @@ Se a animação ao passar o mouse ficar lenta, experimente **Configurações > A
 
 ### A barra de tarefas ou o Dock não voltou
 
-O Pier restaura a barra de tarefas nativa (ou o Dock do macOS) ao sair. Se o processo for encerrado à força, rode o comando abaixo para restaurá-la:
+O Pier restaura a barra de tarefas nativa (ou o Dock do macOS) ao sair. No Windows, um pequeno processo auxiliar também restaura a barra de tarefas quando o Pier é encerrado à força, por exemplo pelo Gerenciador de Tarefas. Se ela continuar sumida (ou no macOS), rode o comando abaixo para restaurá-la:
 
 ```sh
 %LOCALAPPDATA%\Pier\pier.exe --restore-taskbar                # Windows
