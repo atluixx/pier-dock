@@ -4,13 +4,19 @@
 //! reserva) e suas janelas são escondidas. O estado original fica salvo em disco, para que um
 //! crash ou `pier.exe --restore-taskbar` consigam devolvê-la exatamente como estava.
 
+use std::os::windows::process::CommandExt;
+use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use windows::core::{w, PCWSTR};
-use windows::Win32::Foundation::{BOOL, COLORREF, HWND, LPARAM};
+use windows::Win32::Foundation::{CloseHandle, BOOL, COLORREF, HWND, LPARAM};
 use windows::Win32::System::Console::SetConsoleCtrlHandler;
+use windows::Win32::System::Threading::{
+    OpenProcess, WaitForSingleObject, CREATE_BREAKAWAY_FROM_JOB, CREATE_NEW_PROCESS_GROUP, DETACHED_PROCESS, INFINITE,
+    PROCESS_SYNCHRONIZE,
+};
 use windows::Win32::UI::Shell::{SHAppBarMessage, ABM_GETSTATE, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA};
 use windows::Win32::UI::WindowsAndMessaging::{
     FindWindowExW, FindWindowW, GetLayeredWindowAttributes, GetWindowLongPtrW, IsWindowVisible, SetForegroundWindow,
@@ -25,14 +31,22 @@ static SHOWN_FOR_TRAY: AtomicBool = AtomicBool::new(false);
 static PRIMARY_TRAY: AtomicIsize = AtomicIsize::new(0);
 /// Se fomos nós que pusemos `WS_EX_LAYERED` na taskbar (e então devemos tirá-lo).
 static ADDED_LAYERED: AtomicBool = AtomicBool::new(false);
+static GUARDIAN_SPAWNED: AtomicBool = AtomicBool::new(false);
 
 #[derive(Serialize, Deserialize)]
 struct SavedState {
     original_state: u32,
+    /// Pid do Pier que escondeu a taskbar; o guardião só restaura se ainda for o dono.
+    #[serde(default)]
+    owner_pid: Option<u32>,
 }
 
 fn state_path() -> std::path::PathBuf {
     data_dir().join("taskbar-state.json")
+}
+
+fn read_saved() -> Option<SavedState> {
+    serde_json::from_str(&std::fs::read_to_string(state_path()).ok()?).ok()
 }
 
 fn taskbar_windows() -> Vec<HWND> {
@@ -119,34 +133,79 @@ fn set_visible(visible: bool) {
 }
 
 pub fn hide() {
-    let path = state_path();
     // Se o arquivo já existe, uma execução anterior não restaurou (crash): o estado atual é o
     // nosso "autohide", então mantemos o original salvo.
-    if !path.exists() {
-        let saved = SavedState { original_state: get_state() };
-        let _ = crate::util::write_atomic(&path, serde_json::to_string(&saved).unwrap_or_default());
-    }
+    let original_state = read_saved().map_or_else(get_state, |saved| saved.original_state);
+    let saved = SavedState { original_state, owner_pid: Some(std::process::id()) };
+    let _ = crate::util::write_atomic(&state_path(), serde_json::to_string(&saved).unwrap_or_default());
     set_state(ABS_AUTOHIDE);
     set_visible(false);
     if let Some(&tray) = taskbar_windows().first() {
         PRIMARY_TRAY.store(tray.0 as isize, Ordering::SeqCst);
     }
     HIDDEN.store(true, Ordering::SeqCst);
+    spawn_guardian();
 }
 
 pub fn restore() {
     HIDDEN.store(false, Ordering::SeqCst);
     crate::dock_window::remove_appbar();
-    let path = state_path();
-    if let Some(saved) = std::fs::read_to_string(&path)
-        .ok()
-        .and_then(|s| serde_json::from_str::<SavedState>(&s).ok())
-    {
+    if let Some(saved) = read_saved() {
         set_state(saved.original_state);
-        let _ = std::fs::remove_file(&path);
+        let _ = std::fs::remove_file(state_path());
     }
     make_all_opaque();
     set_visible(true);
+}
+
+/// Encerrar o Pier pelo Gerenciador de Tarefas não executa código nenhum, então a taskbar só
+/// volta se outro processo cuidar disso: este fica esperando o Pier morrer.
+fn spawn_guardian() {
+    if GUARDIAN_SPAWNED.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    let Ok(exe) = std::env::current_exe() else {
+        GUARDIAN_SPAWNED.store(false, Ordering::SeqCst);
+        return;
+    };
+    let detached = DETACHED_PROCESS.0 | CREATE_NEW_PROCESS_GROUP.0;
+    // Dentro de um job que não permite breakaway (alguns launchers), pedir CREATE_BREAKAWAY_FROM_JOB
+    // falha com acesso negado; sem ele o guardião nasce no mesmo job, mas ainda sobrevive ao Pier.
+    let spawned = [detached | CREATE_BREAKAWAY_FROM_JOB.0, detached].into_iter().any(|flags| {
+        Command::new(&exe)
+            .arg("--guard-taskbar")
+            .arg(std::process::id().to_string())
+            .creation_flags(flags)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .is_ok()
+    });
+    if !spawned {
+        log::warn!("não foi possível iniciar o guardião da taskbar");
+        GUARDIAN_SPAWNED.store(false, Ordering::SeqCst);
+    }
+}
+
+fn owns_taskbar(saved: Option<&SavedState>, pid: u32) -> bool {
+    saved.is_some_and(|s| s.owner_pid == Some(pid))
+}
+
+/// Corpo de `pier.exe --guard-taskbar <pid>`: espera o processo `pid` terminar e, se ele ainda era
+/// quem mantinha a taskbar escondida, a devolve. Numa saída normal o estado já foi apagado, e num
+/// reinício do updater o novo Pier regravou o dono, então nos dois casos não há nada a fazer.
+pub fn run_guardian(pid: u32) {
+    unsafe {
+        // Se o pid já não existe, `OpenProcess` falha e não há o que esperar.
+        if let Ok(process) = OpenProcess(PROCESS_SYNCHRONIZE, false, pid) {
+            WaitForSingleObject(process, INFINITE);
+            let _ = CloseHandle(process);
+        }
+    }
+    if owns_taskbar(read_saved().as_ref(), pid) {
+        restore();
+    }
 }
 
 fn is_hidden() -> bool {
@@ -215,5 +274,25 @@ unsafe extern "system" fn console_handler(_ctrl: u32) -> BOOL {
 pub fn install_signal_guard() {
     unsafe {
         let _ = SetConsoleCtrlHandler(Some(console_handler), true);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn guardian_only_restores_for_the_pid_that_hid_the_taskbar() {
+        let saved = SavedState { original_state: 0, owner_pid: Some(10) };
+        assert!(owns_taskbar(Some(&saved), 10));
+        assert!(!owns_taskbar(Some(&saved), 11));
+        assert!(!owns_taskbar(None, 10));
+    }
+
+    #[test]
+    fn state_file_from_before_the_guardian_still_loads() {
+        let saved: SavedState = serde_json::from_str(r#"{"original_state":2}"#).unwrap();
+        assert_eq!(saved.original_state, 2);
+        assert!(!owns_taskbar(Some(&saved), 10));
     }
 }
