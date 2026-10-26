@@ -6,11 +6,15 @@
 
 .dock-bar {
   --glass-blur: var(--dock-blur);
-  /* O que mantém a barra centrada no eixo do comprimento. */
-  --dock-center: translateX(-50%);
   position: absolute;
-  left: 50%;
-  transform: var(--dock-center) translate(0, 0) scale(1);
+  /* Centrada pelo layout e não por `translateX(-50%)`: durante a transição do `transform` o
+     WebKit mantém a porcentagem calculada com a largura de antes, então a barra ficava deslocada
+     (e fora do vidro nativo) quando a ampliação a alargava. */
+  left: 0;
+  right: 0;
+  width: fit-content;
+  margin-inline: auto;
+  transform: translate(0, 0) scale(1);
   /* Acima do Clawd (`.claude-pet`): o transform prende os ícones ampliados e as dicas no contexto
      da barra, então é ela inteira que precisa ficar por cima para eles cobrirem o Clawd e
      receberem o clique. */
@@ -33,7 +37,7 @@
 /* Fora da tela (ocultar automaticamente, abrindo, trocando de monitor): desliza para fora da borda
    onde a dock vive, encolhendo de leve. */
 .dock-bar.dock-hidden {
-  transform: var(--dock-center) translate(0, calc(100% + 24px)) scale(0.94);
+  transform: translate(0, calc(100% + 24px)) scale(0.94);
   opacity: 0;
   pointer-events: none;
   transition:
@@ -42,15 +46,15 @@
 }
 
 .dock-root[data-pos="top"] .dock-bar.dock-hidden {
-  transform: var(--dock-center) translate(0, calc(-100% - 24px)) scale(0.94);
+  transform: translate(0, calc(-100% - 24px)) scale(0.94);
 }
 
 .dock-root[data-pos="left"] .dock-bar.dock-hidden {
-  transform: var(--dock-center) translate(calc(-100% - 24px), 0) scale(0.94);
+  transform: translate(calc(-100% - 24px), 0) scale(0.94);
 }
 
 .dock-root[data-pos="right"] .dock-bar.dock-hidden {
-  transform: var(--dock-center) translate(calc(100% + 24px), 0) scale(0.94);
+  transform: translate(calc(100% + 24px), 0) scale(0.94);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -63,8 +67,6 @@
 /* Largura total: a barra vai de ponta a ponta com as quinas retas e sem a borda do lado que
    encosta na tela, como um painel. */
 .dock-bar.dock-full {
-  --dock-center: translateX(0);
-  left: 0;
   border-radius: 0;
   justify-content: center;
 }
@@ -86,15 +88,16 @@
 /* Bordas laterais: a barra vira uma coluna, centrada na vertical e presa à lateral da tela. */
 .dock-root[data-pos="left"] .dock-bar,
 .dock-root[data-pos="right"] .dock-bar {
-  --dock-center: translateY(-50%);
   left: auto;
-  top: 50%;
+  right: auto;
+  top: 0;
+  bottom: 0;
+  height: fit-content;
+  margin: auto 0;
   flex-direction: column;
 }
 
 .dock-root[data-pos="left"] .dock-bar.dock-full {
-  --dock-center: translateY(0);
-  top: 0;
   height: 100%;
   border-top: 0;
   border-bottom: 0;
@@ -102,8 +105,6 @@
 }
 
 .dock-root[data-pos="right"] .dock-bar.dock-full {
-  --dock-center: translateY(0);
-  top: 0;
   height: 100%;
   border-top: 0;
   border-bottom: 0;
