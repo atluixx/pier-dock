@@ -22,16 +22,11 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 
 ## Features
 
-- **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, dividers, and a badge with the count shown in the window title, like "(3) WhatsApp".
-- **Customizable bar:** Put the dock on the bottom, top, left, or right edge of the screen (it stands vertically on the sides), fit it to the icons or stretch it along the edge, and pick the icon size, panel height, material, and accent color.
-- **Media player:** Shows what's playing in Spotify, YouTube Music, and other players, with playback controls.
-- **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
-- **System widgets:** Network (with the Wi-Fi networks nearby), volume (with the output device and per-app volume), Bluetooth (with paired devices, connecting and disconnecting them on macOS and Linux), battery, clock, show desktop (minimizes every window with one click), keyboard layout (on Windows, the active layout with a list to switch), system usage (CPU and memory with the last minute of history), and, on Windows, the tray arrow that opens the hidden icons. The hidden-icons popup closes when you click outside it, press Escape, or click the tray arrow again.
-- **Productivity widgets:** Weather, a Pomodoro timer, your next calendar event with a join button for video calls, and your command-line AI usage.
-- **AI agents:** The AI Agents widget shows sessions from Claude Code, Codex, opencode, and Gemini CLI as running, asking for permission, with an error, or done, and a click jumps to the terminal or IDE that started one. Clawd, Claude's mascot, or a Pokémon can walk along the dock while a session runs. Codex sessions are detected automatically; enable the other CLIs' integrations in the widget's options (opencode needs a restart to load its plugin).
-- **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
-- **Automatic updates:** Pier checks for new versions and installs them in one click.
-- **English and Portuguese:** The interface follows your system language. To change it, go to **Settings** > **General** > **Language**.
+- **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, and count badges.
+- **Customizable bar:** Put the dock on any edge of the screen, fit it to the icons or stretch it along the edge, and pick the icon size, material, and accent color.
+- **Widgets:** Media player, GitHub (reviews, pull requests, commits, contributions), system (network, volume, Bluetooth, battery, clock, show desktop, system usage and, on Windows, keyboard layout and the tray), weather, calendar, Pomodoro, and AI usage.
+- **AI agents:** Sessions from Claude Code, Codex, opencode, and Gemini CLI at a glance, and a click jumps to the terminal or IDE that started one. Clawd or a Pokémon can walk along the dock while a session runs.
+- **And more:** Keyboard shortcuts for the apps in position 1 to 9, one-click updates, and an English and Portuguese interface.
 
 ## Installation
 
@@ -61,33 +56,11 @@ In-app updates work with the Windows installer, the macOS app, and the AppImage.
 
 ## Usage
 
-- **Click** an app to open or focus it. Click the active app to minimize it. If the app has several windows, clicking cycles through them.
-- **Shift+click** an app to open a new instance.
-- **Right-click** an app to see its windows, pin or unpin it, or close it.
-- **Right-click** the dock background to open settings or quit.
-- **Drag** pinned apps to reorder them. To pin an app, drop it on the dock (an `.exe` or shortcut on Windows, an `.app` on macOS, or a `.desktop` file on Linux), or add it in **Settings** > **Apps**.
-- **Click** a widget to open its panel. On the volume widget, scroll to adjust the volume and right-click to mute; its panel has the output device and each app's volume (on macOS, 14.2 or later).
-- **Battery:** Click the widget to pick a power mode. Linux reads the profiles from power-profiles-daemon, Windows lists the installed power plans, and macOS doesn't support switching yet.
-- **Bluetooth:** Saved devices stay visible while the radio is off. Click one to connect or disconnect it (Windows opens Bluetooth settings instead).
-
-| Shortcut | Windows and Linux | macOS |
-| --- | --- | --- |
-| Open or focus the app in position N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
-
-### GitHub widgets
-
-Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) automatically. To use a different account, paste a personal access token with the `repo` and `read:user` scopes in **Settings** > **GitHub**. The token takes priority over the GitHub CLI and is stored in your system's keychain.
-
-### Weather and calendar widgets
-
-Click the clock/date widget to open a month calendar, browse months, or return to today. This works without a calendar account.
-
-- **Weather:** Choose your city in **Settings** > **Widgets** > **Weather**. Forecasts come from [Open-Meteo](https://open-meteo.com) and don't need an API key.
-- **Calendar:** Paste your calendar's secret iCal address in **Settings** > **Widgets** > **Calendar**. Google Calendar, Outlook, and iCloud all publish one. Pier stores the address in your system's keychain.
-
-### AI usage widget
-
-A ring shows how much of the limit of your command-line AI is gone, in Claude Code (the 5-hour session and the week) or Codex CLI. **Settings** > **Widgets** > **AI usage** picks which one; **Automatic** (the default) uses the one whose limits were read most recently. Nothing is configured and nothing is sent anywhere: Pier reads files the CLIs already keep on disk (`~/.claude.json` and `~/.claude/projects/` for Claude Code, `~/.codex/sessions/` for Codex), and only the numeric usage fields, the model name, and the timestamps, never your conversations, commands, or diffs. The CLIs only refresh the percentages while they run, so with them closed the widget dims and says how old the reading is.
+- **Click** an app to open or focus it (clicking the active app minimizes it; with several windows, clicking cycles through them). **Shift+click** opens a new instance.
+- **Right-click** an app to see its windows, pin or unpin it, or close it. Right-click the dock background to open settings or quit.
+- **Drag** pinned apps to reorder them. To pin an app, drop it on the dock or add it in **Settings** > **Apps**.
+- **Click** a widget to open its panel. On the volume widget, scroll to adjust the volume and right-click to mute.
+- **Press** <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> (<kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> on macOS) to open or focus the app in that position.
 
 ## Platform notes
 
