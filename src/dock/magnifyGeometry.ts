@@ -21,3 +21,22 @@ export function projectedCenters(items: { center: number; initial: number; curre
     return center;
   });
 }
+
+/**
+ * Where the row ends up under the cursor. An icon's size depends on where its center is, and the
+ * centers move as the sizes grow, so this iterates until the two agree. Targeting these sizes,
+ * rather than the centers of a row still in motion, keeps the neighbors from growing past their
+ * final size on the way there (the centers they were read from lag a frame behind).
+ */
+export function settledSizes(cursor: number, items: { center: number; initial: number }[], base: number, scale: number): number[] {
+  if (!Number.isFinite(cursor) || scale <= 1) return items.map(() => base);
+  let sizes = items.map((item) => item.initial);
+  for (let pass = 0; pass < 24; pass++) {
+    const centers = projectedCenters(items.map((item, i) => ({ ...item, current: sizes[i] })));
+    const next = centers.map((center) => magnifiedSize(cursor, center, base, scale));
+    const moved = next.reduce((most, size, i) => Math.max(most, Math.abs(size - sizes[i])), 0);
+    sizes = next;
+    if (moved < 0.01) break;
+  }
+  return sizes;
+}

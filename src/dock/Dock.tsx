@@ -451,7 +451,7 @@ const DockLayout = memo(function DockLayout({ config }: { config: Config }) {
   }
 
   return (
-    <MagnifyGeometry mouse={mouse} position={position}>
+    <MagnifyGeometry {...magnifyContext}>
     <div
       className="dock-root"
       data-pos={position}
