@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, Search, Settings, X } from "lucide-react";
-import type { BluetoothState, Config, WidgetConfig, WidgetKind, WidgetSize } from "../../lib/ipc";
+import type { BluetoothState, Config, KeyboardLayouts, WidgetConfig, WidgetKind, WidgetSize } from "../../lib/ipc";
 import { os, widgetSupported } from "../../lib/platform";
 import { moveAmong, widgetKey } from "../../dock/order";
 import { useGithub } from "../../hooks/useGithub";
@@ -33,6 +33,7 @@ const WIDGETS: Record<WidgetKind, { group: Group; tint: [string, string] }> = {
   battery: { group: "system", tint: ["#1E3A2A", "#20242C"] },
   clock: { group: "system", tint: ["#2A2A3A", "#3A1E2A"] },
   "show-desktop": { group: "system", tint: ["#2A2A3A", "#1E3A3A"] },
+  "keyboard-layout": { group: "system", tint: ["#2A2A3A", "#1E3A4A"] },
   weather: { group: "productivity", tint: ["#1E3A6A", "#6A4A12"] },
   pomodoro: { group: "productivity", tint: ["#6A1E22", "#3A1A2A"] },
   "system-usage": { group: "system", tint: ["#3A1E6A", "#1E2A4A"] },
@@ -60,6 +61,8 @@ const inUse = (config: Config, widget: WidgetConfig) => widget.enabled || petOn(
 
 /** Com o widget desligado o Bluetooth não é consultado (no macOS isso pede permissão). */
 const SAMPLE_BLUETOOTH: BluetoothState = { available: true, powered: true, canToggle: false, canConnect: false, devices: [] };
+
+const SAMPLE_KEYBOARD: KeyboardLayouts = { layouts: [{ id: "sample", code: "ENG", name: "English" }], active: "sample" };
 
 const tintStyle = (kind: WidgetKind) => {
   const [a, b] = WIDGETS[kind].tint;
@@ -274,6 +277,7 @@ export function WidgetsTab({ config, update, setFooter }: TabProps) {
     github: useGithub(),
     system: useSystemStatus(),
     bluetooth: enabled("bluetooth") ? bluetooth : SAMPLE_BLUETOOTH,
+    keyboard: SAMPLE_KEYBOARD,
     weather: useWeather(),
     weatherConfigured: !!config.weatherLocation,
     calendar: useCalendar(),

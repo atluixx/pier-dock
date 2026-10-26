@@ -5,7 +5,7 @@ import type { Config, WidgetKind, WidgetSize } from "../lib/ipc";
 import { widgetSupported } from "../lib/platform";
 import { useMedia } from "../hooks/useMedia";
 import { useGithub } from "../hooks/useGithub";
-import { useBluetooth, useSystemStatus } from "../hooks/useSystem";
+import { useBluetooth, useKeyboardLayouts, useSystemStatus } from "../hooks/useSystem";
 import { useWeather } from "../hooks/useWeather";
 import { useCalendar } from "../hooks/useCalendar";
 import { useAiUsage } from "../hooks/useAiUsage";
@@ -25,11 +25,12 @@ export function DockWidgetsProvider({ config, children }: { config: Config; chil
   const weather = useWeather(enabled("weather"), place ? `${place.latitude},${place.longitude}` : undefined);
   const calendar = useCalendar(enabled("calendar"));
   const [bluetooth] = useBluetooth(enabled("bluetooth"));
+  const { keyboard } = useKeyboardLayouts(enabled("keyboard-layout"));
   const ai = useAiUsage(enabled("ai-usage") ? config.aiPollMinutes : undefined, config.aiProvider);
   const weatherConfigured = !!place;
   useLayoutEffect(() => {
-    store.setState({ media, github, system, weather, calendar, bluetooth, ai, weatherConfigured });
-  }, [store, media, github, system, weather, calendar, bluetooth, ai, weatherConfigured]);
+    store.setState({ media, github, system, weather, calendar, bluetooth, keyboard, ai, weatherConfigured });
+  }, [store, media, github, system, weather, calendar, bluetooth, keyboard, ai, weatherConfigured]);
   return <WidgetStore.Provider value={store}>{children}</WidgetStore.Provider>;
 }
 

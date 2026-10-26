@@ -7,6 +7,7 @@ import { AiUsagePanel } from "./AiUsagePanel";
 import { AgentSessionsPanel } from "./AgentSessionsPanel";
 import { Commits } from "./Commits";
 import { Contributions } from "./Contributions";
+import { KeyboardLayoutPanel } from "./KeyboardLayout";
 import { Launcher } from "./Launcher";
 import { NowPlaying } from "./NowPlaying";
 import { PowerPanel } from "./Power";
@@ -39,6 +40,8 @@ function Content({ kind }: { kind: string }) {
       return <Pomodoro />;
     case "battery":
       return <PowerPanel />;
+    case "keyboard-layout":
+      return <KeyboardLayoutPanel />;
     case "system-usage":
       return <SystemUsage />;
     case "calendar":

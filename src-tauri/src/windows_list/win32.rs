@@ -89,6 +89,12 @@ fn window_pid(h: HWND) -> u32 {
     pid
 }
 
+/// A última janela de outro processo que esteve em primeiro plano, se ainda existir.
+pub(crate) fn last_foreground() -> Option<HWND> {
+    let h = HWND(LAST_FOREGROUND.load(Ordering::SeqCst) as *mut _);
+    (!h.is_invalid() && unsafe { windows::Win32::UI::WindowsAndMessaging::IsWindow(h) }.as_bool()).then_some(h)
+}
+
 pub(crate) fn process_path(pid: u32) -> String {
     unsafe {
         let Ok(handle) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else { return String::new() };

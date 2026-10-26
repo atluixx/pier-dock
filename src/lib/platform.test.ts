@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { detectOs, widgetSupported } from "./platform.ts";
+import { detectOs, os, widgetSupported } from "./platform.ts";
 
 test("detecta o sistema pelo user agent do WebView", () => {
   // WebView2 (Windows)
@@ -22,4 +22,6 @@ test("sistema desconhecido cai em Linux", () => {
 test("só a bandeja depende do sistema", () => {
   assert.equal(widgetSupported("media"), true);
   assert.equal(widgetSupported("clock"), true);
+  assert.equal(widgetSupported("tray"), os === "windows");
+  assert.equal(widgetSupported("keyboard-layout"), os === "windows");
 });

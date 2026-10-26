@@ -20,4 +20,5 @@ export const PANEL_SIZES: Record<string, [number, number]> = {
   volume: [340, 420],
   network: [340, 400],
   battery: [340, 280],
+  "keyboard-layout": [320, 300],
 };

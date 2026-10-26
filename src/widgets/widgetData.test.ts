@@ -12,6 +12,14 @@ test("media updates leave other widget selections shallowly equal", () => {
   }
 });
 
+test("keyboard layout changes update only the keyboard layout widget", () => {
+  const after = { ...EMPTY_WIDGET_DATA, keyboard: { layouts: [], active: "04090409" } };
+  assert.equal(shallow(selectWidgetData("keyboard-layout", EMPTY_WIDGET_DATA), selectWidgetData("keyboard-layout", after)), false);
+  for (const kind of ["bluetooth", "battery", "clock"] as const) {
+    assert.ok(shallow(selectWidgetData(kind, EMPTY_WIDGET_DATA), selectWidgetData(kind, after)));
+  }
+});
+
 test("weather configuration changes update weather but not other widgets", () => {
   const after = { ...EMPTY_WIDGET_DATA, weatherConfigured: true };
   assert.equal(selectWidgetData("weather", after).weatherConfigured, true);

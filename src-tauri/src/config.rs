@@ -195,6 +195,7 @@ impl Default for Config {
                 disabled("ai-agents", "small"),
                 disabled("pokemon", "small"),
                 disabled("show-desktop", "small"),
+                disabled("keyboard-layout", "small"),
             ],
             material: "glass".into(),
             reduced_effects: false,

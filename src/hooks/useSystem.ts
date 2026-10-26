@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ipc, type AppStream, type AudioState, type BluetoothState, type SystemStatus, type Volume, type WifiState } from "../lib/ipc";
+import { ipc, type AppStream, type AudioState, type BluetoothState, type KeyboardLayouts, type SystemStatus, type Volume, type WifiState } from "../lib/ipc";
 
 export function useSystemStatus(enabled = true): SystemStatus | null {
   const [status, setStatus] = useState<SystemStatus | null>(null);
@@ -98,6 +98,20 @@ export function useBluetooth(enabled = true, intervalMs = 10_000): [BluetoothSta
     finally { await refresh(); }
   }, [refresh]);
   return [state, setPowered, refresh];
+}
+
+/** Não há evento para a troca de layout, então o ativo é consultado a cada `intervalMs`. */
+export function useKeyboardLayouts(enabled = true, intervalMs = 1_000) {
+  const [keyboard, setKeyboard] = useState<KeyboardLayouts | null>(null);
+  const refresh = useCallback(() => ipc.keyboardLayouts().then(setKeyboard).catch(() => {}), []);
+  useEffect(() => {
+    if (!enabled) return;
+    refresh();
+    const id = setInterval(refresh, intervalMs);
+    return () => clearInterval(id);
+  }, [enabled, intervalMs, refresh]);
+  const setActive = useCallback((id: string) => setKeyboard((k) => k && { ...k, active: id }), []);
+  return { keyboard, refresh, setActive };
 }
 
 export function useNow(intervalMs = 1000): Date {

@@ -1,0 +1,7 @@
+.kl-body { padding: 6px 12px 12px; overflow-y: auto; }
+.kl-row { width: 100%; gap: 12px; padding: 12px 10px; }
+.kl-code { min-width: 36px; font-weight: 600; letter-spacing: .02em; text-align: left; color: var(--text-secondary); }
+.kl-name { flex: 1; text-align: left; }
+.kl-row[aria-checked="true"], .kl-row[aria-checked="true"] .kl-code { color: var(--accent); }
+.kl-message { padding: 8px 10px; color: var(--text-secondary); font-size: 12px; }
+.kl-message.error { color: var(--text-danger); }

@@ -23,6 +23,7 @@ export type WidgetKind =
   | "battery"
   | "clock"
   | "show-desktop"
+  | "keyboard-layout"
   | "weather"
   | "pomodoro"
   | "system-usage"
@@ -199,6 +200,18 @@ export interface BluetoothDevice {
   kind: "audio" | "mouse" | "keyboard" | "gamepad" | "phone" | "other";
   battery: number | null;
   connected: boolean;
+}
+
+export interface KeyboardLayout {
+  id: string;
+  /** Código curto do idioma, como a taskbar mostra: "ENG", "POR". */
+  code: string;
+  name: string;
+}
+
+export interface KeyboardLayouts {
+  layouts: KeyboardLayout[];
+  active: string | null;
 }
 
 export interface BluetoothState {
@@ -475,6 +488,8 @@ export const ipc = {
   systemStatus: () => invoke<SystemStatus>("system_status"),
   bluetoothStatus: () => invoke<BluetoothState>("bluetooth_status"),
   setBluetooth: (powered: boolean) => invoke<void>("set_bluetooth", { powered }),
+  keyboardLayouts: () => invoke<KeyboardLayouts>("keyboard_layouts"),
+  setKeyboardLayout: (id: string) => invoke<void>("set_keyboard_layout", { id }),
   bluetoothConnect: (id: string) => invoke<void>("bluetooth_connect", { id }),
   bluetoothDisconnect: (id: string) => invoke<void>("bluetooth_disconnect", { id }),
   getVolume: () => invoke<Volume>("get_volume"),

@@ -7,8 +7,9 @@ export const detectOs = (ua: string): Os => (/Windows/i.test(ua) ? "windows" : /
 
 export const os: Os = detectOs(navigator.userAgent);
 
-/** A bandeja (ícones ocultos) só existe no Windows. */
-export const widgetSupported = (kind: string) => kind !== "tray" || os === "windows";
+/** A bandeja (ícones ocultos) e a troca de layout do teclado só existem no Windows. */
+const WINDOWS_ONLY = new Set(["tray", "keyboard-layout"]);
+export const widgetSupported = (kind: string) => !WINDOWS_ONLY.has(kind) || os === "windows";
 
 /** Teclas dos atalhos como aparecem nos chips (`Kbd`), com os símbolos do Mac no macOS. */
 export const keys = {

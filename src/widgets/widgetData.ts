@@ -1,10 +1,11 @@
-import type { AiUsage, BluetoothState, CalendarData, GithubData, MediaState, SystemStatus, WeatherData, WidgetKind } from "../lib/ipc";
+import type { AiUsage, BluetoothState, CalendarData, GithubData, KeyboardLayouts, MediaState, SystemStatus, WeatherData, WidgetKind } from "../lib/ipc";
 
 export interface WidgetData {
   media: MediaState;
   github: GithubData | null;
   system: SystemStatus | null;
   bluetooth: BluetoothState | null;
+  keyboard: KeyboardLayouts | null;
   weather: WeatherData | null;
   weatherConfigured: boolean;
   calendar: CalendarData | null;
@@ -12,7 +13,7 @@ export interface WidgetData {
 }
 
 export const EMPTY_WIDGET_DATA: WidgetData = {
-  media: { sessions: [] }, github: null, system: null, bluetooth: null,
+  media: { sessions: [] }, github: null, system: null, bluetooth: null, keyboard: null,
   weather: null, weatherConfigured: false, calendar: null, ai: null,
 };
 
@@ -24,6 +25,7 @@ export function selectWidgetData(kind: WidgetKind, data: WidgetData): WidgetData
       return { ...EMPTY_WIDGET_DATA, github: data.github };
     case "network": case "battery": return { ...EMPTY_WIDGET_DATA, system: data.system };
     case "bluetooth": return { ...EMPTY_WIDGET_DATA, bluetooth: data.bluetooth };
+    case "keyboard-layout": return { ...EMPTY_WIDGET_DATA, keyboard: data.keyboard };
     case "weather": return { ...EMPTY_WIDGET_DATA, weather: data.weather, weatherConfigured: data.weatherConfigured };
     case "calendar": return { ...EMPTY_WIDGET_DATA, calendar: data.calendar };
     case "ai-usage": return { ...EMPTY_WIDGET_DATA, ai: data.ai };

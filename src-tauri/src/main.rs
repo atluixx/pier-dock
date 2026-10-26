@@ -11,6 +11,7 @@ mod dock_window;
 mod github;
 mod i18n;
 mod icons;
+mod keyboard;
 mod media;
 #[cfg(windows)]
 mod notifications;
@@ -216,6 +217,8 @@ fn main() {
             system::set_volume,
             system::open_shell,
             system::open_tray,
+            keyboard::keyboard_layouts,
+            keyboard::set_keyboard_layout,
             system::bluetooth_status,
             system::set_bluetooth,
             system::bluetooth_connect,

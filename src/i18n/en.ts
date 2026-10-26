@@ -205,8 +205,10 @@ export const en: Dict = {
     volumeTile: (level, muted) => `Volume ${level}%${muted ? " (muted)" : ""} · scroll to adjust, right-click to mute`,
     battery: (percent, charging) => `Battery ${percent}%${charging ? " (charging)" : ""}`,
     showDesktop: "Show desktop",
+    keyboardLayout: "Keyboard layout",
   },
   power: { title: "Power mode", modes: { "power-saver": "Power save", balanced: "Balanced", performance: "Performance" }, unavailable: "Power mode switching is unavailable on this system.", failed: "Could not change the power mode. Try again." },
+  keyboard: { title: "Keyboard layout", empty: "No keyboard layouts found.", failed: "Could not switch the keyboard layout. Try again." },
   sound: {
     outputOf: (name: string) => `${name} output`,
     chooseOutput: "Choose output", routeFailed: "Could not switch this application’s output.", routingUnavailable: "Per-app output switching is unavailable on this platform.",
@@ -337,6 +339,7 @@ export const en: Dict = {
       volume: "Sound",
       network: "Wi-Fi",
       battery: "Power mode",
+      "keyboard-layout": "Keyboard layout",
     },
   },
   dock: {
@@ -463,6 +466,7 @@ export const en: Dict = {
       battery: { summary: "Charge and whether it's charging.", name: "Battery", description: "Charge level and whether it's charging. Hidden on computers without a battery." },
       clock: { summary: "Time and date.", name: "Clock", description: "Time and date. Clicking opens a month calendar." },
       "show-desktop": { summary: "Minimizes everything and shows the desktop.", name: "Desktop", description: "Minimizes all windows and shows the desktop. Clicking again brings them back." },
+      "keyboard-layout": { summary: "Active keyboard layout and quick switching.", name: "Keyboard layout", description: "The language code of the active keyboard layout (ENG, POR…). Clicking opens the installed layouts so you can switch. Windows only." },
       weather: { summary: "Current temperature and conditions.", name: "Weather", description: "Current temperature and conditions. Clicking opens the hourly and 5-day forecast." },
       pomodoro: { summary: "Focus cycles with a progress ring.",
         name: "Pomodoro",
