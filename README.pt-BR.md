@@ -22,13 +22,13 @@ O Pier substitui a barra de tarefas ou a dock do sistema por uma barra única co
 
 ## Recursos
 
-- **Apps:** apps fixados e abertos, com ampliação, reordenação por arrastar, lista de janelas, separadores e uma bolinha com a contagem exibida no título da janela, como "(3) WhatsApp". O fundo ao passar o mouse fica dentro da dock em todas as bordas, mantendo ícones ampliados, dicas e prévias de janelas visíveis.
+- **Apps:** apps fixados e abertos, com ampliação, reordenação por arrastar, lista de janelas, separadores e uma bolinha com a contagem exibida no título da janela, como "(3) WhatsApp".
 - **Barra personalizável:** coloque a dock na borda de baixo, de cima, da esquerda ou da direita da tela (nas laterais ela fica em pé), deixe-a no tamanho dos ícones ou de ponta a ponta e escolha o tamanho dos ícones, a altura do painel, o material e a cor de destaque.
 - **Player de mídia:** mostra o que está tocando no Spotify, no YouTube Music e em outros players, com os controles de reprodução.
 - **Widgets do GitHub:** pull requests aguardando a sua revisão, os seus pull requests abertos, commits recentes e o gráfico de contribuições.
 - **Widgets do sistema:** rede (com as redes Wi-Fi por perto), volume (com a saída de áudio e o volume por app), Bluetooth (com os dispositivos pareados, que dá para conectar e desconectar no macOS e no Linux), bateria, relógio, mostrar a área de trabalho (minimiza todas as janelas com um clique), layout do teclado (no Windows, o layout ativo com uma lista para trocar), uso do sistema (CPU e memória com o histórico do último minuto) e, no Windows, a seta da bandeja que abre os ícones ocultos. A gaveta de ícones ocultos fecha ao clicar fora dela, pressionar Escape ou clicar na seta da bandeja novamente.
 - **Widgets de produtividade:** clima, timer Pomodoro, o próximo compromisso da agenda, com botão para entrar na videochamada, e o uso das suas IAs de linha de comando.
-- **Agentes de IA:** o widget Agentes de IA mostra as sessões do Claude Code, Codex, opencode e Gemini CLI como em execução, pedindo permissão, com erro ou concluídas, e um clique leva ao terminal ou à IDE que a iniciou. O Clawd, mascote do Claude, ou um Pokémon podem andar pela dock enquanto uma sessão roda. O Clawd muda de cor com o status da sessão principal, e o Pokémon ganha um ponto colorido de status; escolher um Pokémon também troca o ícone do tile na dock. O mascote gira para acompanhar as quatro bordas, mesmo parado, com os pés na barra e saltos de permissão para fora dela. As sessões do Codex CLI e do app-server (incluindo o T3 Code) são detectadas automaticamente pelos eventos locais, sem hooks nem reinício. Hooks opcionais do Codex adicionam o status de permissão; confie neles com `/hooks`. Ative as integrações dos outros CLIs nas opções do widget; o opencode precisa ser reiniciado para carregar o plugin.
+- **Agentes de IA:** o widget Agentes de IA mostra as sessões do Claude Code, Codex, opencode e Gemini CLI como em execução, pedindo permissão, com erro ou concluídas, e um clique leva ao terminal ou à IDE que a iniciou. O Clawd, mascote do Claude, ou um Pokémon podem andar pela dock enquanto uma sessão roda. As sessões do Codex são detectadas automaticamente; ative as integrações dos outros CLIs nas opções do widget (o opencode precisa ser reiniciado para carregar o plugin).
 - **Atalhos de teclado:** abra ou foque o app da posição 1 a 9 de qualquer lugar.
 - **Atualização automática:** o Pier procura versões novas e as instala com um clique.
 - **Português e inglês:** a interface segue o idioma do sistema. Para trocar, vá em **Configurações** > **Geral** > **Idioma**.
@@ -55,16 +55,11 @@ Os instaladores ainda não têm assinatura de código, então o sistema avisa na
 
 ### Atualizações
 
-O Pier procura atualizações logo depois de abrir e a cada 12 horas, e nunca reinicia sozinho. Quando houver uma versão nova, aparece um ponto no lançador de apps (ou no botão Iniciar, se o lançador estiver oculto). Clique no ponto, ou em **Atualização para x.y.z disponível** no menu do fundo da dock, para abrir **Configurações** > **Geral**, e depois em **Instalar e reiniciar**. Também dá para clicar em **Atualizar para x.y.z** no menu da bandeja. Para parar de procurar, desligue **Procurar atualizações automaticamente** em **Configurações** > **Geral**.
+O Pier procura atualizações logo depois de abrir e a cada 12 horas, e nunca reinicia sozinho. Quando houver uma versão nova, aparece um ponto no lançador de apps. Clique nele (ou em **Atualizar para x.y.z** no menu da bandeja) e depois em **Instalar e reiniciar** em **Configurações** > **Geral**. Para parar de procurar, desligue **Procurar atualizações automaticamente** ali.
 
 A atualização pelo app funciona com o instalador do Windows, com o app do macOS e com o AppImage. Se você instalou o pacote `.deb`, baixe e instale cada versão nova pela página de releases.
 
-No Linux, o AppImage reinicia a partir da localização atual, removendo os caminhos de bibliotecas e GTK do pacote anterior. O reinício substitui o processo atual para manter o vínculo com o lançador ou contêiner. No NixOS, o `appimage-run` existente no PATH do sistema é reutilizado, inclusive quando a atualização substitui um binário nativo por um AppImage.
-
 ## Uso
-
-Os painéis de rede, som e Bluetooth mostram os detalhes da conexão e dos dispositivos no corpo do painel; o rodapé reúne as ações.
-Os destaques e rótulos respondem rapidamente ao passar o mouse e respeitam a preferência de movimento reduzido do sistema. As prévias de janelas mantêm uma pequena espera para não abrirem ao cruzar os apps.
 
 - **Clique** num app para abri-lo ou focá-lo. Clique no app ativo para minimizá-lo. Se o app tiver várias janelas, cada clique alterna entre elas.
 - **Shift+clique** num app abre uma nova instância.
@@ -72,14 +67,12 @@ Os destaques e rótulos respondem rapidamente ao passar o mouse e respeitam a pr
 - **Clique com o botão direito** no fundo da dock para abrir as configurações ou sair.
 - **Arraste** os apps fixados para reordená-los. Para fixar um app, solte-o na dock (um `.exe` ou atalho no Windows, um `.app` no macOS ou um arquivo `.desktop` no Linux), ou adicione-o em **Configurações** > **Apps**.
 - **Clique** num widget para abrir o painel dele. No widget de volume, use a roda do mouse para ajustar e o botão direito para silenciar; o painel dele tem a saída de áudio e o volume de cada app (no macOS, a partir do 14.2).
+- **Bateria:** clique no widget para escolher o modo de energia. No Linux os perfis vêm do power-profiles-daemon, no Windows são os planos de energia instalados e no macOS a troca ainda não está disponível.
+- **Bluetooth:** os dispositivos salvos continuam visíveis com o rádio desligado. Clique em um para conectar ou desconectar (o Windows abre as configurações de Bluetooth).
 
 | Atalho | Windows e Linux | macOS |
 | --- | --- | --- |
 | Abrir ou focar o app da posição N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
-
-### Modos de energia
-
-Clique na bateria para escolher o modo de energia. No Linux, os perfis vêm do power-profiles-daemon (ou serviço compatível); no Windows, são exibidos os planos padrão instalados. Modos indisponíveis ficam desativados. No macOS, a troca de modo ainda não está disponível.
 
 ### Widgets do GitHub
 
@@ -89,24 +82,12 @@ O Pier usa automaticamente o login do [GitHub CLI](https://cli.github.com) (`gh 
 
 Clique no relógio/data para abrir um calendário mensal, navegar pelos meses ou voltar para hoje. Não é preciso configurar uma conta de calendário.
 
-
 - **Clima:** escolha a cidade em **Configurações** > **Widgets** > **Clima**. A previsão vem do [Open-Meteo](https://open-meteo.com) e não precisa de chave de API.
 - **Agenda:** cole o endereço secreto iCal da sua agenda em **Configurações** > **Widgets** > **Agenda**. O Google Agenda, o Outlook e o iCloud publicam esse endereço. O Pier guarda o endereço no chaveiro do sistema.
 
 ### Widget de uso de IA
 
-Um anel mostra quanto do limite da sua IA de linha de comando já foi usado — a mais apertada das duas janelas do Claude Code (a sessão de 5h e a semana) ou a janela do plano no Codex CLI — e o painel detalha cada uma com o tempo até o reset, mais os tokens do dia.
-
-Ele lê o Claude Code e o Codex CLI, e **Configurações** > **Widgets** > **Uso de IA** escolhe qual delas: **Automática** (o padrão) usa a IA cuja leitura de limites é a mais recente; sem leitura em nenhuma, a que gastou tokens hoje. Não há nada para configurar e nada sai para a rede — o Pier lê arquivos que os próprios CLIs mantêm em disco:
-
-- **Claude Code:** `~/.claude.json`, campo `cachedUsageUtilization`, para os percentuais de limite. É a mesma fonte do comando `/usage`, então os números batem com o terminal. Os tokens vêm de `~/.claude/projects/**/*.jsonl`, os transcripts das sessões.
-- **Codex CLI:** `~/.codex/sessions/**/rollout-*.jsonl`. A linha `rate_limits` é a mesma fonte do comando `/status`, com as janelas `primary` e `secondary` do plano, e os tokens vêm do `last_token_usage` de cada turno.
-
-Só os campos numéricos de `usage`, o nome do modelo e o timestamp são lidos — nunca o conteúdo das conversas, os comandos executados ou os diffs. Os CLIs só renovam os percentuais enquanto estão abertos, então com eles fechados o número congela: o widget esmaece e diz há quanto tempo foi a leitura em vez de passar um valor velho por atual.
-
-### Bluetooth
-
-O Bluetooth mantém os dispositivos salvos visíveis com o rádio desligado. Ligue-o e clique em um dispositivo salvo para conectar ou use Desconectar nos conectados. Linux e macOS conectam diretamente; Windows abre as configurações de Bluetooth. Falhas ao ler um dispositivo não descartam mais a lista de pareados no Windows.
+Um anel mostra quanto do limite da sua IA de linha de comando já foi usado, no Claude Code (a sessão de 5h e a semana) ou no Codex CLI. **Configurações** > **Widgets** > **Uso de IA** escolhe qual delas; **Automática** (o padrão) usa a que teve a leitura de limites mais recente. Não há nada para configurar e nada sai para a rede: o Pier lê arquivos que os próprios CLIs mantêm em disco (`~/.claude.json` e `~/.claude/projects/` no Claude Code, `~/.codex/sessions/` no Codex), e só os campos numéricos de uso, o nome do modelo e os horários, nunca o conteúdo das conversas, os comandos ou os diffs. Os CLIs só renovam os percentuais enquanto estão abertos, então com eles fechados o widget esmaece e diz há quanto tempo foi a leitura.
 
 ## Particularidades de cada plataforma
 
@@ -131,9 +112,7 @@ O macOS tem algumas limitações em relação ao Windows:
 
 ### Linux
 
-No PulseAudio/PipeWire, o painel de som permite escolher uma saída para cada aplicativo e usa os ícones dos arquivos desktop. Nas outras plataformas, os controles de volume continuam disponíveis e a ausência de suporte à troca de saída é indicada. As opções de saída ficam dentro do painel; as setas navegam, Enter seleciona e Escape fecha primeiro a lista de saídas. Saídas cujas portas são informadas como desconectadas ficam ocultas nos dois seletores e são rejeitadas ao trocar a saída. Dispositivos conectados continuam disponíveis sem reprodução ativa, inclusive quando a disponibilidade do conector é desconhecida.
-
-O Pier tem suporte completo ao GNOME 45 a 49, em Wayland e X11, pela extensão do GNOME Shell. No KDE Plasma 6 a dock não precisa de extensão: numa sessão X11 ela lista as janelas, reserva o espaço na tela e desenha o vidro com o blur do KWin, e no Wayland lista as janelas dos apps X11 (as janelas dos apps nativos do Wayland ainda não aparecem). Em outros ambientes de desktop, o Pier só lista janelas em sessões X11 e não consegue esconder o painel nativo. Apps fixados e widgets funcionam em todos.
+O Pier tem suporte completo ao GNOME 45 a 49, em Wayland e X11, pela extensão do GNOME Shell. No KDE Plasma 6 não precisa de extensão: numa sessão X11 ele lista as janelas, reserva o espaço na tela e desenha o vidro com o blur do KWin, e no Wayland lista só as janelas dos apps X11. Em outros ambientes de desktop, o Pier só lista janelas em sessões X11 e não consegue esconder o painel nativo. Apps fixados e widgets funcionam em todos.
 
 Para deixar a dock em outro monitor, ou fazer ela seguir o cursor, o GNOME precisa da versão 4 da extensão. Se **Configurações** > **Geral** > **Mostrar a dock em** oferecer a atualização, clique em **Atualizar a extensão** e depois encerre a sessão e entre de novo.
 
@@ -150,8 +129,6 @@ O Pier guarda as configurações em `config.json`:
 Se você usava o Pier quando ele se chamava WinDock, o Pier importa as suas configurações, o token do GitHub e o início automático na primeira execução. No GNOME, reinstale a extensão pelas configurações do Pier.
 
 ## Solução de problemas
-
-As ações de configurações seguem o desktop Linux atual (incluindo Bluetooth no KDE), mostram falhas ao abrir e permitem tentar novamente. Testes de interação no navegador rodam no CI; configurações nativas e hardware ainda precisam de verificação em cada plataforma.
 
 ### Lentidão ao passar o mouse
 
