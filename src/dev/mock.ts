@@ -7,7 +7,7 @@
  * chama `listen` ao ser carregado. Dentro do Tauri ele não faz nada.
  */
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
-import type { AgentIntegration, AgentSession, AiUsage, AppEntry, BluetoothState, CalendarData, Config, GithubData, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
+import type { AgentIntegration, AgentSession, AiUsage, AppEntry, BluetoothState, CalendarData, Config, GithubData, KeyboardLayouts, MediaState, PomodoroState, SystemUsage, WeatherData, WindowsSnapshot } from "../lib/ipc";
 import { PANEL_INSET, PANEL_SIZES } from "../popovers/sizes";
 
 const insideTauri = "__TAURI_INTERNALS__" in window;
@@ -44,6 +44,15 @@ let bluetooth: BluetoothState = {
   ],
 };
 
+let keyboard: KeyboardLayouts = {
+  layouts: [
+    { id: "04090409", code: "ENG", name: "English (United States)" },
+    { id: "04160416", code: "POR", name: "Portuguese (Brazil)" },
+    { id: "0c0a0c0a", code: "SPA", name: "Spanish (Spain)" },
+  ],
+  active: "04090409",
+};
+
 const config: Config = {
   pinnedApps: apps.map(({ id, name, target }) => ({ id, name, target, exe: target, aumid: null })),
   widgets: [
@@ -63,6 +72,7 @@ const config: Config = {
     { kind: "calendar", enabled: params.has("new"), size: "wide" },
     { kind: "ai-usage", enabled: params.has("new"), size: "wide" },
     { kind: "show-desktop", enabled: params.has("new"), size: "small" },
+    { kind: "keyboard-layout", enabled: params.has("new"), size: "small" },
     { kind: "pokemon", enabled: false, size: "small" },
   ],
   material: "glass",
@@ -369,6 +379,8 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
       { ssid: "VIVO-8F21", strength: 22, signalBars: 2, secured: true, known: false, connected: false },
     ],
   }),
+  keyboard_layouts: () => keyboard,
+  set_keyboard_layout: (args) => { keyboard = { ...keyboard, active: String(args.id) }; },
   bluetooth_status: () => bluetooth,
   set_bluetooth: (args) => {
     bluetooth = { ...bluetooth, powered: Boolean(args.powered) };

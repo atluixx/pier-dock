@@ -1,7 +1,7 @@
 import type { WidgetKind, WidgetSize } from "../lib/ipc";
 import { MediaWidget } from "./MediaWidget";
 import { ContributionsWidget, GithubCommitsWidget, GithubMineWidget, GithubReviewWidget } from "./GithubWidgets";
-import { BatteryWidget, BluetoothWidget, ClockWidget, NetworkWidget, ShowDesktopWidget, TrayWidget, VolumeWidget } from "./SystemWidgets";
+import { BatteryWidget, BluetoothWidget, ClockWidget, KeyboardLayoutWidget, NetworkWidget, ShowDesktopWidget, TrayWidget, VolumeWidget } from "./SystemWidgets";
 import { WeatherWidget } from "./WeatherWidget";
 import { PomodoroWidget } from "./PomodoroWidget";
 import { UsageWidget } from "./UsageWidget";
@@ -48,6 +48,8 @@ export function WidgetView({ kind, size, data }: { kind: WidgetKind; size: Widge
       return <ClockWidget />;
     case "show-desktop":
       return <ShowDesktopWidget />;
+    case "keyboard-layout":
+      return <KeyboardLayoutWidget keyboard={data.keyboard} />;
     case "weather":
       return <WeatherWidget data={data.weather} wide={wide} configured={data.weatherConfigured} />;
     case "pomodoro":

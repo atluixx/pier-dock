@@ -10,7 +10,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { Battery, Volume1, Volume2, VolumeX, Wifi } from "../ui/DockIcons";
-import { ipc, type BluetoothState, type SystemStatus } from "../lib/ipc";
+import { ipc, type BluetoothState, type KeyboardLayouts, type SystemStatus } from "../lib/ipc";
 import { useNow, useVolume } from "../hooks/useSystem";
 import { shortDate } from "../lib/format";
 import { Tile } from "./Tile";
@@ -75,6 +75,16 @@ export function BluetoothWidget({ bluetooth }: { bluetooth: BluetoothState | nul
     <Tile kind="bluetooth" label={label} className={`sys-tile bt-tile ${on ? "" : "off"}`}>
       <Icon size={17} />
       {names.length > 0 && <span className="bt-dot" aria-hidden />}
+    </Tile>
+  );
+}
+
+export function KeyboardLayoutWidget({ keyboard }: { keyboard: KeyboardLayouts | null }) {
+  const t = useT().system;
+  const active = keyboard?.layouts.find((l) => l.id === keyboard.active);
+  return (
+    <Tile kind="keyboard-layout" label={active ? `${t.keyboardLayout} · ${active.name}` : t.keyboardLayout} className="sys-tile kl-tile">
+      <span>{active?.code ?? "…"}</span>
     </Tile>
   );
 }
