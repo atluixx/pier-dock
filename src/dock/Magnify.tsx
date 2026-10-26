@@ -1,6 +1,6 @@
 import { createContext, useContext, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
 import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useSpring, useTransform, type MotionValue } from "framer-motion";
-import { magnifiedSize, measureCenters, projectedCenters } from "./magnifyGeometry";
+import { magnifiedSize, measureCenters, projectedCenters, settledSizes } from "./magnifyGeometry";
 import type { DockPosition } from "../lib/ipc";
 import { isVertical } from "./layout";
 import { HOVER_SPRING } from "./hoverSpring";
@@ -14,18 +14,22 @@ interface MagnifyContext {
 interface Geometry {
   register: (element: HTMLElement, center: MotionValue<number>, size: MotionValue<number>) => () => void;
   measure: () => void;
+  project: () => void;
 }
 export const MagnifyCtx = createContext<MagnifyContext | null>(null);
 const GeometryCtx = createContext<Geometry | null>(null);
 
 /** Geometry changes with layout, not every pointer event. One observer serves the whole dock. */
-export function MagnifyGeometry({ mouse, position, children }: Pick<MagnifyContext, "mouse" | "position"> & { children: ReactNode }) {
+export function MagnifyGeometry({ mouse, base, scale, position, children }: MagnifyContext & { children: ReactNode }) {
   const geometry = useMemo(() => {
-    type Item = { center: MotionValue<number>; size: MotionValue<number>; anchor: number; length: number };
+    type Item = { center: MotionValue<number>; anchor: number; length: number };
     const items = new Map<HTMLElement, Item>();
     const project = () => {
       const ordered = [...items.values()].sort((a, b) => a.anchor - b.anchor);
-      const centers = projectedCenters(ordered.map((item) => ({ center: item.anchor, initial: item.length, current: item.size.get() })));
+      // Centers are those of the settled row, not of the springs mid-flight: see `settledSizes`.
+      const row = ordered.map((item) => ({ center: item.anchor, initial: item.length }));
+      const sizes = settledSizes(mouse.get(), row, base, scale);
+      const centers = projectedCenters(row.map((item, i) => ({ ...item, current: sizes[i] })));
       ordered.forEach((item, i) => item.center.set(centers[i]));
     };
     const measure = () => {
@@ -40,15 +44,13 @@ export function MagnifyGeometry({ mouse, position, children }: Pick<MagnifyConte
     };
     return {
       measure,
+      project,
       register(element: HTMLElement, center: MotionValue<number>, size: MotionValue<number>) {
-        items.set(element, { center, size, anchor: Infinity, length: size.get() });
-        // The slot's current size is already known: derive neighboring positions
-        // without asking the browser to measure the animated layout again.
-        const unsubscribe = size.on("change", project);
-        return () => { unsubscribe(); items.delete(element); };
+        items.set(element, { center, anchor: Infinity, length: size.get() });
+        return () => { items.delete(element); };
       },
     };
-  }, [position]);
+  }, [mouse, base, scale, position]);
   // Reordering, widget changes and configuration updates can move an unchanged-size icon.
   useLayoutEffect(() => geometry.measure());
   useLayoutEffect(() => {
@@ -73,6 +75,7 @@ export function MagnifyGeometry({ mouse, position, children }: Pick<MagnifyConte
   const outside = useRef(true);
   useMotionValueEvent(mouse, "change", (cursor) => {
     if (Number.isFinite(cursor) && outside.current) geometry.measure();
+    else geometry.project();
     outside.current = !Number.isFinite(cursor);
   });
   return <GeometryCtx.Provider value={geometry}>{children}</GeometryCtx.Provider>;
