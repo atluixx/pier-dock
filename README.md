@@ -22,13 +22,13 @@ Pier replaces your system's taskbar or dock with a single bar that holds your pi
 
 ## Features
 
-- **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, dividers, and a badge with the count shown in the window title, like "(3) WhatsApp". Hover backgrounds stay within the dock on every edge, while magnified icons, tooltips and window previews remain visible.
+- **Apps:** Pinned and running apps with magnification, drag-to-reorder, window lists, dividers, and a badge with the count shown in the window title, like "(3) WhatsApp".
 - **Customizable bar:** Put the dock on the bottom, top, left, or right edge of the screen (it stands vertically on the sides), fit it to the icons or stretch it along the edge, and pick the icon size, panel height, material, and accent color.
 - **Media player:** Shows what's playing in Spotify, YouTube Music, and other players, with playback controls.
 - **GitHub widgets:** Pull requests waiting for your review, your open pull requests, recent commits, and your contribution graph.
 - **System widgets:** Network (with the Wi-Fi networks nearby), volume (with the output device and per-app volume), Bluetooth (with paired devices, connecting and disconnecting them on macOS and Linux), battery, clock, show desktop (minimizes every window with one click), system usage (CPU and memory with the last minute of history), and, on Windows, the tray arrow that opens the hidden icons. The hidden-icons popup closes when you click outside it, press Escape, or click the tray arrow again.
 - **Productivity widgets:** Weather, a Pomodoro timer, your next calendar event with a join button for video calls, and your command-line AI usage.
-- **AI agents:** The AI Agents widget shows sessions from Claude Code, Codex, opencode, and Gemini CLI as running, asking for permission, with an error, or done, and a click jumps to the terminal or IDE that started one. Clawd, Claude's mascot, or a Pokémon can walk along the dock while a session runs. Clawd changes color with the lead session's status, and the Pokémon gets a colored status dot; choosing a Pokémon also swaps the dock tile icon. The mascot rotates to match all four dock edges, including while idle, with its feet on the bar and permission jumps directed away from it. Codex CLI and app-server sessions (including T3 Code) are detected automatically from local lifecycle events, without hooks or a restart. Optional Codex hooks add permission status; trust them with `/hooks`. Enable the other CLIs' integrations in the widget's options; opencode needs a restart to load its plugin.
+- **AI agents:** The AI Agents widget shows sessions from Claude Code, Codex, opencode, and Gemini CLI as running, asking for permission, with an error, or done, and a click jumps to the terminal or IDE that started one. Clawd, Claude's mascot, or a Pokémon can walk along the dock while a session runs. Codex sessions are detected automatically; enable the other CLIs' integrations in the widget's options (opencode needs a restart to load its plugin).
 - **Keyboard shortcuts:** Open or focus the app in position 1 to 9 from anywhere.
 - **Automatic updates:** Pier checks for new versions and installs them in one click.
 - **English and Portuguese:** The interface follows your system language. To change it, go to **Settings** > **General** > **Language**.
@@ -55,16 +55,11 @@ The installers aren't code-signed yet, so your system warns you the first time y
 
 ### Updates
 
-Pier checks for updates shortly after it starts and every 12 hours, and never restarts on its own. When a new version is available, a dot appears on the app launcher (or on the start button when the launcher is hidden). Select the dot, or **Update to x.y.z available** in the menu of the dock background, to open **Settings** > **General**, and then select **Install and restart**. You can also select **Update to x.y.z** in the tray menu. To stop checking, turn off **Check for updates automatically** in **Settings** > **General**.
+Pier checks for updates shortly after it starts and every 12 hours, and never restarts on its own. When a new version is available, a dot appears on the app launcher. Select it (or **Update to x.y.z** in the tray menu), and then select **Install and restart** in **Settings** > **General**. To stop checking, turn off **Check for updates automatically** there.
 
 In-app updates work with the Windows installer, the macOS app, and the AppImage. If you installed the `.deb` package, download and install each new version from the releases page.
 
-On Linux, the AppImage restarts from its current location with the previous bundle’s library and GTK paths cleared. Restart replaces the running process so launcher/container supervisors remain attached. On NixOS, an existing `appimage-run` in the host PATH is reused, including when an update replaces a standalone native binary with an AppImage.
-
 ## Usage
-
-Network, sound and Bluetooth panels keep connection and device details in the panel body; the footer contains actions.
-Hover highlights and labels respond quickly and follow the system’s reduced-motion preference. Window previews still wait briefly to avoid opening while you move across apps.
 
 - **Click** an app to open or focus it. Click the active app to minimize it. If the app has several windows, clicking cycles through them.
 - **Shift+click** an app to open a new instance.
@@ -72,14 +67,12 @@ Hover highlights and labels respond quickly and follow the system’s reduced-mo
 - **Right-click** the dock background to open settings or quit.
 - **Drag** pinned apps to reorder them. To pin an app, drop it on the dock (an `.exe` or shortcut on Windows, an `.app` on macOS, or a `.desktop` file on Linux), or add it in **Settings** > **Apps**.
 - **Click** a widget to open its panel. On the volume widget, scroll to adjust the volume and right-click to mute; its panel has the output device and each app's volume (on macOS, 14.2 or later).
+- **Battery:** Click the widget to pick a power mode. Linux reads the profiles from power-profiles-daemon, Windows lists the installed power plans, and macOS doesn't support switching yet.
+- **Bluetooth:** Saved devices stay visible while the radio is off. Click one to connect or disconnect it (Windows opens Bluetooth settings instead).
 
 | Shortcut | Windows and Linux | macOS |
 | --- | --- | --- |
 | Open or focus the app in position N | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> | <kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> |
-
-### Battery power modes
-
-Click the battery widget to select a power mode. Linux reads available profiles from power-profiles-daemon (including compatible services); Windows lists installed standard power plans. Unsupported modes are disabled. macOS currently shows that mode switching is unavailable.
 
 ### GitHub widgets
 
@@ -89,24 +82,12 @@ Pier uses your [GitHub CLI](https://cli.github.com) login (`gh auth login`) auto
 
 Click the clock/date widget to open a month calendar, browse months, or return to today. This works without a calendar account.
 
-
 - **Weather:** Choose your city in **Settings** > **Widgets** > **Weather**. Forecasts come from [Open-Meteo](https://open-meteo.com) and don't need an API key.
 - **Calendar:** Paste your calendar's secret iCal address in **Settings** > **Widgets** > **Calendar**. Google Calendar, Outlook, and iCloud all publish one. Pier stores the address in your system's keychain.
 
 ### AI usage widget
 
-A ring shows how much of the limit of your command-line AI is gone — the tighter of the two windows in Claude Code (the 5-hour session and the week) or the plan's window in Codex CLI — and the panel breaks it down with the time until each resets, plus today's token count.
-
-It reads Claude Code and Codex CLI, and **Settings** > **Widgets** > **AI usage** picks which one: **Automatic** (the default) uses the AI whose limits were read most recently; with neither, the one that spent tokens today. Nothing is configured and nothing is sent anywhere — Pier reads files the CLIs already keep on disk:
-
-- **Claude Code:** `~/.claude.json`, field `cachedUsageUtilization`, for the limit percentages. This is the same source the `/usage` command reads, so the numbers match your terminal. The tokens come from `~/.claude/projects/**/*.jsonl`, the session transcripts.
-- **Codex CLI:** `~/.codex/sessions/**/rollout-*.jsonl`. The `rate_limits` line is the same source the `/status` command shows, with the plan's `primary` and `secondary` windows, and the token counts come from the `last_token_usage` of each turn.
-
-Only the numeric `usage` fields, the model name, and the timestamp are read — never the content of your conversations, the commands, or the diffs. The CLIs only refresh the percentages while they run, so with them closed the number freezes: the widget dims and says how old the reading is instead of passing a stale value off as current.
-
-### Bluetooth
-
-Bluetooth keeps saved devices visible while the radio is off. Turn it on, then click a saved device to connect or use Disconnect for a connected device. Linux and macOS connect directly; Windows opens Bluetooth settings. Devices that cannot be read individually no longer discard the Windows paired inventory.
+A ring shows how much of the limit of your command-line AI is gone, in Claude Code (the 5-hour session and the week) or Codex CLI. **Settings** > **Widgets** > **AI usage** picks which one; **Automatic** (the default) uses the one whose limits were read most recently. Nothing is configured and nothing is sent anywhere: Pier reads files the CLIs already keep on disk (`~/.claude.json` and `~/.claude/projects/` for Claude Code, `~/.codex/sessions/` for Codex), and only the numeric usage fields, the model name, and the timestamps, never your conversations, commands, or diffs. The CLIs only refresh the percentages while they run, so with them closed the widget dims and says how old the reading is.
 
 ## Platform notes
 
@@ -131,9 +112,7 @@ macOS has some limitations compared to Windows:
 
 ### Linux
 
-The sound panel can route each playing app to its own output on PulseAudio/PipeWire and resolves app icons from desktop metadata. Output choices stay inside the panel; arrow keys navigate, Enter selects, and Escape closes the choices first. Other platforms keep their supported volume controls and show when per-app routing is unavailable. Outputs whose ports are explicitly reported disconnected are hidden from both output pickers and rejected when routing. Connected devices remain selectable while idle, including devices whose jack availability is unknown.
-
-Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On KDE Plasma 6 the dock needs no extension: in an X11 session it lists windows, reserves screen space and draws glass with KWin's blur, and on Wayland it lists the windows of X11 apps (windows of native Wayland apps aren't listed yet). On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
+Pier fully supports GNOME 45 to 49 on Wayland and X11 through its GNOME Shell extension. On KDE Plasma 6 it needs no extension: in an X11 session it lists windows, reserves screen space and blurs with KWin, and on Wayland it lists only the windows of X11 apps. On other desktop environments, Pier can list windows only in X11 sessions, and it can't hide the native panel. Pinned apps and widgets work everywhere.
 
 To keep the dock on another monitor, or have it follow the cursor, on GNOME you need version 4 of the extension. If **Settings** > **General** > **Show the dock on** offers to update it, select **Update the extension**, and then log out and log back in.
 
@@ -150,8 +129,6 @@ Pier stores its settings in `config.json`:
 If you used Pier when it was called WinDock, Pier imports your settings, GitHub token, and launch-at-login setting the first time it runs. On GNOME, reinstall the extension from Pier's settings.
 
 ## Troubleshooting
-
-System settings actions follow the current Linux desktop (including KDE Bluetooth settings), report launch failures, and can be retried. Browser interaction tests run in CI; native settings and hardware still need verification on each target platform.
 
 ### Hover feels slow
 
