@@ -2,6 +2,16 @@
 
 O que mudou em cada versão do Pier. O app mostra estas notas uma vez depois de se atualizar, então escreva para quem usa. Antes de criar a tag de uma release, adicione uma seção `## <versão>` aqui e no `CHANGELOG.md`.
 
+## 0.21.0
+
+### Widget de layout do teclado
+- **Windows:** o novo widget **Layout do teclado** mostra o código do idioma do layout ativo (ENG, POR…), como o da barra de tarefas do Windows. Clique nele para ver os layouts instalados e alternar entre eles. Ele vem desligado e fica oculto no macOS e no Linux.
+
+### Correções
+- **Windows:** se o Pier for encerrado à força, por exemplo pelo Gerenciador de Tarefas, a barra de tarefas agora volta sozinha. Antes ela ficava oculta até você rodar `pier.exe --restore-taskbar`.
+- **Dock:** quando o cursor cai de uma vez sobre um ícone, como quando a dock sobe de volta debaixo dele, os vizinhos não crescem mais além do tamanho final para depois encolher.
+- **Dock:** a barra continua centralizada, dentro do vidro por trás dela, enquanto a ampliação a alarga durante a animação de aparecer.
+
 ## 0.20.0
 
 ### Aparência e feedback redesenhados
