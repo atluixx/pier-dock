@@ -2,6 +2,16 @@
 
 What changed in each version of Pier. The app shows these notes once after it updates, so write them for users. Add a `## <version>` section before tagging a release, in this file and in `CHANGELOG.pt-BR.md`.
 
+## 0.21.0
+
+### Keyboard layout widget
+- **Windows:** a new **Keyboard layout** widget shows the language code of the active layout (ENG, POR…), like the one in the Windows taskbar. Click it to list the installed layouts and switch between them. It is off by default, and it is hidden on macOS and Linux.
+
+### Fixes
+- **Windows:** if Pier is killed, for example from Task Manager, the taskbar now comes back on its own. Before, it stayed hidden until you ran `pier.exe --restore-taskbar`.
+- **Dock:** when the cursor lands on an icon at once, as when the dock slides back up under it, the neighbors no longer grow past their final size and shrink back.
+- **Dock:** the bar stays centered, inside the glass behind it, while magnification widens it during the reveal.
+
 ## 0.20.0
 
 ### Redesigned Appearance and feedback
