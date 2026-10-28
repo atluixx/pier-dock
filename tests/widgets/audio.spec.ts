@@ -3,6 +3,14 @@ import { openMock, expectCall } from "./fixtures";
 
 const picker = (page: import("@playwright/test").Page, name = "Spotify") => page.getByRole("button", { name: `${name} output`, exact: true });
 
+test("the panel names the system and application output scopes", async ({ page }) => {
+  await openMock(page, "view=panel&kind=volume");
+  await expect(page.getByRole("radiogroup", { name: "Default output" })).toBeVisible();
+  await expect(page.getByText("App audio", { exact: true })).toBeVisible();
+  await expect(page.getByText("Choose a separate output for each app.")).toBeVisible();
+  await expect(picker(page)).toBeVisible();
+});
+
 test("click opens choices inside the panel, survives polling, and routes only the chosen app", async ({ page }) => {
   await openMock(page, "view=panel&kind=volume");
   await expect(page.locator(".sound-app-icon img")).toHaveCount(2);

@@ -42,6 +42,7 @@ In-app updates work with the Windows installer, the macOS app, and the AppImage.
 - **Right-click** an app to see its windows, pin or unpin it, or close it. Right-click the dock background to open settings or quit.
 - **Drag** pinned apps to reorder them. To pin an app, drop it on the dock or add it in **Settings** > **Apps**.
 - **Click** a widget to open its panel. On the volume widget, scroll to adjust the volume and right-click to mute.
+- In the sound panel, **Default output** selects the system output; **App audio** shows the controls for individual apps. On supported platforms, each app can use a separate output.
 - **Press** <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> (<kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> on macOS) to open or focus the app in that position.
 
 ## Platform notes

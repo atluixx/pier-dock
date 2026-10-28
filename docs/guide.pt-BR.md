@@ -42,6 +42,7 @@ A atualização pelo app funciona com o instalador do Windows, com o app do macO
 - **Clique com o botão direito** num app para ver as janelas, fixá-lo ou desafixá-lo ou fechá-lo. No fundo da dock, abre as configurações ou sai.
 - **Arraste** os apps fixados para reordená-los. Para fixar um app, solte-o na dock ou adicione-o em **Configurações** > **Apps**.
 - **Clique** num widget para abrir o painel. No volume, role para ajustar e clique com o botão direito para silenciar.
+- No painel de som, **Saída padrão** escolhe a saída do sistema; **Áudio dos apps** mostra os controles de cada app. Nas plataformas compatíveis, cada app pode usar uma saída própria.
 - **Pressione** <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd> (<kbd>Control</kbd>+<kbd>Option</kbd>+<kbd>1</kbd>…<kbd>9</kbd> no macOS) para abrir ou focar o app dessa posição.
 
 ## Particularidades de cada plataforma
