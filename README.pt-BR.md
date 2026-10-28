@@ -4,11 +4,22 @@
 
 [![Versão](https://img.shields.io/github/v/release/pier-dock/pier-dock?label=release)](https://github.com/pier-dock/pier-dock/releases/latest) [![CI](https://github.com/pier-dock/pier-dock/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pier-dock/pier-dock/actions/workflows/ci.yml) [![Licença: GPL-3.0-or-later](https://img.shields.io/github/license/pier-dock/pier-dock)](LICENSE)
 
-_Seus apps, widgets e agentes de IA em uma dock personalizável._
+_Sua dock, do seu jeito._
 
-O Pier reúne apps fixados e abertos, widgets ao vivo e sessões de agentes de IA em uma única barra no Windows, macOS e Linux. Feito com [Tauri 2](https://tauri.app), Rust e React.
+O Pier é uma dock gratuita e de código aberto para Windows, macOS e Linux. Reúna seus apps, janelas e widgets do dia a dia numa barra de vidro e escolha a borda da tela, o tamanho, o material e a cor de destaque que combinam com você.
 
 [English](README.md) · **Português**
+
+[Site](https://pier-dock.vercel.app/pt-br) · [Baixar o Pier](https://github.com/pier-dock/pier-dock/releases/latest) · [Explorar os widgets](https://pier-dock.vercel.app/pt-br#widgets)
+
+[![Demonstração interativa do site do Pier com apps fixados, controles de mídia, atividade do GitHub e widgets do sistema](docs/images/dock-preview.png)](https://pier-dock.vercel.app/pt-br)
+
+## Num relance
+
+- **Apps à mão:** Fixe, reordene e alterne entre apps. Use um atalho para abrir ou focar qualquer um dos nove primeiros apps fixados.
+- **Widgets para o seu dia:** Controle a música, confira o clima e o próximo compromisso, inicie um Pomodoro e ajuste as configurações do sistema pela dock.
+- **GitHub sem trocar de aba:** Acompanhe pull requests abertos, revisões pendentes e seu gráfico de contribuições.
+- **Companhia enquanto trabalha:** Acompanhe sessões de agentes de IA, abra o terminal ou a IDE delas e deixe o Clawd ou seus Pokémon escolhidos passearem pela dock.
 
 ## Instalação
 

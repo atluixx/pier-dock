@@ -4,11 +4,22 @@
 
 [![Release](https://img.shields.io/github/v/release/pier-dock/pier-dock?label=release)](https://github.com/pier-dock/pier-dock/releases/latest) [![CI](https://github.com/pier-dock/pier-dock/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pier-dock/pier-dock/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/github/license/pier-dock/pier-dock)](LICENSE)
 
-_Your apps, widgets, and AI agents in one customizable dock._
+_Your dock, your way._
 
-Pier brings pinned and running apps, live widgets, and AI agent sessions to a single bar on Windows, macOS, and Linux. Built with [Tauri 2](https://tauri.app), Rust, and React.
+Pier is a free, open-source dock for Windows, macOS, and Linux. Bring your apps, windows, and everyday widgets together in a glass bar, then make it yours with your preferred screen edge, size, material, and accent color.
 
 **English** · [Português](README.pt-BR.md)
+
+[Website](https://pier-dock.vercel.app/) · [Download Pier](https://github.com/pier-dock/pier-dock/releases/latest) · [Explore the widgets](https://pier-dock.vercel.app/#widgets)
+
+[![Interactive website demo of Pier with pinned apps, media controls, GitHub activity, and system widgets](docs/images/dock-preview.png)](https://pier-dock.vercel.app/)
+
+## At a glance
+
+- **Apps within reach:** Pin, reorder, and switch between apps. Use a keyboard shortcut to open or focus any of your first nine pinned apps.
+- **Widgets for your day:** Control playback, check the weather and your next event, start a Pomodoro timer, and adjust system settings from the dock.
+- **GitHub without the tab switching:** Keep open pull requests, pending reviews, and your contribution graph in view.
+- **Company while you work:** Track AI agent sessions, jump to their terminal or IDE, and let Clawd or your chosen Pokémon walk along the dock.
 
 ## Installation
 
