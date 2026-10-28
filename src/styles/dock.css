@@ -388,8 +388,6 @@ html[data-reduced-effects="true"] .dock-bar {
   background: var(--warning);
 }
 
-.attention-label { visibility: hidden; }
-.attention-dot:is(:hover, :focus-visible) .attention-label { visibility: visible; }
 .attention-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 50%; }
 
 /* A área do separador é mais larga que a linha, para dar para arrastá-lo. */

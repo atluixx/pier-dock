@@ -57,6 +57,8 @@ const attentionMenuItems = (attention: Attention[]) => attention.map((a) => ({ i
 
 /** Ponto no canto do botão de apps com o aviso mais importante; o menu do botão lista todos. */
 function AttentionDot({ attention }: { attention: Attention }) {
+  const [hover, setHover] = useState(false);
+  const [focused, setFocused] = useState(false);
   return (
     <button
       className="attention-dot"
@@ -65,8 +67,12 @@ function AttentionDot({ attention }: { attention: Attention }) {
       title={attention.label}
       onPointerDown={(e) => e.stopPropagation()}
       onClick={attention.open}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
     >
-      <span className="attention-label"><Tooltip label={attention.label} /></span>
+      {(hover || focused) && <Tooltip label={attention.label} />}
     </button>
   );
 }
