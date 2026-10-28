@@ -24,6 +24,7 @@ export function GithubReviewWidget({ data }: { data: GithubData | null }) {
     <Tile kind="github-review" label={data?.error ?? t.reviewsTile(count)}>
       <GitCompare size={18} strokeWidth={1.8} />
       <Count value={count} highlight />
+      <span className="github-count-label" aria-hidden>{t.reviewShort}</span>
       {data?.error && <span className="status-dot failure" />}
     </Tile>
   );
@@ -37,6 +38,7 @@ export function GithubMineWidget({ data }: { data: GithubData | null }) {
     <Tile kind="github-mine" label={t.mineTile(count)}>
       <GitPullRequest size={18} strokeWidth={1.8} />
       <Count value={count} />
+      <span className="github-count-label" aria-hidden>{t.mineShort}</span>
       {state !== "none" && <span className={`status-dot ${state}`} />}
     </Tile>
   );
