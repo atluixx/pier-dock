@@ -1267,13 +1267,6 @@
   padding: 12px 16px 6px;
 }
 
-.sound-scope-hint {
-  margin: 0;
-  padding: 0 16px 6px;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
 .sound-list {
   padding: 0 8px;
 }
@@ -1355,6 +1348,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sound-scope-hint {
+  margin: 0;
+  padding: 0 16px 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 
 .sound-mute[aria-pressed="true"] {

@@ -17,7 +17,7 @@ O Pier é uma dock gratuita e de código aberto para Windows, macOS e Linux. Re�
 ## Num relance
 
 - **Apps à mão:** Fixe, reordene e alterne entre apps. Use um atalho para abrir ou focar qualquer um dos nove primeiros apps fixados.
-- **Widgets para o seu dia:** Controle a música, confira o clima e o próximo compromisso, inicie um Pomodoro e ajuste as configurações do sistema pela dock. O painel de som distingue a saída padrão do áudio dos apps.
+- **Widgets para o seu dia:** Controle a música, confira o clima e o próximo compromisso, inicie um Pomodoro e ajuste as configurações do sistema pela dock.
 - **GitHub sem trocar de aba:** Acompanhe pull requests abertos, revisões pendentes e seu gráfico de contribuições.
 - **Companhia enquanto trabalha:** Acompanhe sessões de agentes de IA, abra o terminal ou a IDE delas e deixe o Clawd ou seus Pokémon escolhidos passearem pela dock.
 
@@ -28,6 +28,7 @@ Baixe o Pier para **Windows**, **macOS** ou **Linux** na [versão mais recente](
 ## Documentação
 
 - [Recursos e uso](docs/guide.pt-BR.md)
+- [Saída padrão e áudio por app](docs/guide.pt-BR.md#uso)
 - [Particularidades de cada plataforma](docs/guide.pt-BR.md#particularidades-de-cada-plataforma)
 - [Configuração](docs/guide.pt-BR.md#configuração)
 - [Solução de problemas](docs/guide.pt-BR.md#solução-de-problemas)
