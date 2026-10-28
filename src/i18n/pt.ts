@@ -214,6 +214,7 @@ export const pt = {
     chooseOutput: "Escolher saída", routeFailed: "Não foi possível trocar a saída deste aplicativo.", routingUnavailable: "A troca de saída por aplicativo não está disponível nesta plataforma.",
     title: "Som",
     master: "Volume geral",
+    dockGestures: "Na dock: role para ajustar, clique com o botão direito para silenciar.",
     muted: "Sem som",
     mute: "Silenciar",
     unmute: "Ativar o som",

@@ -214,6 +214,7 @@ export const en: Dict = {
     chooseOutput: "Choose output", routeFailed: "Could not switch this application’s output.", routingUnavailable: "Per-app output switching is unavailable on this platform.",
     title: "Sound",
     master: "Volume",
+    dockGestures: "On the dock: scroll to adjust, right-click to mute.",
     muted: "Muted",
     mute: "Mute",
     unmute: "Unmute",

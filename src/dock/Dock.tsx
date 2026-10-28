@@ -28,6 +28,7 @@ import { SortableItem } from "./SortableItem";
 import { addDivider, applyOrder, isDivider, LAUNCHER_KEY, removeItem, resolveOrder, START_KEY, widgetKey } from "./order";
 import { DockWidget, DockWidgetsProvider } from "../widgets/DockWidgets";
 import { togglePanel } from "../widgets/Tile";
+import { Tooltip } from "../ui/Tooltip";
 
 /** Espera antes de fechar a faixa quando o cursor sai da dock (ver o efeito do `mouseleave`). */
 const PREVIEW_CLOSE_DELAY = 200;
@@ -64,7 +65,9 @@ function AttentionDot({ attention }: { attention: Attention }) {
       title={attention.label}
       onPointerDown={(e) => e.stopPropagation()}
       onClick={attention.open}
-    />
+    >
+      <span className="attention-label"><Tooltip label={attention.label} /></span>
+    </button>
   );
 }
 

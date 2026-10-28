@@ -3,6 +3,11 @@ import { openMock, expectCall } from "./fixtures";
 
 const picker = (page: import("@playwright/test").Page, name = "Spotify") => page.getByRole("button", { name: `${name} output`, exact: true });
 
+test("sound panel explains dock volume gestures", async ({ page }) => {
+  await openMock(page, "view=panel&kind=volume");
+  await expect(page.getByText("On the dock: scroll to adjust, right-click to mute.")).toBeVisible();
+});
+
 test("click opens choices inside the panel, survives polling, and routes only the chosen app", async ({ page }) => {
   await openMock(page, "view=panel&kind=volume");
   await expect(page.locator(".sound-app-icon img")).toHaveCount(2);
