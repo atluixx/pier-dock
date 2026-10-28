@@ -23,3 +23,10 @@ test("a named divider remains draggable with the pointer", async ({ page }) => {
   await page.mouse.up();
   await expectCall(page, "save_config");
 });
+
+test("a divider opens its menu from the keyboard", async ({ page }) => {
+  await openMock(page, "view=dock", { "plugin:menu|new": [1, "divider-menu"] });
+  await page.getByRole("button", { name: "Divider", exact: true }).first().focus();
+  await page.keyboard.press("Enter");
+  await expectCall(page, "plugin:menu|popup");
+});
