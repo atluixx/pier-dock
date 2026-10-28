@@ -3,6 +3,16 @@ import { openMock, expectCall } from "./fixtures";
 
 const picker = (page: import("@playwright/test").Page, name = "Spotify") => page.getByRole("button", { name: `${name} output`, exact: true });
 
+test("per-app volume can be adjusted from the larger slider target", async ({ page }) => {
+  await openMock(page, "view=panel&kind=volume");
+  const slider = page.getByRole("slider", { name: "Spotify volume" });
+  await slider.scrollIntoViewIfNeeded();
+  const box = (await slider.boundingBox())!;
+  expect(box.height).toBeGreaterThanOrEqual(24);
+  await slider.click({ position: { x: box.width / 2, y: 2 } });
+  await expectCall(page, "set_app_volume", { id: "1", level: expect.any(Number) });
+});
+
 test("click opens choices inside the panel, survives polling, and routes only the chosen app", async ({ page }) => {
   await openMock(page, "view=panel&kind=volume");
   await expect(page.locator(".sound-app-icon img")).toHaveCount(2);
